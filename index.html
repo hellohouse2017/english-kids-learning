@@ -40,28 +40,20 @@
                 <div class="counter-box">
                     <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
                     <span id="busuanzi_container_site_pv" style="display:none">
-                        👀 本站總瀏覽：<span id="busuanzi_value_site_pv" class="highlight-num">...</span> 次
+                        👀 訪客：<span id="busuanzi_value_site_pv" class="highlight-num">...</span> 人
                     </span>
                 </div>
-
                 <div class="date-box">
-                    🕒 更新：<span id="last-updated">讀取中...</span>
+                    🕒 更新：<span id="last-updated">...</span>
                 </div>
-                
-                <p class="copyright">© 2025 Happy English RPG. Keep Learning!</p>
+                <p class="copyright">© 2025 Happy English RPG.</p>
             </div>
         </footer>
     </div>
 
     <script>
-        // 自動顯示網頁最後更新日期
         const date = new Date(document.lastModified);
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        
-        // 顯示格式：YYYY/MM/DD
-        document.getElementById('last-updated').innerText = `${year}/${month}/${day}`;
+        document.getElementById('last-updated').innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`;
     </script>
 </body>
 </html>
