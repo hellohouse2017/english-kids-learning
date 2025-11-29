@@ -1,221 +1,313 @@
+/* style.css - 溫馨可愛 RWD 版 */
+
 :root {
-    --bg-color: #e0f7fa;
-    --primary-color: #ff9800;
-    --accent-color: #00bcd4;
-    --text-color: #333;
+    /* --- 溫馨馬卡龍色票 --- */
+    --bg-gradient-start: #fff9c4; /* 奶油黃 */
+    --bg-gradient-end: #fff176;   /* 濃郁黃 */
+    
+    --card-bg: #ffffff;
+    --text-color: #5d4037;        /* 暖咖啡色 (代替純黑) */
+    
+    --primary-btn: #ffb74d;       /* 溫暖橘 */
+    --primary-btn-shadow: #f57c00;
+    
+    --accent-blue: #4fc3f7;       /* 天空藍 */
+    --accent-pink: #f06292;       /* 糖果粉 */
+    --accent-green: #81c784;      /* 草地綠 */
+    
+    --house-bg: #e1f5fe;          /* 淡藍底 */
+    --slot-line: #bcaaa4;         /* 底線顏色 */
+}
+
+* {
+    box-sizing: border-box; /* 這是 RWD 排版最重要的設定 */
 }
 
 body {
-    font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif;
-    background-color: var(--bg-color);
-    margin: 0; padding: 0; color: var(--text-color); text-align: center;
+    font-family: 'Comic Sans MS', 'Microsoft JhengHei', '微軟正黑體', sans-serif;
+    background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+    text-align: center;
+    overflow-x: hidden; /* 防止左右滑動 */
 }
 
-/* === 通用遮罩 (Overlay) === */
+/* === 通用遮罩 (Overlay) - 霧面玻璃質感 === */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 999;
+    background: rgba(0,0,0,0.6); 
+    backdrop-filter: blur(5px); /* 模糊背景 */
+    z-index: 999;
     display: flex; justify-content: center; align-items: center;
-    backdrop-filter: blur(5px);
+    padding: 20px;
 }
 
-/* === 開始畫面 === */
-.start-modal {
-    background: white; padding: 40px; border-radius: 25px; width: 90%; max-width: 450px;
-    border: 5px solid var(--accent-color); box-shadow: 0 0 30px rgba(0,255,255,0.5);
+/* === 彈出視窗卡片 (Modal) === */
+.modal {
+    background: #fff;
+    padding: 30px;
+    border-radius: 30px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    border: 5px solid #fff;
+    animation: bounceIn 0.5s;
+    position: relative;
 }
-.input-group { margin: 20px 0; text-align: left; }
-.input-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 1.2rem; }
+
+/* 開始畫面專用 */
+.start-modal { border-color: var(--accent-blue); }
+.start-modal h1 { color: var(--accent-blue); margin-bottom: 20px; }
+
+.input-group { text-align: left; margin: 20px 0; }
+.input-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; color: #8d6e63; }
 .input-group input { 
-    width: 100%; padding: 10px; font-size: 1.2rem; border-radius: 10px; 
-    border: 2px solid #ccc; box-sizing: border-box; 
+    width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 15px; 
+    border: 3px solid #eee; transition: 0.3s; color: var(--text-color);
 }
-.voice-selection { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
-.btn-voice { padding: 15px 30px; font-size: 1.2rem; border: none; border-radius: 50px; cursor: pointer; color: white; transition: 0.2s; font-weight: bold; }
+.input-group input:focus { outline: none; border-color: var(--accent-blue); }
+
+.voice-selection { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
+.btn-voice { 
+    flex: 1; padding: 15px; font-size: 1.1rem; border: none; border-radius: 20px; 
+    cursor: pointer; color: white; font-weight: bold; box-shadow: 0 5px rgba(0,0,0,0.1); 
+    transition: transform 0.1s;
+}
 .btn-voice:active { transform: scale(0.95); }
-.male { background: #2196f3; box-shadow: 0 5px #1565c0; }
-.female { background: #e91e63; box-shadow: 0 5px #ad1457; }
+.male { background: var(--accent-blue); }
+.female { background: var(--accent-pink); }
 
-/* === 升級彈窗 (Level Up) === */
-.levelup-card {
-    background: linear-gradient(135deg, #fff, #fff9c4);
-    padding: 30px; border-radius: 30px; width: 90%; max-width: 400px;
-    border: 5px solid #FFD700; text-align: center;
-    animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* === 遊戲抬頭顯示器 (HUD) === */
+.game-hud {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 20px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    margin-bottom: 20px;
 }
-@keyframes zoomIn { from { transform: scale(0); } to { transform: scale(1); } }
-.levelup-header { font-size: 2.5rem; color: #ff9800; font-weight: 900; text-shadow: 2px 2px 0 #fff; margin-bottom: 10px; }
-.levelup-icon { font-size: 4rem; margin: 10px 0; animation: bounce 1s infinite; }
-.new-house-icon { font-size: 6rem; margin: 10px 0; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
-.reward-text { color: #e91e63; font-weight: bold; font-size: 1.2rem; background: #fce4ec; padding: 10px; border-radius: 10px; display: inline-block; }
-.btn-confirm { background: #4caf50; color: white; border: none; padding: 15px 40px; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: 0 5px #2e7d32; }
-.btn-confirm:active { transform: translateY(3px); box-shadow: none; }
 
-/* === HUD === */
-.game-hud { background: #263238; color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-.top-row { display: flex; justify-content: space-between; align-items: center; }
-.player-info { display: flex; flex-direction: column; align-items: flex-start; }
-.player-name { font-size: 1.2rem; font-weight: bold; color: #4fc3f7; }
-.level-badge { font-size: 0.9rem; color: #FFD700; }
-.hp-container { font-size: 1.2rem; letter-spacing: 2px; color: #ff5252; }
-.xp-bar-container { width: 100%; height: 8px; background: #455a64; border-radius: 4px; overflow: hidden; margin-top: 5px; }
-.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #00e676, #69f0ae); width: 0%; transition: width 0.5s ease-out; }
-.btn-home { color: #bdbdbd; text-decoration: none; font-size: 0.9rem; border: 1px solid #78909c; padding: 5px 10px; border-radius: 5px; }
+.top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
-/* === 房屋養成區 === */
-.house-container {
-    background: white; border-radius: 20px; padding: 15px; margin: 15px auto; max-width: 600px;
-    display: flex; align-items: center; justify-content: center; gap: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 2px solid #b2ebf2;
+.player-info { text-align: left; line-height: 1.2; }
+.player-name { font-size: 1.1rem; font-weight: 900; color: var(--text-color); display: block; }
+.level-badge { font-size: 0.9rem; background: #FFD700; color: #fff; padding: 2px 8px; border-radius: 10px; text-shadow: 1px 1px 0 rgba(0,0,0,0.2); }
+
+.hp-container { 
+    font-size: 1.2rem; letter-spacing: 2px; color: #ff5252; 
+    white-space: nowrap; /* 防止愛心換行 */
 }
-.house-label { font-weight: bold; color: #00bcd4; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 3px; }
-.house-icon { font-size: 4rem; transition: transform 0.3s; }
+
+.btn-home { 
+    background: #eceff1; color: #78909c; text-decoration: none; font-size: 0.9rem; 
+    padding: 8px 12px; border-radius: 12px; font-weight: bold;
+}
+
+.xp-bar-container { width: 100%; height: 10px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #69f0ae, #00c853); width: 0%; transition: width 0.5s ease-out; }
+.combo-text { position: absolute; top: 60px; right: 20px; font-size: 1.5rem; font-weight: 900; color: #ffca28; text-shadow: 2px 2px 0 #fff; transform: scale(0); transition: 0.3s; z-index: 101; }
+.combo-text.show { transform: scale(1); animation: pop 0.3s; }
+
+/* === 遊戲主容器 === */
+.container { max-width: 900px; margin: 0 auto; padding: 0 15px 50px; }
+
+/* === 房屋養成區 (重點設計) === */
+.house-section {
+    background: var(--house-bg);
+    border-radius: 30px;
+    padding: 10px;
+    margin-bottom: 25px;
+    position: relative;
+    border: 4px solid #fff;
+    box-shadow: 0 10px 20px rgba(179, 229, 252, 0.4);
+}
+
+.house-wrapper {
+    height: 140px; 
+    display: flex; justify-content: center; align-items: flex-end;
+    margin-bottom: 5px; position: relative;
+}
+.house-icon { 
+    font-size: 7rem; z-index: 2; cursor: pointer; 
+    filter: drop-shadow(0 8px 0 rgba(0,0,0,0.1));
+    transition: transform 0.2s;
+}
 .house-icon:hover { transform: scale(1.1); }
-#house-name { font-size: 1.2rem; font-weight: bold; color: #555; }
+.house-icon.bounce { animation: houseBounce 0.6s; }
 
-/* === 遊戲區 === */
-.container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
-.game-stage { background: white; border-radius: 20px; padding: 20px; margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative; }
-.question-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.q-tag { background: #00bcd4; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-.big-icon { font-size: 5rem; margin-top: 10px; }
-.cn-text { font-size: 1.5rem; color: #555; font-weight: bold; margin-bottom: 10px; background: #f5f5f5; display: inline-block; padding: 5px 20px; border-radius: 10px; }
+.house-base {
+    position: absolute; bottom: 5px; width: 140px; height: 15px;
+    background: rgba(129, 199, 132, 0.5); border-radius: 50%; z-index: 1;
+}
 
-/* 按鈕與操作 */
-.btn-group { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
-.btn-replay, .btn-hint { padding: 8px 15px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 0.9rem; color: white; box-shadow: 0 4px rgba(0,0,0,0.2); }
-.btn-replay { background: #ffca28; color: #333; }
-.btn-hint { background: #ab47bc; }
-.btn-replay:active, .btn-hint:active { transform: translateY(2px); box-shadow: none; }
-.hint-text { font-size: 3rem; font-weight: bold; color: #e91e63; letter-spacing: 5px; opacity: 0; transition: 0.5s; height: 50px; }
+.house-title { font-size: 1.2rem; font-weight: 900; color: #0277bd; background: #fff; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 5px;}
+.next-level-hint { font-size: 0.85rem; color: #78909c; margin: 0; }
+
+/* 氣泡對話框 */
+.house-bubble {
+    position: absolute; top: -15px; right: 5%;
+    background: #fff; color: var(--accent-pink);
+    padding: 8px 15px; border-radius: 20px; border: 2px solid var(--accent-pink);
+    font-weight: bold; font-size: 1rem; box-shadow: 3px 3px 0 rgba(0,0,0,0.05);
+    z-index: 10; opacity: 0; transform: translateY(10px); transition: 0.3s;
+}
+.house-bubble::after { content: ''; position: absolute; bottom: -8px; left: 20px; border-width: 8px 8px 0; border-style: solid; border-color: var(--accent-pink) transparent; }
+.house-bubble.show { opacity: 1; transform: translateY(0); }
+
+/* === 答題區 (Card Style) === */
+.game-stage {
+    background: var(--card-bg);
+    border-radius: 30px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+.question-header { display: flex; justify-content: center; margin-bottom: 15px; }
+.q-tag { background: var(--accent-blue); color: white; padding: 5px 20px; border-radius: 50px; font-weight: bold; font-size: 1rem; }
+
+/* 題目圖片與文字 */
+.question-area { margin-bottom: 20px; }
+.big-icon { font-size: 5rem; margin: 10px 0; animation: float 3s ease-in-out infinite; }
+.cn-text { 
+    font-size: 1.4rem; color: #795548; font-weight: bold; 
+    background: #efebe9; padding: 5px 25px; border-radius: 50px; 
+    display: inline-block; margin-bottom: 15px;
+}
+.hint-text { 
+    font-size: 3rem; font-weight: 900; color: var(--accent-pink); letter-spacing: 3px; 
+    opacity: 0; transition: 0.3s; height: 50px; margin: 5px 0; 
+}
 .hint-text.visible { opacity: 1; }
 
-.slots-container { display: flex; justify-content: center; gap: 5px; min-height: 50px; margin: 10px 0; flex-wrap: wrap; }
-.slot { width: 40px; height: 50px; border-bottom: 4px solid #333; font-size: 30px; font-weight: bold; color: #0097a7; display: flex; align-items: center; justify-content: center; }
-.btn-clear { background: #78909c; color: white; border: none; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-bottom: 15px; }
+/* 功能按鈕 (再唸一次/提示) */
+.btn-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+.btn-replay, .btn-hint {
+    border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; 
+    font-size: 1rem; cursor: pointer; color: white;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: 0.1s;
+    min-width: 140px; /* 確保手機上好按 */
+}
+.btn-replay { background: #ffca28; color: #5d4037; }
+.btn-hint { background: #ab47bc; }
+.btn-replay:active, .btn-hint:active { transform: translateY(3px); box-shadow: none; }
+.btn-hint:disabled { background: #e0e0e0; box-shadow: none; color: #999; cursor: not-allowed; }
 
-/* 字母按鈕與鎖定 */
-.pool-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.letter-btn { width: 50px; height: 50px; background: #00bcd4; color: white; font-size: 24px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px #00838f; transition: 0.1s; }
+/* 答案填空底線 */
+.slots-container { 
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; 
+    min-height: 60px; margin: 20px 0; 
+}
+.slot { 
+    width: 45px; height: 55px; 
+    border-bottom: 5px solid var(--slot-line); 
+    font-size: 32px; font-weight: 900; color: var(--accent-blue); 
+    display: flex; align-items: center; justify-content: center; 
+    background: #fafafa; border-radius: 10px 10px 0 0; /* 微圓角背景 */
+}
+
+/* 操作按鈕 (重寫) */
+.control-row { margin-bottom: 20px; }
+.btn-clear { 
+    background: #cfd8dc; color: #546e7a; border: none; 
+    padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold;
+}
+
+/* 字母按鈕池 */
+.pool-container { 
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; 
+    margin: 0 auto 20px; max-width: 600px;
+}
+.letter-btn { 
+    width: 55px; height: 55px; /* 大按鈕好點 */
+    background: white; border: 2px solid var(--accent-blue);
+    color: var(--accent-blue); font-size: 24px; font-weight: bold; 
+    border-radius: 15px; cursor: pointer; 
+    box-shadow: 0 4px 0 var(--accent-blue); transition: 0.1s;
+}
 .letter-btn:active { transform: translateY(4px); box-shadow: none; }
-.letter-btn.used { background: #cfd8dc; box-shadow: none; color: #90a4ae; cursor: default; }
+.letter-btn.used { 
+    background: #f5f5f5; border-color: #eee; color: #ddd; 
+    box-shadow: none; cursor: default; transform: translateY(4px);
+}
+
+/* 狀態訊息與下一題 */
+.result-msg { font-size: 1.5rem; margin-bottom: 15px; font-weight: bold; min-height: 1.5em; }
+.btn-next { 
+    background: var(--accent-green); color: white; border: none; 
+    padding: 15px 50px; border-radius: 50px; font-size: 1.5rem; font-weight: bold;
+    cursor: pointer; box-shadow: 0 6px 0 #2e7d32; 
+    animation: pop 0.6s infinite alternate; width: 100%; max-width: 300px;
+}
+
+/* 遊戲說明 */
+.game-rules {
+    background: rgba(255,255,255,0.6); padding: 20px; border-radius: 20px;
+    margin-top: 30px; text-align: left; font-size: 0.95rem; color: #607d8b;
+}
+.game-rules h3 { margin-top: 0; color: var(--accent-blue); text-align: center; }
+.game-rules li { margin-bottom: 8px; }
 
 /* 冷卻遮罩 */
 .freeze-msg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255,255,255,0.8); z-index: 50;
+    background: rgba(255,255,255,0.85); z-index: 50; border-radius: 30px;
     display: flex; justify-content: center; align-items: center;
-    color: #f44336; font-size: 2rem; font-weight: 900;
-    border-radius: 20px; animation: pulse 0.5s infinite;
+    color: #ef5350; font-size: 2rem; font-weight: 900;
 }
 
-.result-msg { font-size: 1.5rem; font-weight: bold; min-height: 1.5em; margin-bottom: 10px; }
-.btn-next { background: #43a047; color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 1.4rem; cursor: pointer; box-shadow: 0 5px #2e7d32; animation: pop 0.5s infinite alternate; }
-.game-rules { background: #e1f5fe; padding: 20px; border-radius: 15px; text-align: left; border: 2px dashed #81d4fa; margin-top: 30px; }
-.game-rules li { margin-bottom: 8px; color: #0277bd; }
-
-/* === 房屋養成區 (巨大化版) === */
-.house-section {
-    background: linear-gradient(to bottom, #e1f5fe, #ffffff);
-    border-radius: 30px;
-    padding: 20px;
-    margin: 20px auto;
-    max-width: 600px;
-    position: relative;
-    border: 5px solid #b3e5fc;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    overflow: visible; /* 讓氣泡可以突出去 */
+/* 升級視窗 */
+.levelup-card {
+    text-align: center; border-color: #FFD700;
+    background: radial-gradient(circle, #fff, #fffde7);
+}
+.levelup-header { font-size: 2rem; color: #ffab00; font-weight: 900; margin-bottom: 10px; }
+.new-house-icon { font-size: 6rem; margin: 15px 0; animation: houseBounce 1s infinite; }
+.btn-confirm { 
+    background: var(--accent-green); color: white; border: none; 
+    padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; font-weight: bold;
+    margin-top: 15px; box-shadow: 0 5px #2e7d32; cursor: pointer;
 }
 
-/* 房子包裝容器 */
-.house-wrapper {
-    position: relative;
-    height: 160px; /* 預留高度給大房子 */
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    margin-bottom: 10px;
-}
+/* === 動畫 Keyframes === */
+@keyframes pop { from { transform: scale(1); } to { transform: scale(1.05); } }
+@keyframes bounceIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes houseBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.shake-screen { animation: shake 0.4s; background: #ffcdd2; }
 
-/* 房子本體 (超級大) */
-.house-icon {
-    font-size: 9rem; /* 從 4rem 改成 9rem (超大!) */
-    line-height: 1;
-    z-index: 2;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
-    cursor: pointer;
-}
-
-/* 滑鼠移過去或是答對時會跳動 */
-.house-icon:hover, .house-icon.bounce {
-    transform: scale(1.2) translateY(-10px);
-}
-
-/* 房子底下的草地/地基 */
-.house-base {
-    position: absolute;
-    bottom: 10px;
-    width: 200px;
-    height: 20px;
-    background: #81c784;
-    border-radius: 50%;
-    z-index: 1;
-    opacity: 0.6;
-}
-
-/* 房屋名稱 */
-.house-title {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #0277bd;
-    background: #e1f5fe;
-    display: inline-block;
-    padding: 5px 20px;
-    border-radius: 20px;
-}
-
-.next-level-hint {
-    font-size: 0.9rem;
-    color: #888;
-    margin: 5px 0 0 0;
-}
-
-/* === 加油氣泡 (Speech Bubble) === */
-.house-bubble {
-    position: absolute;
-    top: -10px;
-    right: 10%; /* 放在房子右上方 */
-    background: #fff;
-    color: #e91e63;
-    padding: 10px 20px;
-    border-radius: 20px;
-    border: 3px solid #e91e63;
-    font-weight: bold;
-    font-size: 1.1rem;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
-    z-index: 10;
-    opacity: 0; /* 平常隱藏 */
-    transform: translateY(20px) scale(0.8);
-    transition: all 0.3s ease-out;
-    max-width: 200px;
-}
-
-/* 氣泡的小尾巴 */
-.house-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 20px;
-    border-width: 10px 10px 0;
-    border-style: solid;
-    border-color: #e91e63 transparent;
-    display: block;
-    width: 0;
-}
-
-/* 氣泡顯示時的動畫 */
-.house-bubble.show {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+/* === RWD 手機版專屬調整 (Media Queries) === */
+@media (max-width: 600px) {
+    /* 縮小標題 */
+    .start-modal h1 { font-size: 1.5rem; }
+    
+    /* HUD 變緊湊 */
+    .game-hud { padding: 10px; }
+    .hp-container { font-size: 1rem; letter-spacing: 1px; }
+    .btn-home { padding: 5px 10px; font-size: 0.8rem; }
+    
+    /* 房子不要太大，保留空間給答題 */
+    .house-icon { font-size: 5rem; }
+    .house-wrapper { height: 100px; }
+    .house-bubble { font-size: 0.8rem; padding: 5px 10px; right: 0; }
+    
+    /* 圖片與文字縮小 */
+    .big-icon { font-size: 4rem; }
+    .cn-text { font-size: 1.2rem; }
+    .hint-text { font-size: 2.2rem; }
+    
+    /* 填空底線縮小 */
+    .slot { width: 35px; height: 45px; font-size: 24px; border-width: 3px; }
+    
+    /* 字母按鈕適應手指 */
+    .pool-container { gap: 6px; }
+    .letter-btn { width: 48px; height: 48px; font-size: 20px; }
+    
+    /* 按鈕直排 */
+    .btn-group { flex-direction: column; width: 100%; }
+    .btn-replay, .btn-hint { width: 100%; }
 }
