@@ -1,12 +1,12 @@
 // ===================================================
 // 1. 遊戲參數與狀態
 // ===================================================
-const MAX_HP = 8;       // (雖然不顯示血條，但內部邏輯保留變數結構)
+const MAX_HP = 8;       // (保留變數但不顯示血條)
 const XP_WIN = 50;      // 答對 +50 XP
 const XP_LOSE = 30;     // 答錯 -30 XP
 const HINT_COST = 20;   // 偷看 -20 XP
 const REQUIRED_REVIEW_WINS = 3;
-const MASTERY_THRESHOLD = 5; // 連續答對5次降低權重
+const MASTERY_THRESHOLD = 5;
 
 // 房屋進化表 (20階段)
 const HOUSE_STAGES = [
@@ -27,7 +27,7 @@ let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 // 遊戲局狀態
 let currentCategory = "ALL";
-let questionBank = []; // 從 data.js 載入
+let questionBank = []; // 會從 data.js 載入
 let filteredQuestions = [];
 let currentQ = {};      
 let currentInput = [];  
@@ -45,12 +45,11 @@ const isTypingMode = () => document.getElementById('typing-input') !== null;
 window.onload = function() { 
     if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     
-    // 從外部 data.js 讀取單字庫
+    // 從 data.js 載入
     if (typeof VOCAB_DB !== 'undefined') {
         questionBank = VOCAB_DB['grade3']; 
     } else {
-        // Fallback 防呆 (如果 data.js 沒載入)
-        alert("錯誤：找不到 data.js，請檢查檔案！");
+        alert("錯誤：找不到 data.js，請確認檔案存在！");
         questionBank = [];
     }
 };
@@ -119,8 +118,8 @@ function nextQuestion() {
     } else {
         document.getElementById("freeze-overlay").style.display = "none";
         currentInput = [];
-        renderLetterPool();
-        renderSlots();
+        renderLetterPool(); // 產生按鈕
+        renderSlots();      // 產生格子
     }
 
     // 選題 (智慧權重)
@@ -206,8 +205,10 @@ function selectLetter(char, btnElement) {
     if (isFrozen) return;
     const cleanWord = currentQ.word.replace(/ /g, "");
     if (currentInput.length >= cleanWord.length) return;
+    
     try { speak(char); } catch(e){}
     currentInput.push(char);
+    
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
         if (currentQ.word[i] !== " " && slot && slot.innerText === "") {
@@ -254,10 +255,11 @@ function handleTypingInput(e) {
 // 5. 檢查答案
 // ===================================================
 function checkAnswer(playerAnswer) {
-    const targetWord = currentQ.word.replace(/ /g, "");
+    const cleanWord = currentQ.word.replace(/ /g, "");
     const cleanPlayerAns = playerAnswer.replace(/ /g, "").toUpperCase();
+    const msgDiv = document.getElementById("message-area");
 
-    if (cleanPlayerAns === targetWord) {
+    if (cleanPlayerAns === cleanWord) {
         // --- 答對 ---
         if(isTypingMode()) {
             document.getElementById('typing-input').classList.add('correct-anim');
@@ -266,7 +268,7 @@ function checkAnswer(playerAnswer) {
             document.getElementById("btn-clear").disabled = true;
         }
         document.getElementById("btn-hint").disabled = true;
-        document.getElementById("message-area").innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
+        msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
 
         gainXP(XP_WIN);
         updateLearningProgress(currentQ.word, true);
@@ -283,8 +285,8 @@ function checkAnswer(playerAnswer) {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
+        // 自動跳下一題 (如果有升級彈窗就不跳)
         if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
-            document.getElementById("next-btn").style.display = "inline-block";
             setTimeout(nextQuestion, 1500); 
         }
 
@@ -292,7 +294,8 @@ function checkAnswer(playerAnswer) {
         // --- 答錯 ---
         loseXP(XP_LOSE);
         updateLearningProgress(currentQ.word, false);
-        document.getElementById("message-area").innerHTML = "<span style='color:red'>❌ Wrong!</span>";
+        
+        msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         try { speak("Try again"); cheerHouse("加油！再試一次！🛡️"); } catch(e){}
         
         registerMistake(currentQ);
@@ -330,7 +333,8 @@ function checkAnswer(playerAnswer) {
 function getLevelThreshold(level) {
     let totalReq = 0;
     for(let i = 1; i <= level; i++) {
-        // 每一級需要的經驗值公式：50 * (等級+1)
+        // 公式：每一級增加 50 * (等級+1)
+        // Lv1: 100, Lv2: 150, Lv3: 200...
         totalReq += (50 * (i + 1)); 
     }
     return totalReq;
@@ -346,11 +350,11 @@ function updateHUD() {
     document.getElementById("level-display").innerText = player.level;
     document.getElementById("ticket-count").innerText = player.freeHints;
     
-    // 計算累加制的進度
-    const nextLevelTotal = getLevelThreshold(player.level); // 下一級目標
-    const prevLevelTotal = getPrevLevelThreshold(player.level); // 這一級起點
+    // 1. 計算區間
+    const nextLevelTotal = getLevelThreshold(player.level); // 下一級目標 (例: 250)
+    const prevLevelTotal = getPrevLevelThreshold(player.level); // 上一級門檻 (例: 100)
     
-    // 計算百分比： (目前 - 起點) / (目標 - 起點)
+    // 2. 計算進度條百分比
     const levelRange = nextLevelTotal - prevLevelTotal;
     const currentProgress = player.currentXP - prevLevelTotal;
     
@@ -360,22 +364,20 @@ function updateHUD() {
     
     document.getElementById("xp-bar").style.width = percentage + "%";
     
-    // 顯示：目前總經驗 / 下一級總目標 (例如 120 / 250 XP)
-    if(document.getElementById("xp-text-overlay")) {
-        // 修正：有些html版本可能用 id="xp-display-text"
-        const textSpan = document.getElementById("xp-display-text") || document.querySelector(".xp-text-overlay span");
-        if(textSpan) textSpan.innerText = `${player.currentXP} / ${nextLevelTotal} XP`;
-        else if(document.querySelector(".xp-text-overlay")) document.querySelector(".xp-text-overlay").innerText = `${player.currentXP} / ${nextLevelTotal} XP`;
-    } else if (document.getElementById("xp-current")) {
-        // 相容舊版 html
-        document.getElementById("xp-current").innerText = player.currentXP;
-        document.getElementById("xp-max").innerText = nextLevelTotal;
+    // 3. 顯示文字：目前總經驗 / 下一級總門檻
+    const displayStr = `${player.currentXP} / ${nextLevelTotal} XP`;
+    if(document.getElementById("xp-display-text")) {
+        document.getElementById("xp-display-text").innerText = displayStr;
+    } else {
+        const overlay = document.querySelector(".xp-text-overlay");
+        if(overlay) overlay.innerText = displayStr;
     }
 }
 
 function showXPGainEffect(amount, isGain) {
     const hud = document.querySelector('.xp-bar-container');
     if(!hud) return;
+    
     const floatText = document.createElement('div');
     floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
     floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
@@ -394,9 +396,10 @@ function gainXP(amount) {
     player.currentXP += amount;
     showXPGainEffect(amount, true);
     
-    // 檢查是否升級
+    // 檢查是否達到總門檻
     const threshold = getLevelThreshold(player.level);
     if (player.currentXP >= threshold) {
+        // 升級時【不歸零】，保留總經驗值
         levelUp();
     } else {
         updateHUD();
@@ -408,9 +411,11 @@ function loseXP(amount) {
     
     player.currentXP -= amount;
     
-    // 保護機制：不能掉級
+    // 保護機制：經驗值不能低於「上一級的門檻」 (不掉級)
     const minXP = getPrevLevelThreshold(player.level);
-    if (player.currentXP < minXP) player.currentXP = minXP;
+    if (player.currentXP < minXP) {
+        player.currentXP = minXP;
+    }
     
     showXPGainEffect(amount, false);
     
@@ -418,6 +423,7 @@ function loseXP(amount) {
         document.body.classList.add("shake-screen");
         setTimeout(() => document.body.classList.remove("shake-screen"), 500);
     } catch(e){}
+    
     updateHUD();
 }
 
@@ -430,13 +436,16 @@ function levelUp() {
     try{ speak("Level Up!"); fireConfetti(); }catch(e){}
     
     const modal = document.getElementById("levelup-modal");
-    document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
+    if(modal) {
+        document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
+        
+        let nextStageIndex = player.level - 1;
+        if (nextStageIndex >= HOUSE_STAGES.length) nextStageIndex = HOUSE_STAGES.length - 1;
+        document.getElementById("levelup-house").innerText = HOUSE_STAGES[nextStageIndex].icon;
+        
+        modal.style.display = "flex";
+    }
     
-    let nextStageIndex = player.level - 1;
-    if (nextStageIndex >= HOUSE_STAGES.length) nextStageIndex = HOUSE_STAGES.length - 1;
-    document.getElementById("levelup-house").innerText = HOUSE_STAGES[nextStageIndex].icon;
-    
-    modal.style.display = "flex";
     updateHouse();
     cheerHouse("太棒了！房子升級囉！🎉");
 }
@@ -449,7 +458,7 @@ function updateHouse() {
     if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
 }
 
-// ... (提示功能) ...
+// ... (以下為輔助功能) ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if(!btn) return;
@@ -475,7 +484,7 @@ function showHint() {
             hasUsedHint = true;
             updateHUD();
         } else {
-            alert("經驗值不足，無法偷看！");
+            alert("經驗值不足，無法偷看！加油再試試！");
             return;
         }
     }
