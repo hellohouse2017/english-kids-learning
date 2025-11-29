@@ -1,8 +1,8 @@
-// data.js - 獨立單字資料庫
-const VOCAB_DB = {
-    // === 三年級單字 (Grade 3) ===
+// data.js - 國小英語單字庫 (掛載於 window 物件)
+
+window.VOCAB_DB = {
     "grade3": [
-        // 動物
+        // === 動物 ===
         { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, 
         { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
         { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" }, 
@@ -18,7 +18,7 @@ const VOCAB_DB = {
         { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" }, 
         { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
         
-        // 顏色
+        // === 顏色 ===
         { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }, 
         { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
         { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" }, 
@@ -29,7 +29,7 @@ const VOCAB_DB = {
         { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
         { word: "PINK", icon: "🩷", cn: "粉紅色", cat: "color" },
 
-        // 數字
+        // === 數字 ===
         { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" }, 
         { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
         { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" }, 
@@ -41,7 +41,7 @@ const VOCAB_DB = {
         { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" }, 
         { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
 
-        // 食物
+        // === 食物 ===
         { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }, 
         { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
         { word: "ORANGE", icon: "🍊", cn: "柳橙", cat: "food" }, 
@@ -55,11 +55,11 @@ const VOCAB_DB = {
         { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" }, 
         { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
 
-        // 身體
+        // === 身體 ===
         { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" }, 
         { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
         { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" }, 
-        { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
+        { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" }, 
         { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" }, 
         { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
         { word: "LEG", icon: "🦵", cn: "腿", cat: "body" }, 
@@ -67,7 +67,7 @@ const VOCAB_DB = {
         { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" }, 
         { word: "FACE", icon: "😀", cn: "臉", cat: "body" },
 
-        // 用品與其他
+        // === 用品與其他 ===
         { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" }, 
         { word: "PENCIL", icon: "✏️", cn: "鉛筆", cat: "item" },
         { word: "BOOK", icon: "📖", cn: "書", cat: "item" }, 
@@ -83,7 +83,7 @@ const VOCAB_DB = {
         { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
         { word: "ROBOT", icon: "🤖", cn: "機器人", cat: "item" },
         
-        // 家庭
+        // === 家庭 ===
         { word: "DAD", icon: "👨", cn: "爸爸", cat: "family" }, 
         { word: "MOM", icon: "👩", cn: "媽媽", cat: "family" },
         { word: "BOY", icon: "👦", cn: "男孩", cat: "family" }, 
@@ -91,9 +91,8 @@ const VOCAB_DB = {
         { word: "BABY", icon: "👶", cn: "嬰兒", cat: "family" }, 
         { word: "KING", icon: "👑", cn: "國王", cat: "family" }
     ],
-
-    // === 未來可擴充四年級 (Grade 4) ===
-    "grade4": [
-        // 這裡可以放四年級的單字...
-    ]
+    // 這裡預留給四年級
+    "grade4": []
 };
+
+console.log("Data.js loaded successfully!"); // 除錯用，打開 F12 會看到這行

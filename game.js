@@ -1,6 +1,7 @@
 // ===================================================
 // 1. 遊戲參數與狀態
 // ===================================================
+const MAX_HP = 8;
 const XP_WIN = 50;      // 答對 +50 XP
 const XP_LOSE = 30;     // 答錯 -30 XP
 const HINT_COST = 20;   // 偷看 -20 XP
@@ -26,7 +27,7 @@ let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 // 遊戲局狀態
 let currentCategory = "ALL";
-let questionBank = []; // 會從 data.js 載入
+let questionBank = []; // 空陣列，等待從 data.js 載入
 let filteredQuestions = [];
 let currentQ = {};      
 let currentInput = [];  
@@ -39,17 +40,23 @@ let learningProgress = JSON.parse(localStorage.getItem('english_rpg_progress')) 
 const isTypingMode = () => document.getElementById('typing-input') !== null;
 
 // ===================================================
-// 2. 初始化 (讀取外部單字庫)
+// 2. 初始化 (讀取 window.VOCAB_DB)
 // ===================================================
 window.onload = function() { 
+    // 1. 預載語音
     if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     
-    // ★ 關鍵：從外部 data.js 讀取單字庫
-    if (typeof VOCAB_DB !== 'undefined') {
-        questionBank = VOCAB_DB['grade3']; 
+    // 2. ★ 關鍵：檢查 data.js 是否載入成功
+    if (window.VOCAB_DB && window.VOCAB_DB['grade3']) {
+        questionBank = window.VOCAB_DB['grade3']; 
+        console.log("GameJS: 成功讀取單字庫，共 " + questionBank.length + " 個字。");
     } else {
-        alert("錯誤：無法讀取單字庫 (data.js)。請確保檔案存在且語法正確。");
-        questionBank = [];
+        // 如果讀取失敗，使用一個緊急備用題庫，防止卡死
+        alert("⚠️ 警告：找不到單字庫 (data.js)。請檢查檔案是否在同一資料夾。目前使用備用題庫。");
+        questionBank = [
+            { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" },
+            { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }
+        ];
     }
 };
 
@@ -72,6 +79,8 @@ function goToCategorySelect(gender) {
 
 function startGame(category) {
     currentCategory = category;
+    
+    // 過濾題目
     if (category === 'ALL') {
         filteredQuestions = questionBank;
         if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = "隨機挑戰";
@@ -81,14 +90,16 @@ function startGame(category) {
         if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = map[category] || category;
     }
 
-    // 防呆：如果沒題目，就載入全部
-    if(filteredQuestions.length === 0) filteredQuestions = questionBank;
+    // 防呆：如果該類別沒題目
+    if (!filteredQuestions || filteredQuestions.length === 0) {
+        alert("這個類別沒有題目，將使用全部題目！");
+        filteredQuestions = questionBank;
+    }
 
     document.getElementById('category-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('game-container').style.display = 'block';
     
-    // 綁定打字輸入事件
     if(isTypingMode()) {
         const input = document.getElementById('typing-input');
         input.addEventListener('input', handleTypingInput);
@@ -129,12 +140,17 @@ function nextQuestion() {
     } else {
         document.getElementById("freeze-overlay").style.display = "none";
         currentInput = [];
-        // ★ 確保每次都重新產生按鈕
-        renderLetterPool();
-        renderSlots();
+        renderLetterPool(); // 產生按鈕
+        renderSlots();      // 產生格子
     }
 
     currentQ = getWeightedQuestion();
+    
+    // ★ 防卡死檢查：確保 currentQ 是有效的
+    if (!currentQ || !currentQ.word) {
+        console.error("選題失敗！使用預設題目");
+        currentQ = { word: "BUG", icon: "🐛", cn: "錯誤", cat: "none" };
+    }
     
     document.getElementById("image-area").innerText = currentQ.icon;
     document.getElementById("hint-overlay").innerText = currentQ.word;
@@ -143,6 +159,7 @@ function nextQuestion() {
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
+// 智慧選題演算法
 function getWeightedQuestion() {
     if (isReviewMode) {
         const mistakes = Object.keys(mistakeRegistry);
@@ -181,7 +198,7 @@ function updateLearningProgress(word, isCorrect) {
 }
 
 // ===================================================
-// 4. 輸入處理 (UI Logic)
+// 4. 輸入處理
 // ===================================================
 function renderSlots() {
     const slotsDiv = document.getElementById("answer-slots");
@@ -260,20 +277,15 @@ function handleTypingInput(e) {
 }
 
 // ===================================================
-// 5. 判斷對錯與XP
+// 5. 判斷對錯
 // ===================================================
 function checkAnswer(playerAnswer) {
-    // 按鈕模式補完答案
-    if (!playerAnswer && !isTypingMode()) {
-        playerAnswer = currentInput.join("");
-    }
-
+    if (!playerAnswer && !isTypingMode()) { playerAnswer = currentInput.join(""); }
     const cleanWord = currentQ.word.replace(/ /g, "");
     const cleanPlayerAns = playerAnswer.replace(/ /g, "").toUpperCase();
     const msgDiv = document.getElementById("message-area");
 
     if (cleanPlayerAns === cleanWord) {
-        // --- 答對 ---
         if(isTypingMode()) {
             document.getElementById('typing-input').classList.add('correct-anim');
             document.getElementById('typing-input').disabled = true;
@@ -298,13 +310,11 @@ function checkAnswer(playerAnswer) {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
-        // 自動跳下一題 (如果沒升級)
         if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
             setTimeout(nextQuestion, 1500); 
         }
 
     } else {
-        // --- 答錯 ---
         loseXP(XP_LOSE);
         updateLearningProgress(currentQ.word, false);
         msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
@@ -363,12 +373,10 @@ function updateHUD() {
     
     document.getElementById("xp-bar").style.width = percentage + "%";
     
-    // 顯示：目前總經驗 / 下一級總門檻
     const displayStr = `${player.currentXP} / ${nextLevelTotal} XP`;
     if(document.getElementById("xp-display-text")) {
         document.getElementById("xp-display-text").innerText = displayStr;
     } else {
-        // Fallback
         const overlay = document.querySelector(".xp-text-overlay");
         if(overlay) overlay.innerText = displayStr;
     }
@@ -380,11 +388,9 @@ function showXPGainEffect(amount, isGain) {
     const floatText = document.createElement('div');
     floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
     floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
-    
     const rect = hud.getBoundingClientRect();
     floatText.style.top = (rect.top - 30) + 'px';
     floatText.style.left = (rect.left + rect.width / 2) + 'px';
-    
     document.body.appendChild(floatText);
     setTimeout(() => { floatText.remove(); }, 1200);
 }
@@ -393,10 +399,8 @@ function gainXP(amount) {
     if (isReviewMode) return;
     player.currentXP += amount;
     showXPGainEffect(amount, true);
-    
-    const threshold = getLevelThreshold(player.level);
-    if (player.currentXP >= threshold) {
-        levelUp();
+    if (player.currentXP >= getLevelThreshold(player.level)) {
+        levelUp(); // 升級時不歸零
     } else {
         updateHUD();
     }
@@ -405,10 +409,8 @@ function gainXP(amount) {
 function loseXP(amount) {
     if (isReviewMode) return;
     player.currentXP -= amount;
-    // 保護：不掉級
     const minXP = getPrevLevelThreshold(player.level);
     if (player.currentXP < minXP) player.currentXP = minXP;
-    
     showXPGainEffect(amount, false);
     try {
         document.body.classList.add("shake-screen");
@@ -421,7 +423,6 @@ function levelUp() {
     player.level++;
     if (player.level > 20) player.level = 20;
     player.freeHints++; 
-    
     updateHUD();
     try{ speak("Level Up!"); fireConfetti(); }catch(e){}
     
@@ -474,7 +475,6 @@ function showHint() {
             return;
         }
     }
-
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
     hintBox.classList.add("visible");
