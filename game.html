@@ -14,23 +14,34 @@
     </nav>
 
     <div class="container">
-        <div class="game-stage">
-            <h2 id="question-text">拼出這個單字！</h2>
+        <div class="container">
+    <div class="game-header">
+        <span class="level-badge">第 <span id="q-count">1</span> 題</span>
+        <div class="score-box">🏆 分數: <span id="score-board">0</span></div>
+    </div>
+
+    <div class="game-stage">
+        <h2 id="question-text">聽聲音，拼單字！</h2>
+        
+        <div class="question-area">
+            <div id="image-area" class="big-icon">🍎</div>
             
-            <div id="image-area" style="font-size: 80px; margin: 20px;">
-                🍎
-            </div>
-
-            <div id="answer-slots" class="slots-container">
-                </div>
-
-            <div id="letter-pool" class="pool-container">
-                </div>
-
-            <div id="message-area" class="result-msg"></div>
-
-            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一題 ➔</button>
+            <button onclick="playCurrentWord()" class="btn-replay">
+                🔊 再唸一次
+            </button>
         </div>
+
+        <div id="answer-slots" class="slots-container"></div>
+
+        <div id="letter-pool" class="pool-container"></div>
+
+        <div id="message-area" class="result-msg"></div>
+
+        <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">
+            下一題 ➔
+        </button>
+    </div>
+</div>
     </div>
 
     <script src="game.js"></script>
