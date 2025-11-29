@@ -10,7 +10,9 @@
     <div class="container main-menu-container">
         <header>
             <h1 class="main-title">🎈 Happy English</h1>
-            <p style="font-size: 1.2rem; color: #795548;">準備好開始冒險了嗎？</p>
+            <p style="font-size: 1.3rem; color: #795548; font-weight: bold;">
+                準備好開始冒險了嗎？
+            </p>
         </header>
 
         <div class="menu-grid">
@@ -33,9 +35,33 @@
             </a>
         </div>
         
-        <footer>
-            <p>Keep going! You are the best! 🌟</p>
+        <footer class="game-footer">
+            <div class="footer-content">
+                <div class="counter-box">
+                    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        👀 本站總瀏覽：<span id="busuanzi_value_site_pv" class="highlight-num">...</span> 次
+                    </span>
+                </div>
+
+                <div class="date-box">
+                    🕒 更新：<span id="last-updated">讀取中...</span>
+                </div>
+                
+                <p class="copyright">© 2025 Happy English RPG. Keep Learning!</p>
+            </div>
         </footer>
     </div>
+
+    <script>
+        // 自動顯示網頁最後更新日期
+        const date = new Date(document.lastModified);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        
+        // 顯示格式：YYYY/MM/DD
+        document.getElementById('last-updated').innerText = `${year}/${month}/${day}`;
+    </script>
 </body>
 </html>
