@@ -1,5 +1,4 @@
-// data.js - 獨立單字庫
-
+// data.js - 獨立單字資料庫
 const VOCAB_DB = {
     // === 三年級單字 (Grade 3) ===
     "grade3": [
@@ -82,12 +81,15 @@ const VOCAB_DB = {
         { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, 
         { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
         { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
-        { word: "DAD", icon: "👨", cn: "爸爸" }, 
-        { word: "MOM", icon: "👩", cn: "媽媽" },
-        { word: "BOY", icon: "👦", cn: "男孩" }, 
-        { word: "GIRL", icon: "👧", cn: "女孩" },
-        { word: "BABY", icon: "👶", cn: "嬰兒" }, 
-        { word: "KING", icon: "👑", cn: "國王" }
+        { word: "ROBOT", icon: "🤖", cn: "機器人", cat: "item" },
+        
+        // 家庭
+        { word: "DAD", icon: "👨", cn: "爸爸", cat: "family" }, 
+        { word: "MOM", icon: "👩", cn: "媽媽", cat: "family" },
+        { word: "BOY", icon: "👦", cn: "男孩", cat: "family" }, 
+        { word: "GIRL", icon: "👧", cn: "女孩", cat: "family" },
+        { word: "BABY", icon: "👶", cn: "嬰兒", cat: "family" }, 
+        { word: "KING", icon: "👑", cn: "國王", cat: "family" }
     ],
 
     // === 未來可擴充四年級 (Grade 4) ===

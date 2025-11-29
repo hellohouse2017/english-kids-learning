@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Level 1: 單字圖鑑</title>
     <link rel="stylesheet" href="style.css">
+    <script src="data.js"></script>
 </head>
 <body>
     <nav class="game-hud" style="justify-content: space-between; display: flex; align-items: center;">
@@ -15,7 +16,6 @@
     <div class="container">
         <p style="margin: 20px 0; color: #795548;">點擊卡片聽聽看怎麼唸！(Click to listen)</p>
         <div id="vocab-container"></div>
-        
         <footer class="game-footer">
             <div class="footer-content">
                 <div class="date-box">🕒 更新：<span id="last-updated">...</span></div>
@@ -24,54 +24,48 @@
     </div>
 
     <script>
-        const vocabData = {
-            "🐶 動物 (Animals)": [
-                { w: "Cat", i: "🐱", c: "貓" }, { w: "Dog", i: "🐶", c: "狗" }, { w: "Pig", i: "🐷", c: "豬" },
-                { w: "Bird", i: "🐦", c: "鳥" }, { w: "Fish", i: "🐟", c: "魚" }, { w: "Lion", i: "🦁", c: "獅子" },
-                { w: "Tiger", i: "🐯", c: "老虎" }, { w: "Bear", i: "🐻", c: "熊" }, { w: "Elephant", i: "🐘", c: "大象" }
-            ],
-            "🎨 顏色 (Colors)": [
-                { w: "Red", i: "🔴", c: "紅色" }, { w: "Blue", i: "🔵", c: "藍色" }, { w: "Yellow", i: "🟡", c: "黃色" },
-                { w: "Green", i: "🟢", c: "綠色" }, { w: "Orange", i: "🟠", c: "橘色" }, { w: "Purple", i: "🟣", c: "紫色" },
-                { w: "Black", i: "⚫", c: "黑色" }, { w: "White", i: "⚪", c: "白色" }
-            ],
-            "🔢 數字 (Numbers)": [
-                { w: "One", i: "1️⃣", c: "一" }, { w: "Two", i: "2️⃣", c: "二" }, { w: "Three", i: "3️⃣", c: "三" },
-                { w: "Four", i: "4️⃣", c: "四" }, { w: "Five", i: "5️⃣", c: "五" }, { w: "Six", i: "6️⃣", c: "六" },
-                { w: "Seven", i: "7️⃣", c: "七" }, { w: "Eight", i: "8️⃣", c: "八" }, { w: "Nine", i: "9️⃣", c: "九" }, { w: "Ten", i: "🔟", c: "十" }
-            ],
-            "🍎 食物 (Food)": [
-                { w: "Apple", i: "🍎", c: "蘋果" }, { w: "Banana", i: "🍌", c: "香蕉" }, { w: "Egg", i: "🥚", c: "蛋" },
-                { w: "Milk", i: "🥛", c: "牛奶" }, { w: "Cake", i: "🍰", c: "蛋糕" }, { w: "Ice Cream", i: "🍦", c: "冰淇淋" },
-                { w: "Pizza", i: "🍕", c: "披薩" }, { w: "Hamburger", i: "🍔", c: "漢堡" }
-            ],
-            "🖐️ 身體 (Body)": [
-                { w: "Head", i: "🗣️", c: "頭" }, { w: "Eye", i: "👁️", c: "眼睛" }, { w: "Ear", i: "👂", c: "耳朵" },
-                { w: "Nose", i: "👃", c: "鼻子" }, { w: "Mouth", i: "👄", c: "嘴巴" }, { w: "Hand", i: "🖐️", c: "手" }
-            ]
-        };
-
-        const container = document.getElementById('vocab-container');
-        for (const [category, words] of Object.entries(vocabData)) {
-            const title = document.createElement('h2');
-            title.style.cssText = "background:#fff; padding:10px 20px; border-radius:20px; color:#ff9800; display:inline-block; margin-top:30px;";
-            title.innerText = category;
-            container.appendChild(title);
-
-            const grid = document.createElement('div');
-            grid.className = 'pool-container'; grid.style.marginBottom = "20px";
-
-            words.forEach(item => {
-                const card = document.createElement('div');
-                card.style.cssText = "background:white; border:2px solid #ddd; border-radius:15px; padding:15px; width:120px; cursor:pointer; box-shadow:0 4px 0 #ddd; transition:0.1s;";
-                card.onclick = () => { card.style.transform = "scale(0.95)"; setTimeout(()=>card.style.transform="scale(1)",100); speak(item.w); };
-                card.innerHTML = `<div style="font-size:3rem; margin-bottom:5px;">${item.i}</div><div style="font-weight:bold; color:#333;">${item.w}</div><div style="font-size:0.9rem; color:#888;">${item.c}</div>`;
-                grid.appendChild(card);
+        function loadVocab() {
+            if (typeof VOCAB_DB === 'undefined') return;
+            const rawData = VOCAB_DB['grade3'];
+            const categories = {
+                "animal": "🐶 動物 (Animals)",
+                "food": "🍎 食物 (Food)",
+                "color": "🎨 顏色 (Colors)",
+                "number": "🔢 數字 (Numbers)",
+                "body": "🖐️ 身體 (Body)",
+                "item": "🎒 用品 (Items)",
+                "family": "👨‍👩‍👧 家庭 (Family)"
+            };
+            const groupedData = {};
+            rawData.forEach(item => {
+                const catName = categories[item.cat] || "其他";
+                if (!groupedData[catName]) groupedData[catName] = [];
+                groupedData[catName].push({ w: item.word, i: item.icon, c: item.cn });
             });
-            container.appendChild(grid);
+
+            const container = document.getElementById('vocab-container');
+            for (const [category, words] of Object.entries(groupedData)) {
+                const title = document.createElement('h2');
+                title.style.cssText = "background:#fff; padding:10px 20px; border-radius:20px; color:#ff9800; display:inline-block; margin-top:30px;";
+                title.innerText = category;
+                container.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'pool-container'; grid.style.marginBottom = "20px";
+
+                words.forEach(item => {
+                    const card = document.createElement('div');
+                    card.style.cssText = "background:white; border:2px solid #ddd; border-radius:15px; padding:15px; width:120px; cursor:pointer; box-shadow:0 4px 0 #ddd; transition:0.1s;";
+                    card.onclick = () => { card.style.transform = "scale(0.95)"; setTimeout(()=>card.style.transform="scale(1)",100); speak(item.w); };
+                    card.innerHTML = `<div style="font-size:3rem; margin-bottom:5px;">${item.i}</div><div style="font-weight:bold; color:#333;">${item.w}</div><div style="font-size:0.9rem; color:#888;">${item.c}</div>`;
+                    grid.appendChild(card);
+                });
+                container.appendChild(grid);
+            }
         }
 
         function speak(text) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.toLowerCase()); u.lang='en-US'; window.speechSynthesis.speak(u); }
+        window.onload = loadVocab;
         const date = new Date(document.lastModified);
         document.getElementById('last-updated').innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`;
     </script>

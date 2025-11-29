@@ -51,15 +51,14 @@
         </div>
         <div class="xp-bar-container">
             <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
-            <div class="xp-text-overlay"><span id="xp-display-text">0 / 100 XP</span></div>
+            <div class="xp-text-overlay" id="xp-display-text">0 / 100 XP</div>
         </div>
     </div>
 
     <div class="container" id="game-container" style="display:none;">
-        
         <div class="dashboard-wrapper">
             <div class="house-section">
-                <div id="house-msg" class="house-bubble">用鍵盤輸入單字！</div>
+                <div id="house-msg" class="house-bubble">用鍵盤輸入！</div>
                 <div class="house-wrapper">
                     <div id="my-house-icon" class="house-icon">🌲</div>
                     <div class="house-base"></div>
@@ -68,13 +67,12 @@
                     <div id="house-name" class="house-title">荒野樹林</div>
                 </div>
             </div>
-            
             <div class="game-rules-panel">
                 <h3>⌨️ 打字模式</h3>
                 <ul>
                     <li>🎯 <b>機制：</b> 不提供字母，請看圖打字。</li>
-                    <li>🔥 <b>加權：</b> 答錯的字會更常出現喔！</li>
-                    <li>✅ <b>目標：</b> 每個字連續答對 5 次才算精通。</li>
+                    <li>🔥 <b>目標：</b> 每個字連續答對 5 次精通。</li>
+                    <li>⏩ <b>自動：</b> 答對自動下一題。</li>
                 </ul>
             </div>
         </div>
@@ -89,7 +87,6 @@
                 <div id="image-area" class="big-icon">❓</div>
                 <div id="cn-meaning" class="cn-text">蘋果</div>
                 <div id="hint-overlay" class="hint-text">APPLE</div>
-
                 <div class="btn-group">
                     <button onclick="playCurrentWord()" class="btn-replay">🔊 再唸一次</button>
                     <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看 (-20 XP)</button>
