@@ -490,4 +490,11 @@ function hideCombo() {
 }
 
 function fireConfetti() {
-    if (typeof
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    }
+}
