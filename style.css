@@ -1,3 +1,5 @@
+/* style.css - 升級版 */
+
 :root {
     --bg-gradient-start: #fff9c4;
     --bg-gradient-end: #fff176;
@@ -9,8 +11,6 @@
     --accent-green: #81c784;
     --house-bg: #e1f5fe;
     --slot-line: #bcaaa4;
-    --level1-color: #4caf50;
-    --level2-color: #e91e63;
 }
 
 * { box-sizing: border-box; }
@@ -22,26 +22,7 @@ body {
     text-align: center; overflow-x: hidden;
 }
 
-/* === 首頁與通用 === */
-.container { max-width: 900px; margin: 0 auto; padding: 0 15px 50px; }
-.main-title { font-size: 3rem; color: #ff9800; text-shadow: 2px 2px 0 #fff; margin-bottom: 5px; margin-top: 30px; }
-
-/* Menu Grid */
-.menu-grid { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
-.menu-card {
-    background: white; border-radius: 20px; padding: 20px; display: flex; align-items: center;
-    text-decoration: none; color: #333; box-shadow: 0 6px 0 rgba(0,0,0,0.1); transition: transform 0.1s;
-    border: 3px solid transparent;
-}
-.menu-card:active { transform: scale(0.98); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
-.menu-card.level-1 { border-color: var(--level1-color); }
-.menu-card.level-2 { border-color: var(--level2-color); }
-.card-icon { font-size: 4rem; margin-right: 20px; }
-.card-content h2 { margin: 0; font-size: 1.5rem; }
-.card-content p { margin: 5px 0 10px; color: #666; }
-.tag { background: #eee; padding: 5px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; }
-
-/* === 遮罩與開始畫面 === */
+/* === 通用遮罩 === */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
@@ -51,6 +32,8 @@ body {
     background: #fff; padding: 30px; border-radius: 30px; width: 100%; max-width: 450px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 5px solid #fff; animation: bounceIn 0.5s;
 }
+
+/* === 開始畫面 === */
 .start-modal h1 { color: var(--accent-blue); margin-bottom: 20px; font-size: 1.8rem; }
 .input-group label { display: block; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; color: #8d6e63; }
 .input-group input { width: 100%; padding: 12px; font-size: 1.2rem; border-radius: 12px; border: 3px solid #eee; text-align: center; color: var(--text-color); }
@@ -65,6 +48,20 @@ body {
 .male { background: var(--accent-blue); }
 .female { background: var(--accent-pink); }
 
+/* === 關卡選擇 (新) === */
+.category-modal h2 { color: #f57c00; margin-bottom: 20px; }
+.category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.btn-cat {
+    padding: 15px; font-size: 1.1rem; border: none; border-radius: 15px;
+    cursor: pointer; font-weight: bold; background: #e0f7fa; color: #006064;
+    box-shadow: 0 4px 0 #b2ebf2; transition: 0.1s;
+}
+.btn-cat:active { transform: translateY(3px); box-shadow: none; }
+.btn-cat.rainbow {
+    grid-column: span 2; background: linear-gradient(45deg, #ffcdd2, #e1bee7, #c5cae9);
+    color: #4a148c; box-shadow: 0 4px 0 #b39ddb;
+}
+
 /* === HUD === */
 .game-hud {
     background: rgba(255, 255, 255, 0.95); padding: 10px 20px;
@@ -72,18 +69,23 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; margin-bottom: 20px;
 }
-.top-row { display: flex; justify-content: space-between; align-items: center; }
+.top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .player-info { text-align: left; }
 .player-name { font-size: 1.1rem; font-weight: 900; color: var(--text-color); display: block; }
 .level-badge { font-size: 0.9rem; background: #FFD700; color: #fff; padding: 2px 8px; border-radius: 10px; }
 .hp-container { font-size: 1.2rem; letter-spacing: 2px; color: #ff5252; white-space: nowrap; }
+
+/* 道具欄 (新) */
+.item-container { background: #fff9c4; padding: 5px 10px; border-radius: 15px; font-size: 0.9rem; font-weight: bold; color: #f57c00; border: 1px solid #ffe082; }
+
 .btn-home { background: #eceff1; color: #78909c; text-decoration: none; font-size: 0.9rem; padding: 8px 12px; border-radius: 12px; font-weight: bold; }
-.xp-bar-container { width: 100%; height: 10px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+.xp-bar-container { width: 100%; height: 16px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 5px; position: relative; }
 .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #69f0ae, #00c853); width: 0%; transition: width 0.5s ease-out; }
+.xp-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #555; font-weight: bold; }
 .combo-text { position: absolute; top: 60px; right: 20px; font-size: 1.5rem; font-weight: 900; color: #ffca28; text-shadow: 2px 2px 0 #fff; transform: scale(0); transition: 0.3s; z-index: 101; }
 .combo-text.show { transform: scale(1); animation: pop 0.3s; }
 
-/* === Dashboard (並排區塊) === */
+/* === Dashboard === */
 .dashboard-wrapper { display: flex; gap: 20px; margin-bottom: 25px; align-items: stretch; }
 .house-section {
     flex: 1.5; background: var(--house-bg); border-radius: 30px; padding: 15px;
@@ -99,7 +101,6 @@ body {
 .game-rules-panel ul { padding-left: 20px; margin: 0; }
 .game-rules-panel li { margin-bottom: 6px; line-height: 1.4; }
 
-/* 房子樣式 */
 .house-wrapper { height: 120px; display: flex; justify-content: center; align-items: flex-end; margin-bottom: 5px; position: relative; }
 .house-icon { font-size: 6rem; z-index: 2; cursor: pointer; filter: drop-shadow(0 8px 0 rgba(0,0,0,0.1)); transition: transform 0.2s; }
 .house-icon:hover { transform: scale(1.1); }
@@ -113,16 +114,21 @@ body {
 
 /* === 答題區 === */
 .game-stage { background: var(--card-bg); border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 15px 50px; }
+.question-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
 .q-tag { background: var(--accent-blue); color: white; padding: 5px 20px; border-radius: 50px; font-weight: bold; }
+
 .question-area { margin-bottom: 20px; }
 .big-icon { font-size: 5rem; margin: 10px 0; animation: float 3s ease-in-out infinite; }
 .cn-text { font-size: 1.4rem; color: #795548; font-weight: bold; background: #efebe9; padding: 5px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; }
 .hint-text { font-size: 3rem; font-weight: 900; color: var(--accent-pink); letter-spacing: 3px; opacity: 0; transition: 0.3s; height: 50px; margin: 5px 0; }
 .hint-text.visible { opacity: 1; }
+
 .btn-group { display: flex; gap: 15px; justify-content: center; }
 .btn-replay, .btn-hint { border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: 0.1s; min-width: 140px; }
 .btn-replay { background: #ffca28; color: #5d4037; }
 .btn-hint { background: #ab47bc; }
+.btn-hint.use-ticket { background: #ffa726; box-shadow: 0 4px 0 #ef6c00; } /* 使用券的顏色 */
 .btn-replay:active, .btn-hint:active { transform: translateY(3px); box-shadow: none; }
 .btn-hint:disabled { background: #e0e0e0; box-shadow: none; color: #999; cursor: not-allowed; }
 
@@ -130,6 +136,26 @@ body {
 .slot { width: 45px; height: 55px; border-bottom: 5px solid var(--slot-line); font-size: 32px; font-weight: 900; color: var(--accent-blue); display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 10px 10px 0 0; }
 .control-row { margin-bottom: 20px; }
 .btn-clear { background: #cfd8dc; color: #546e7a; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+/* style.css 新增樣式 */
+
+.btn-backspace {
+    background: #ff7043; /* 亮橘色 */
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 4px 0 #d84315;
+    transition: 0.1s;
+    margin-right: 10px; /* 與重寫按鈕的間距 */
+}
+
+.btn-backspace:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
 
 .pool-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 auto 20px; max-width: 600px; }
 .letter-btn { width: 55px; height: 55px; background: white; border: 2px solid var(--accent-blue); color: var(--accent-blue); font-size: 24px; font-weight: bold; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 0 var(--accent-blue); transition: 0.1s; }
@@ -140,12 +166,15 @@ body {
 .btn-next { background: var(--accent-green); color: white; border: none; padding: 15px 50px; border-radius: 50px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #2e7d32; animation: pop 0.6s infinite alternate; width: 100%; max-width: 300px; }
 .freeze-msg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 50; border-radius: 30px; display: flex; justify-content: center; align-items: center; color: #ef5350; font-size: 2rem; font-weight: 900; }
 
+/* 升級獎勵樣式 */
 .levelup-card { text-align: center; border-color: #FFD700; background: radial-gradient(circle, #fff, #fffde7); }
 .levelup-header { font-size: 2rem; color: #ffab00; font-weight: 900; margin-bottom: 10px; }
 .new-house-icon { font-size: 6rem; margin: 15px 0; animation: houseBounce 1s infinite; }
-.btn-confirm { background: var(--accent-green); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; font-weight: bold; margin-top: 15px; box-shadow: 0 5px #2e7d32; cursor: pointer; }
+.reward-box { background: #fff3e0; border: 2px dashed #ffb74d; padding: 15px; border-radius: 15px; margin: 15px 0; text-align: left; }
+.reward-box p { color: #f57c00; font-weight: bold; margin-bottom: 5px; }
+.reward-item { background: #fff; padding: 8px; margin: 5px 0; border-radius: 8px; font-weight: bold; color: #5d4037; box-shadow: 0 2px 0 rgba(0,0,0,0.05); }
+.btn-confirm { background: var(--accent-green); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; font-weight: bold; margin-top: 5px; box-shadow: 0 5px #2e7d32; cursor: pointer; }
 
-/* 動畫 */
 @keyframes pop { from { transform: scale(1); } to { transform: scale(1.05); } }
 @keyframes bounceIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -153,20 +182,60 @@ body {
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .shake-screen { animation: shake 0.4s; background: #ffcdd2; }
 
-/* RWD 手機版 */
 @media (max-width: 768px) {
     .dashboard-wrapper { flex-direction: column; }
     .house-section, .game-rules-panel { flex: none; width: 100%; }
-    .game-rules-panel { font-size: 0.85rem; padding: 15px; }
-    .start-modal h1 { font-size: 1.5rem; }
-    .btn-voice { padding: 12px; }
-    .game-hud { padding: 8px 15px; }
-    .hp-container { font-size: 1rem; }
-    .house-icon { font-size: 5rem; }
-    .house-wrapper { height: 100px; }
-    .big-icon { font-size: 4rem; }
-    .hint-text { font-size: 2.5rem; }
+    .category-grid { grid-template-columns: 1fr 1fr; }
     .slot { width: 38px; height: 48px; font-size: 24px; border-width: 4px; }
     .pool-container { gap: 6px; }
     .letter-btn { width: 48px; height: 48px; font-size: 20px; }
+}
+
+/* style.css 新增頁尾樣式 */
+
+.game-footer {
+    margin-top: 50px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.6);
+    border-top: 4px solid #fff;
+    font-size: 0.9rem;
+    color: #8d6e63;
+}
+
+.footer-content {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.counter-box, .date-box {
+    background: #fff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: inline-block;
+}
+
+.highlight-num {
+    color: #ff9800;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.copyright {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+/* RWD 手機版微調 */
+@media (max-width: 600px) {
+    .game-footer {
+        font-size: 0.8rem;
+        padding: 15px;
+    }
 }

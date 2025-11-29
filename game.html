@@ -20,14 +20,29 @@
 
             <p>請選擇老師的聲音：</p>
             <div class="voice-selection">
-                <button onclick="startGame('male')" class="btn-voice male">
+                <button onclick="goToCategorySelect('male')" class="btn-voice male">
                     <span>👦</span> 男生
                 </button>
-                <button onclick="startGame('female')" class="btn-voice female">
+                <button onclick="goToCategorySelect('female')" class="btn-voice female">
                     <span>👧</span> 女生
                 </button>
             </div>
             <p style="font-size:0.8rem; color:#888; margin-top:15px;">*請開啟聲音以獲得最佳體驗</p>
+        </div>
+    </div>
+
+    <div id="category-screen" class="overlay" style="display:none;">
+        <div class="modal category-modal">
+            <h2>🌍 請問今天要挑戰哪裡？</h2>
+            <div class="category-grid">
+                <button onclick="startGame('ALL')" class="btn-cat rainbow">🎲 全部隨機</button>
+                <button onclick="startGame('animal')" class="btn-cat">🐶 動物園</button>
+                <button onclick="startGame('food')" class="btn-cat">🍎 美食街</button>
+                <button onclick="startGame('color')" class="btn-cat">🎨 顏色館</button>
+                <button onclick="startGame('number')" class="btn-cat">🔢 數字谷</button>
+                <button onclick="startGame('body')" class="btn-cat">👀 身體檢查</button>
+                <button onclick="startGame('item')" class="btn-cat">🎒 生活用品</button>
+            </div>
         </div>
     </div>
 
@@ -40,11 +55,16 @@
             
             <div class="hp-container" id="hp-display">❤️❤️❤️❤️❤️❤️❤️❤️</div>
             
+            <div class="item-container">
+                🎟️ 券: <span id="ticket-count">0</span>
+            </div>
+
             <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
         <div class="xp-bar-container">
             <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
+            <div class="xp-text-overlay"><span id="xp-current">0</span> / <span id="xp-max">100</span> XP</div>
         </div>
         
         <div id="combo-display" class="combo-text">Combo x2!</div>
@@ -53,34 +73,34 @@
     <div class="container" id="game-container" style="display:none;">
         
         <div class="dashboard-wrapper">
-            
             <div class="house-section">
                 <div id="house-msg" class="house-bubble">一起蓋房子吧！💪</div>
                 <div class="house-wrapper">
-                    <div id="my-house-icon" class="house-icon">⛺</div>
+                    <div id="my-house-icon" class="house-icon">🌲</div>
                     <div class="house-base"></div>
                 </div>
                 <div class="house-info">
-                    <div id="house-name" class="house-title">Lv.1 破舊帳篷</div>
-                    <p class="next-level-hint">集滿經驗值升級！</p>
+                    <div id="house-name" class="house-title">荒野樹林</div>
+                    <p class="next-level-hint">努力升級來開發土地！</p>
                 </div>
             </div>
 
             <div class="game-rules-panel">
                 <h3>📜 冒險指南</h3>
                 <ul>
-                    <li>❤️ <b>生命 8 顆心：</b> 答錯扣 1 顆，別歸零喔！</li>
-                    <li>🏠 <b>蓋房子：</b> 答對累積經驗，把帳篷變城堡！</li>
-                    <li>🔒 <b>防亂猜：</b> 答錯會鎖定 1.5 秒冷卻。</li>
-                    <li>🔄 <b>魔王複習：</b> 升級前要通過錯題考驗。</li>
-                    <li>💡 <b>提示：</b> 真的不會可偷看 (扣 0.5❤)。</li>
+                    <li>❤️ <b>生命：</b> 答錯扣 1 顆心。</li>
+                    <li>🏗️ <b>建設：</b> 經驗值越高，房子越豪華！</li>
+                    <li>🎟️ <b>獎勵：</b> 升級會送「免費偷看券」！</li>
+                    <li>🔒 <b>防亂猜：</b> 答錯會暫停 1.5 秒。</li>
+                    <li>🔄 <b>魔王關：</b> 升級前要複習錯字。</li>
                 </ul>
             </div>
         </div>
 
         <div class="game-stage">
             <div class="question-header">
-                <span class="q-tag">Question <span id="q-count">1</span></span>
+                <span id="category-tag" class="q-tag">隨機挑戰</span>
+                <span style="font-weight:bold; color:#aaa;">Q.<span id="q-count">1</span></span>
             </div>
             
             <div class="question-area">
@@ -97,13 +117,13 @@
             <div id="answer-slots" class="slots-container"></div>
 
             <div class="control-row">
-                 <button onclick="resetInput()" class="btn-clear" id="btn-clear">🧹 全部重寫</button>
-            </div>
+    <button onclick="backspace()" class="btn-backspace">⌫ 退格</button>
+    <button onclick="resetInput()" class="btn-clear" id="btn-clear">🧹 全部重寫</button>
+</div>
 
             <div id="letter-pool" class="pool-container"></div>
             
             <div id="freeze-overlay" class="freeze-msg" style="display:none;">🔒 想一下再按！</div>
-
             <div id="message-area" class="result-msg"></div>
 
             <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一關 ➔</button>
@@ -115,13 +135,56 @@
             <div class="levelup-header">🎉 LEVEL UP!</div>
             <div class="levelup-icon">🆙</div>
             <h2 id="levelup-title">恭喜升級！</h2>
-            <p>你的房子進化了！</p>
+            
+            <p style="color:#666; margin:5px 0;">場景變化了！</p>
             <div id="levelup-house" class="new-house-icon">🛖</div>
-            <p class="reward-text">🎁 獎勵：生命值全滿！</p>
-            <button onclick="closeLevelUpModal()" class="btn-confirm">太棒了！</button>
+            
+            <div class="reward-box">
+                <p>🎁 獲得獎勵：</p>
+                <div class="reward-item">❤️ 生命全滿</div>
+                <div class="reward-item">🎟️ 免費提示券 x 1</div>
+            </div>
+            
+            <button onclick="closeLevelUpModal()" class="btn-confirm">收下獎勵！</button>
         </div>
     </div>
 
     <script src="game.js"></script>
+
+<footer class="game-footer">
+        <div class="footer-content">
+            <div class="counter-box">
+                <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+                
+                <span id="busuanzi_container_site_pv" style="display:none">
+                    👀 本站總瀏覽人次：<span id="busuanzi_value_site_pv" class="highlight-num">...</span> 次
+                </span>
+            </div>
+
+            <div class="date-box">
+                🕒 最後更新：<span id="last-updated">讀取中...</span>
+            </div>
+            
+            <p class="copyright">© 2024 Happy English RPG. Keep Learning!</p>
+        </div>
+    </footer>
+
+    <script src="game.js"></script>
+    
+    <script>
+        // 抓取網頁最後修改時間
+        const date = new Date(document.lastModified);
+        
+        // 格式化日期 (YYYY/MM/DD HH:mm)
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        
+        const formattedDate = `${year}/${month}/${day} ${hours}:${minutes}`;
+        
+        document.getElementById('last-updated').innerText = formattedDate;
+    </script>
 </body>
 </html>
