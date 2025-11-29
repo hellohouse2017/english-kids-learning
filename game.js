@@ -1,5 +1,5 @@
 // ===================================================
-// 1. 遊戲參數與全域變數
+// 1. 遊戲參數與狀態
 // ===================================================
 const MAX_HP = 8;
 const HINT_HP_COST = 0.5;
@@ -35,7 +35,7 @@ let isReviewMode = false;
 let isFrozen = false; 
 
 // ===================================================
-// 2. 單字庫 (Question Bank)
+// 2. 單字庫
 // ===================================================
 const questionBank = [
     { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
@@ -72,21 +72,18 @@ const questionBank = [
     { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" }, { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
     { word: "CAR", icon: "🚗", cn: "車子", cat: "item" }, { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
     { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
-    { word: "ROBOT", icon: "🤖", cn: "機器人", cat: "item" }, { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
+    { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
     { word: "DAD", icon: "👨", cn: "爸爸" }, { word: "MOM", icon: "👩", cn: "媽媽" },
     { word: "BOY", icon: "👦", cn: "男孩" }, { word: "GIRL", icon: "👧", cn: "女孩" },
     { word: "BABY", icon: "👶", cn: "嬰兒" }, { word: "KING", icon: "👑", cn: "國王" }
 ];
 
 window.onload = function() { 
-    // 預載語音
-    if('speechSynthesis' in window) {
-        window.speechSynthesis.getVoices(); 
-    }
+    if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
 };
 
 // ===================================================
-// 3. 遊戲流程控制
+// 3. 遊戲流程
 // ===================================================
 function goToCategorySelect(gender) {
     const nameInput = document.getElementById('player-name-input').value.trim();
@@ -134,7 +131,6 @@ function nextQuestion() {
     
     errorCount = 0; currentInput = []; hasUsedHint = false;
     
-    // UI 重置
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
@@ -142,7 +138,6 @@ function nextQuestion() {
     document.getElementById("hint-overlay").classList.remove("visible");
     updateHintButton();
 
-    // 選題
     if (isReviewMode) {
         const mistakes = Object.keys(mistakeRegistry);
         if (mistakes.length === 0) { levelUp(); return; }
@@ -161,7 +156,8 @@ function nextQuestion() {
     renderSlots();
     renderLetterPool();
     
-    setTimeout(() => { speak(currentQ.word); }, 500);
+    // 安全播放聲音
+    setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
 function renderSlots() {
@@ -191,35 +187,36 @@ function renderLetterPool() {
     });
 }
 
-// ★ 核心修復：選擇字母邏輯
 function selectLetter(char, btnElement) {
     if (isFrozen) return;
     
+    // 去除空格後的目標單字長度
     const cleanWord = currentQ.word.replace(/ /g, "");
     
-    // 如果已經滿了，就不再動作
     if (currentInput.length >= cleanWord.length) return;
     
-    speak(char);
+    // 嘗試播放聲音，失敗不卡死
+    try { speak(char); } catch(e){}
+    
     currentInput.push(char);
     
-    // 視覺填充
+    // 填入對應的格子
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
-        // 找到第一個不是空格且還沒填字的格子
-        if (currentQ.word[i] !== " " && slot.innerText === "") {
+        // 找到第一個不是空格，而且還是空的格子
+        if (currentQ.word[i] !== " " && slot && slot.innerText === "") {
             slot.innerText = char;
             break;
         }
     }
     
-    // 按鈕變灰
     btnElement.classList.add("used");
     btnElement.disabled = true;
 
-    // ★ 關鍵檢查：長度達到後，馬上檢查答案
+    // ★ 強制檢查：只要長度滿了，就一定觸發檢查
     if (currentInput.length === cleanWord.length) {
-        checkAnswer();
+        // 給一點點延遲讓使用者看到最後一個字填進去
+        setTimeout(checkAnswer, 100); 
     }
 }
 
@@ -227,7 +224,6 @@ function backspace() {
     if (isFrozen || currentInput.length === 0) return;
     const lastChar = currentInput.pop();
     
-    // 恢復按鈕
     const btns = document.getElementsByClassName("letter-btn");
     for (let i = 0; i < btns.length; i++) {
         if (btns[i].innerText === lastChar && btns[i].classList.contains("used")) {
@@ -236,8 +232,6 @@ function backspace() {
             break; 
         }
     }
-    
-    // 清除格子
     const slots = document.getElementsByClassName("slot");
     for (let i = slots.length - 1; i >= 0; i--) {
         if (slots[i].innerText !== "" && slots[i].innerHTML !== "&nbsp;") {
@@ -256,6 +250,7 @@ function resetInput() {
     for(let b of btns) { b.classList.remove("used"); b.disabled = false; }
 }
 
+// ★ 修復版 checkAnswer：安全優先
 function checkAnswer() {
     const cleanWord = currentQ.word.replace(/ /g, "");
     const playerAnswer = currentInput.join("");
@@ -263,32 +258,38 @@ function checkAnswer() {
 
     if (playerAnswer === cleanWord) {
         // --- 答對 ---
-        document.getElementById("btn-clear").disabled = true;
         
+        // 1. 【關鍵修復】優先顯示按鈕，確保遊戲可以繼續
+        document.getElementById("next-btn").style.display = "inline-block";
+        document.getElementById("btn-clear").disabled = true;
+        document.getElementById("btn-hint").disabled = true;
+        msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
+
+        // 2. 處理邏輯與特效 (包在 try-catch 裡)
         try {
             const randomCheer = HOUSE_CHEERS[Math.floor(Math.random() * HOUSE_CHEERS.length)];
             cheerHouse(randomCheer);
+            
             const houseIcon = document.getElementById("my-house-icon");
             houseIcon.classList.add("bounce");
             setTimeout(() => houseIcon.classList.remove("bounce"), 1000);
-        } catch(e) { console.log("Effects error", e); }
 
-        if (isReviewMode) handleReviewVictory(); else handleNormalVictory();
-        
-        msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
-        speak("Correct! " + currentQ.word);
-        
-        // ★ 顯示下一關按鈕
-        document.getElementById("next-btn").style.display = "inline-block";
-        document.getElementById("btn-hint").disabled = true;
+            if (isReviewMode) handleReviewVictory(); else handleNormalVictory();
+            
+            speak("Correct! " + currentQ.word);
+        } catch(e) {
+            console.log("Effects error:", e); // 萬一特效壞了，只會印在控制台，不會卡住遊戲
+        }
 
     } else {
         // --- 答錯 ---
-        handleDamage();
-        msgDiv.innerHTML = "<span style='color:red'>❌ Try again!</span>";
-        speak("Try again");
-        cheerHouse("哎呀！再來一次！🛡️");
+        try {
+            handleDamage();
+            speak("Try again");
+            cheerHouse("哎呀！再來一次！🛡️");
+        } catch(e) {}
 
+        msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         registerMistake(currentQ);
         errorCount++;
         
@@ -365,9 +366,11 @@ function showHint() {
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
     hintBox.classList.add("visible");
-    let utterance = new SpeechSynthesisUtterance(currentQ.word.toLowerCase());
-    setVoice(utterance); utterance.rate = 0.5;
-    window.speechSynthesis.speak(utterance);
+    try {
+        let utterance = new SpeechSynthesisUtterance(currentQ.word.toLowerCase());
+        setVoice(utterance); utterance.rate = 0.5;
+        window.speechSynthesis.speak(utterance);
+    } catch(e){}
     
     hintBtn.disabled = true;
     setTimeout(() => {
@@ -392,8 +395,7 @@ function levelUp() {
     player.freeHints++; 
     
     updateHUD();
-    speak("Level Up!");
-    fireConfetti();
+    try{ speak("Level Up!"); fireConfetti(); }catch(e){}
     
     const modal = document.getElementById("levelup-modal");
     document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
@@ -439,7 +441,7 @@ function handleNormalVictory() {
     player.combo++;
     if (player.combo > 1) gainedXP += (player.combo * 2);
     gainXP(gainedXP);
-    fireConfetti();
+    try{ fireConfetti(); }catch(e){}
 }
 
 function handleReviewVictory() {
@@ -451,7 +453,7 @@ function handleReviewVictory() {
         }
     }
     if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
-    else { fireConfetti(); }
+    else { try{ fireConfetti(); }catch(e){} }
 }
 
 function checkLevelUpCondition() {
@@ -464,15 +466,18 @@ function startReviewMode() {
     isReviewMode = true; 
     player.currentXP = getRequiredXP(player.level); 
     updateHUD();
-    speak("Boss Battle!");
+    try{ speak("Boss Battle!"); }catch(e){}
     alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`);
     nextQuestion(); 
 }
 
 function handleDamage() {
     player.hp--; player.combo = 0;
-    document.body.classList.add("shake-screen");
-    setTimeout(() => document.body.classList.remove("shake-screen"), 500);
+    try {
+        document.body.classList.add("shake-screen");
+        setTimeout(() => document.body.classList.remove("shake-screen"), 500);
+    } catch(e){}
+    
     updateHUD();
     if (player.hp <= 0) setTimeout(gameOver, 500);
 }
@@ -494,6 +499,6 @@ function setVoice(utterance) {
     if (targetVoice) utterance.voice = targetVoice;
 }
 
-function playCurrentWord() { speak(currentQ.word); }
-function gameOver() { speak("Game Over"); alert("💀 血量歸零！請重新挑戰！"); location.reload(); }
+function playCurrentWord() { try{ speak(currentQ.word); }catch(e){} }
+function gameOver() { try{ speak("Game Over"); }catch(e){} alert("💀 血量歸零！請重新挑戰！"); location.reload(); }
 function fireConfetti() { if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
