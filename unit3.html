@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 3: Colors</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">🏠 回首頁</a>
+        <span>Unit 3: Colors 🎨</span>
+    </nav>
+
+    <div class="container">
+        
+        <section class="section-box">
+            <h2>1. 點擊圖片聽聲音 (Vocabulary) 🔊</h2>
+            <div class="vocab-grid">
+                <div class="vocab-card" onclick="speak('Red')">
+                    <div class="color-circle" style="background-color: #ff4d4d;"></div>
+                    <h3>Red</h3>
+                    <p>紅色</p>
+                </div>
+                <div class="vocab-card" onclick="speak('Blue')">
+                    <div class="color-circle" style="background-color: #3399ff;"></div>
+                    <h3>Blue</h3>
+                    <p>藍色</p>
+                </div>
+                <div class="vocab-card" onclick="speak('Yellow')">
+                    <div class="color-circle" style="background-color: #ffeb3b;"></div>
+                    <h3>Yellow</h3>
+                    <p>黃色</p>
+                </div>
+                <div class="vocab-card" onclick="speak('Green')">
+                    <div class="color-circle" style="background-color: #4caf50;"></div>
+                    <h3>Green</h3>
+                    <p>綠色</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-box game-box">
+            <h2>2. 聽力小測驗 (Listen & Pick) 🎮</h2>
+            <p>請聽聲音，選出正確的顏色！</p>
+            <button class="btn-sound" onclick="playGameSound()">🔊 播放題目</button>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="checkAnswer('Red')" style="background-color: #ff4d4d;">Red</button>
+                <button class="option-btn" onclick="checkAnswer('Blue')" style="background-color: #3399ff;">Blue</button>
+                <button class="option-btn" onclick="checkAnswer('Yellow')" style="background-color: #ffeb3b; color:black;">Yellow</button>
+                <button class="option-btn" onclick="checkAnswer('Green')" style="background-color: #4caf50;">Green</button>
+            </div>
+            <div id="game-result" class="result-msg"></div>
+        </section>
+
+        <section class="section-box">
+            <h2>3. 句子練習 (Sentence) 🧩</h2>
+            <p>請重組句子： <b>它是紅色的。</b></p>
+            
+            <div id="sentence-board" class="sentence-board">
+                </div>
+
+            <div class="word-bank">
+                <button onclick="addWord('It')">It</button>
+                <button onclick="addWord('red')">red</button>
+                <button onclick="addWord('is')">is</button>
+                <button onclick="addWord('.')">.</button>
+            </div>
+            
+            <div class="controls">
+                <button onclick="checkSentence()" class="btn-check">檢查答案</button>
+                <button onclick="resetSentence()" class="btn-reset">清除</button>
+            </div>
+            <div id="sentence-result" class="result-msg"></div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
