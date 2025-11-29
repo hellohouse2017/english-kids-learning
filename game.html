@@ -10,88 +10,110 @@
 <body>
 
     <div id="start-screen" class="overlay">
-        <div class="modal">
-            <h1>🎮 準備好了嗎？</h1>
-            <p>請選擇你喜歡的老師聲音：</p>
-            <div class="voice-selection">
-                <button onclick="startGame('male')" class="btn-voice male">
-                    👦 男生老師
-                </button>
-                <button onclick="startGame('female')" class="btn-voice female">
-                    👧 女生老師
-                </button>
+        <div class="modal start-modal">
+            <h1>🎮 歡迎來到拼字冒險！</h1>
+            
+            <div class="input-group">
+                <label>勇者的名字：</label>
+                <input type="text" id="player-name-input" placeholder="請輸入英文名字" maxlength="10">
             </div>
-            <p class="note">*聲音取決於您的裝置，若無區別將以音調模擬</p>
+
+            <p>請選擇老師的聲音：</p>
+            <div class="voice-selection">
+                <button onclick="startGame('male')" class="btn-voice male">👦 男生</button>
+                <button onclick="startGame('female')" class="btn-voice female">👧 女生</button>
+            </div>
+            <p style="font-size:0.8rem; color:#666; margin-top:10px;">*請開啟喇叭以獲得最佳體驗</p>
         </div>
     </div>
 
-    <div class="game-hud" id="hud" style="display:none;"> <div class="top-row">
-            <div class="player-stats">
-                <div class="level-badge">Lv. <span id="level-display">1</span></div>
-                <div class="hp-container" id="hp-display">
-                    ❤️❤️❤️❤️❤️❤️❤️❤️
-                </div>
+    <div class="game-hud" id="hud" style="display:none;">
+        <div class="top-row">
+            <div class="player-info">
+                <span id="player-name-display" class="player-name">Player</span>
+                <span class="level-badge">Lv. <span id="level-display">1</span></span>
             </div>
+            
+            <div class="hp-container" id="hp-display">❤️❤️❤️❤️❤️❤️❤️❤️</div>
+            
             <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
         <div class="xp-bar-container">
             <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
-            <span class="xp-text">XP</span>
         </div>
-
+        
         <div id="combo-display" class="combo-text">Combo x2!</div>
     </div>
 
     <div class="container" id="game-container" style="display:none;">
         
-        <div class="game-header">
-            <span class="level-badge" style="background:#2196f3;">Question <span id="q-count">1</span></span>
+        <div class="house-section">
+            <div id="house-msg" class="house-bubble">一起努力蓋房子吧！💪</div>
+            
+            <div class="house-wrapper">
+                <div id="my-house-icon" class="house-icon">⛺</div>
+                <div class="house-base"></div> </div>
+            
+            <div class="house-info">
+                <div id="house-name" class="house-title">Lv.1 破舊帳篷</div>
+                <p class="next-level-hint">再集滿經驗值，就能升級囉！</p>
+            </div>
         </div>
 
         <div class="game-stage">
-            <h2 id="question-text">聽聲音，拼單字！</h2>
+            <div class="question-header">
+                <span class="q-tag">Question <span id="q-count">1</span></span>
+            </div>
             
             <div class="question-area">
                 <div id="image-area" class="big-icon">❓</div>
+                <div id="cn-meaning" class="cn-text">蘋果</div>
+                
                 <div id="hint-overlay" class="hint-text">APPLE</div>
 
                 <div class="btn-group">
-                    <button onclick="playCurrentWord()" class="btn-replay">
-                        🔊 再唸一次
-                    </button>
-                    <button onclick="showHint()" id="btn-hint" class="btn-hint">
-                        💡 偷看一眼 (-0.5❤)
-                    </button>
+                    <button onclick="playCurrentWord()" class="btn-replay">🔊 再唸一次</button>
+                    <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看一眼 (-0.5❤)</button>
                 </div>
             </div>
 
             <div id="answer-slots" class="slots-container"></div>
 
             <div class="control-row">
-                 <button onclick="resetInput()" class="btn-clear" id="btn-clear">
-                    🧹 全部重寫
-                 </button>
+                 <button onclick="resetInput()" class="btn-clear" id="btn-clear">🧹 全部重寫</button>
             </div>
 
             <div id="letter-pool" class="pool-container"></div>
+            
+            <div id="freeze-overlay" class="freeze-msg" style="display:none;">🔒 冷卻中...想一下再按！</div>
 
             <div id="message-area" class="result-msg"></div>
 
-            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">
-                下一關 ➔
-            </button>
+            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一關 ➔</button>
         </div>
 
         <div class="game-rules">
-            <h3>📜 冒險指南 (Game Rules)</h3>
+            <h3>📜 遊戲機制說明</h3>
             <ul>
-                <li>❤️ <b>生命值 (HP)：</b> 你有 <b>8 顆心</b>，答錯扣 1 顆，歸零就 Game Over！</li>
-                <li>💡 <b>提示 (Hint)：</b> 遇到不會的字可以「偷看一眼」，但會扣 <b>0.5 顆心</b>喔。</li>
-                <li>🧹 <b>重寫：</b> 拼錯沒關係，按「全部重寫」就可以把字母拿回來重新拼。</li>
-                <li>⚔️ <b>魔王挑戰：</b> 答錯的字會被記在「錯題本」。經驗值滿了之後，必須把錯題本裡的每個字都<b>答對 3 次</b>，才能升級並補滿血！</li>
-                <li>🔥 <b>Combo：</b> 連續答對分數會越來越高！</li>
+                <li>❤️ <b>生命值：</b> 共有 8 顆心，答錯扣 1 顆，小心別歸零！</li>
+                <li>🏠 <b>蓋房子：</b> 答對問題累積經驗，把帳篷一路升級成城堡！</li>
+                <li>🔒 <b>防亂猜：</b> 答錯會被鎖定 1.5 秒，請看清楚題目再作答。</li>
+                <li>🔄 <b>魔王複習：</b> 升級前必須通過「錯題考驗」，每個錯字要答對 3 次。</li>
+                <li>💡 <b>提示：</b> 真的不會可以偷看，但會扣 0.5 顆心喔。</li>
             </ul>
+        </div>
+    </div>
+
+    <div id="levelup-modal" class="overlay" style="display:none;">
+        <div class="modal levelup-card">
+            <div class="levelup-header">🎉 LEVEL UP!</div>
+            <div class="levelup-icon">🆙</div>
+            <h2 id="levelup-title">恭喜升級！</h2>
+            <p>你的房子進化了！</p>
+            <div id="levelup-house" class="new-house-icon">🛖</div>
+            <p class="reward-text">🎁 獎勵：生命值全滿！</p>
+            <button onclick="closeLevelUpModal()" class="btn-confirm">太棒了！</button>
         </div>
     </div>
 

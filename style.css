@@ -113,3 +113,109 @@ body {
 .btn-next { background: #43a047; color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 1.4rem; cursor: pointer; box-shadow: 0 5px #2e7d32; animation: pop 0.5s infinite alternate; }
 .game-rules { background: #e1f5fe; padding: 20px; border-radius: 15px; text-align: left; border: 2px dashed #81d4fa; margin-top: 30px; }
 .game-rules li { margin-bottom: 8px; color: #0277bd; }
+
+/* === 房屋養成區 (巨大化版) === */
+.house-section {
+    background: linear-gradient(to bottom, #e1f5fe, #ffffff);
+    border-radius: 30px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    position: relative;
+    border: 5px solid #b3e5fc;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    overflow: visible; /* 讓氣泡可以突出去 */
+}
+
+/* 房子包裝容器 */
+.house-wrapper {
+    position: relative;
+    height: 160px; /* 預留高度給大房子 */
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}
+
+/* 房子本體 (超級大) */
+.house-icon {
+    font-size: 9rem; /* 從 4rem 改成 9rem (超大!) */
+    line-height: 1;
+    z-index: 2;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+    cursor: pointer;
+}
+
+/* 滑鼠移過去或是答對時會跳動 */
+.house-icon:hover, .house-icon.bounce {
+    transform: scale(1.2) translateY(-10px);
+}
+
+/* 房子底下的草地/地基 */
+.house-base {
+    position: absolute;
+    bottom: 10px;
+    width: 200px;
+    height: 20px;
+    background: #81c784;
+    border-radius: 50%;
+    z-index: 1;
+    opacity: 0.6;
+}
+
+/* 房屋名稱 */
+.house-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0277bd;
+    background: #e1f5fe;
+    display: inline-block;
+    padding: 5px 20px;
+    border-radius: 20px;
+}
+
+.next-level-hint {
+    font-size: 0.9rem;
+    color: #888;
+    margin: 5px 0 0 0;
+}
+
+/* === 加油氣泡 (Speech Bubble) === */
+.house-bubble {
+    position: absolute;
+    top: -10px;
+    right: 10%; /* 放在房子右上方 */
+    background: #fff;
+    color: #e91e63;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 3px solid #e91e63;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+    z-index: 10;
+    opacity: 0; /* 平常隱藏 */
+    transform: translateY(20px) scale(0.8);
+    transition: all 0.3s ease-out;
+    max-width: 200px;
+}
+
+/* 氣泡的小尾巴 */
+.house-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #e91e63 transparent;
+    display: block;
+    width: 0;
+}
+
+/* 氣泡顯示時的動畫 */
+.house-bubble.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
