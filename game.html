@@ -3,45 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拼字大挑戰</title>
+    <title>拼字大冒險 RPG</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <nav style="background-color: #e91e63;">
-        <a href="index.html">🏠 回首頁</a>
-        <span>Score: <span id="score-board">0</span> 分</span>
-    </nav>
 
-    <div class="container">
-        <div class="container">
-    <div class="game-header">
-        <span class="level-badge">第 <span id="q-count">1</span> 題</span>
-        <div class="score-box">🏆 分數: <span id="score-board">0</span></div>
-    </div>
-
-    <div class="game-stage">
-        <h2 id="question-text">聽聲音，拼單字！</h2>
-        
-        <div class="question-area">
-            <div id="image-area" class="big-icon">🍎</div>
+    <div class="game-hud">
+        <div class="top-row">
+            <div class="player-stats">
+                <div class="level-badge">Lv. <span id="level-display">1</span></div>
+                <div class="hp-container" id="hp-display">
+                    ❤️❤️❤️ </div>
+            </div>
             
-            <button onclick="playCurrentWord()" class="btn-replay">
-                🔊 再唸一次
-            </button>
+            <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
-        <div id="answer-slots" class="slots-container"></div>
+        <div class="xp-bar-container">
+            <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
+            <span class="xp-text">XP</span>
+        </div>
 
-        <div id="letter-pool" class="pool-container"></div>
-
-        <div id="message-area" class="result-msg"></div>
-
-        <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">
-            下一題 ➔
-        </button>
+        <div id="combo-display" class="combo-text">Combo x2!</div>
     </div>
-</div>
+
+    <div class="container">
+        
+        <div class="game-header">
+            <span class="level-badge" style="background:#2196f3;">Question <span id="q-count">1</span></span>
+        </div>
+
+        <div class="game-stage">
+            <h2 id="question-text">聽聲音，拼單字！</h2>
+            
+            <div class="question-area">
+                <div id="image-area" class="big-icon">❓</div>
+                
+                <div id="hint-overlay" class="hint-text">APPLE</div>
+
+                <div class="btn-group">
+                    <button onclick="playCurrentWord()" class="btn-replay">
+                        🔊 再唸一次
+                    </button>
+                    
+                    <button onclick="showHint()" id="btn-hint" class="btn-hint">
+                        💡 偷看一眼
+                    </button>
+                </div>
+            </div>
+
+            <div id="answer-slots" class="slots-container">
+                </div>
+
+            <div id="letter-pool" class="pool-container">
+                </div>
+
+            <div id="message-area" class="result-msg"></div>
+
+            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">
+                下一關 ➔
+            </button>
+        </div>
     </div>
 
     <script src="game.js"></script>
