@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼字大挑戰</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <nav style="background-color: #e91e63;">
+        <a href="index.html">🏠 回首頁</a>
+        <span>Score: <span id="score-board">0</span> 分</span>
+    </nav>
+
+    <div class="container">
+        <div class="game-stage">
+            <h2 id="question-text">拼出這個單字！</h2>
+            
+            <div id="image-area" style="font-size: 80px; margin: 20px;">
+                🍎
+            </div>
+
+            <div id="answer-slots" class="slots-container">
+                </div>
+
+            <div id="letter-pool" class="pool-container">
+                </div>
+
+            <div id="message-area" class="result-msg"></div>
+
+            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一題 ➔</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

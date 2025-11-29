@@ -83,3 +83,74 @@ function checkSentence() {
         speak("Oh oh, try again.");
     }
 }
+
+/* --- 把這些加到 style.css 的最下面 --- */
+
+.slots-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    min-height: 60px;
+}
+
+.slot {
+    width: 40px;
+    height: 50px;
+    border-bottom: 3px solid #333;
+    font-size: 30px;
+    font-weight: bold;
+    color: #e91e63;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pool-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.letter-btn {
+    width: 50px;
+    height: 50px;
+    background: #e91e63;
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #ad1457;
+    transition: transform 0.1s;
+}
+
+.letter-btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.letter-btn.used {
+    background: #ccc;
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.5;
+}
+
+.btn-next {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    animation: pop 0.5s infinite alternate; /* 讓按鈕跳動 */
+}
+
+@keyframes pop {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
