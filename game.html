@@ -6,29 +6,29 @@
     <title>拼字大冒險 RPG</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="data.js"></script>
 </head>
 <body>
 
     <div id="start-screen" class="overlay">
         <div class="modal start-modal">
             <h1>🎮 歡迎來到拼字冒險！</h1>
-            
             <div class="input-group">
                 <label>勇者的名字：</label>
                 <input type="text" id="player-name-input" placeholder="請輸入英文名字" maxlength="10">
             </div>
-
             <p>請選擇老師的聲音：</p>
             <div class="voice-selection">
                 <button onclick="goToCategorySelect('male')" class="btn-voice male"><span>👦</span> 男生</button>
                 <button onclick="goToCategorySelect('female')" class="btn-voice female"><span>👧</span> 女生</button>
             </div>
+            <p style="font-size:0.8rem; color:#888; margin-top:15px;">*請開啟聲音</p>
         </div>
     </div>
 
     <div id="category-screen" class="overlay" style="display:none;">
         <div class="modal category-modal">
-            <h2>🌍 請問今天要挑戰哪裡？</h2>
+            <h2>🌍 請選擇挑戰區域</h2>
             <div class="category-grid">
                 <button onclick="startGame('ALL')" class="btn-cat rainbow">🎲 全部隨機</button>
                 <button onclick="startGame('animal')" class="btn-cat">🐶 動物園</button>
@@ -47,26 +47,18 @@
                 <span id="player-name-display" class="player-name">Player</span>
                 <span class="level-badge">Lv. <span id="level-display">1</span></span>
             </div>
-            
-            <div class="item-container">
-                🎟️ 券: <span id="ticket-count">0</span>
-            </div>
-
+            <div class="item-container">🎟️ 券: <span id="ticket-count">0</span></div>
             <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
         <div class="xp-bar-container">
             <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
-            <div class="xp-text-overlay">
-                <span id="xp-current">0</span> / <span id="xp-max">100</span> XP
-            </div>
+            <div class="xp-text-overlay"><span id="xp-display-text">0 / 100 XP</span></div>
         </div>
-        
         <div id="combo-display" class="combo-text">Combo x2!</div>
     </div>
 
     <div class="container" id="game-container" style="display:none;">
-        
         <div class="dashboard-wrapper">
             <div class="house-section">
                 <div id="house-msg" class="house-bubble">蓋房子囉！💪</div>
@@ -76,16 +68,15 @@
                 </div>
                 <div class="house-info">
                     <div id="house-name" class="house-title">荒野樹林</div>
-                    <p class="next-level-hint">答對 +50 XP / 答錯 -30 XP</p>
+                    <p class="next-level-hint">答對自動下一題，無需按鍵！</p>
                 </div>
             </div>
-
             <div class="game-rules-panel">
                 <h3>📜 冒險指南</h3>
                 <ul>
-                    <li>✨ <b>獲得經驗：</b> 答對 +50 XP，集滿升級！</li>
-                    <li>💥 <b>小心扣分：</b> 答錯會倒扣 30 XP 喔。</li>
-                    <li>🏗️ <b>建設：</b> 20 個等級，把樹林變宇宙基地！</li>
+                    <li>✨ <b>經驗值：</b> 採累加制，滿了就升級！</li>
+                    <li>⏩ <b>自動前進：</b> 答對後自動進入下一關。</li>
+                    <li>🏗️ <b>建設：</b> 20 個等級，邁向宇宙基地！</li>
                     <li>🎟️ <b>獎勵：</b> 升級送免費提示券。</li>
                     <li>🔒 <b>冷卻：</b> 答錯會暫停 1.5 秒。</li>
                 </ul>
@@ -97,12 +88,10 @@
                 <span id="category-tag" class="q-tag">隨機挑戰</span>
                 <span style="font-weight:bold; color:#aaa;">Q.<span id="q-count">1</span></span>
             </div>
-            
             <div class="question-area">
                 <div id="image-area" class="big-icon">❓</div>
                 <div id="cn-meaning" class="cn-text">蘋果</div>
                 <div id="hint-overlay" class="hint-text">APPLE</div>
-
                 <div class="btn-group">
                     <button onclick="playCurrentWord()" class="btn-replay">🔊 再唸一次</button>
                     <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看 (-20 XP)</button>
@@ -117,12 +106,10 @@
             </div>
 
             <div id="letter-pool" class="pool-container"></div>
-            
             <div id="freeze-overlay" class="freeze-msg" style="display:none;">🔒 想一下再按！</div>
             <div id="message-area" class="result-msg"></div>
-
-            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一關 ➔</button>
-        </div>
+            
+            </div>
     </div>
 
     <div id="levelup-modal" class="overlay" style="display:none;">
@@ -136,7 +123,7 @@
                 <p>🎁 獲得獎勵：</p>
                 <div class="reward-item">🎟️ 免費提示券 x 1</div>
             </div>
-            <button onclick="closeLevelUpModal()" class="btn-confirm">太棒了！</button>
+            <button onclick="closeLevelUpModal()" class="btn-confirm">繼續挑戰！</button>
         </div>
     </div>
 

@@ -1,13 +1,12 @@
 // ===================================================
-// 1. 遊戲參數與狀態 (數值已平衡)
+// 1. 遊戲參數
 // ===================================================
-const MAX_HP = 8;       // (此變數保留但不顯示)
-const XP_WIN = 50;      // ★ 答對 +50 XP
-const XP_LOSE = 30;     // ★ 答錯 -30 XP
-const HINT_COST = 20;   // ★ 偷看 -20 XP
+const XP_WIN = 50;      
+const XP_LOSE = 30;     
+const HINT_COST = 20;   
 const REQUIRED_REVIEW_WINS = 3;
 
-// 房屋進化表 (20階段：樹林 -> 整地 -> 建築 -> 城堡)
+// 房屋進化表 (20階)
 const HOUSE_STAGES = [
     { icon: "🌲", name: "荒野樹林" }, { icon: "🚜", name: "整地中..." }, { icon: "🟫", name: "平坦空地" },
     { icon: "⛺", name: "簡易帳篷" }, { icon: "🔥", name: "營火帳篷" }, { icon: "🛖", name: "茅草屋" },
@@ -20,11 +19,12 @@ const HOUSE_STAGES = [
 
 const HOUSE_CHEERS = ["好棒！", "磚塊+1 🧱", "離城堡近了！", "勇者太強了！", "繼續保持！🔥", "Nice Job!"];
 
-// 玩家狀態
-let player = { name: "Player", hp: MAX_HP, level: 1, currentXP: 0, combo: 0, freeHints: 0 };
+// 玩家狀態 (currentXP 是總累加經驗值)
+let player = { name: "Player", level: 1, currentXP: 0, combo: 0, freeHints: 0 };
 let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 let currentCategory = "ALL";
+let questionBank = []; // 會從 data.js 載入
 let filteredQuestions = [];
 let currentQ = {};      
 let currentInput = [];  
@@ -36,51 +36,17 @@ let isReviewMode = false;
 let isFrozen = false; 
 
 // ===================================================
-// 2. 單字庫
+// 2. 初始化 (讀取 data.js)
 // ===================================================
-const questionBank = [
-    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
-    { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" }, { word: "BIRD", icon: "🐦", cn: "鳥", cat: "animal" },
-    { word: "FISH", icon: "🐟", cn: "魚", cat: "animal" }, { word: "DUCK", icon: "🦆", cn: "鴨子", cat: "animal" },
-    { word: "LION", icon: "🦁", cn: "獅子", cat: "animal" }, { word: "TIGER", icon: "🐯", cn: "老虎", cat: "animal" },
-    { word: "BEAR", icon: "🐻", cn: "熊", cat: "animal" }, { word: "RABBIT", icon: "🐰", cn: "兔子", cat: "animal" },
-    { word: "MONKEY", icon: "🐵", cn: "猴子", cat: "animal" }, { word: "ELEPHANT", icon: "🐘", cn: "大象", cat: "animal" },
-    { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" }, { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
-    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }, { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
-    { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" }, { word: "GREEN", icon: "🟢", cn: "綠色", cat: "color" },
-    { word: "ORANGE", icon: "🟠", cn: "橘色", cat: "color" }, { word: "PURPLE", icon: "🟣", cn: "紫色", cat: "color" },
-    { word: "BLACK", icon: "⚫", cn: "黑色", cat: "color" }, { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
-    { word: "PINK", icon: "🩷", cn: "粉紅色", cat: "color" },
-    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" }, { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
-    { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" }, { word: "FOUR", icon: "4️⃣", cn: "四", cat: "number" },
-    { word: "FIVE", icon: "5️⃣", cn: "五", cat: "number" }, { word: "SIX", icon: "6️⃣", cn: "六", cat: "number" },
-    { word: "SEVEN", icon: "7️⃣", cn: "七", cat: "number" }, { word: "EIGHT", icon: "8️⃣", cn: "八", cat: "number" },
-    { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" }, { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
-    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }, { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
-    { word: "ORANGE", icon: "🍊", cn: "柳橙", cat: "food" }, { word: "LEMON", icon: "🍋", cn: "檸檬", cat: "food" },
-    { word: "EGG", icon: "🥚", cn: "蛋", cat: "food" }, { word: "MILK", icon: "🥛", cn: "牛奶", cat: "food" },
-    { word: "CAKE", icon: "🍰", cn: "蛋糕", cat: "food" }, { word: "ICE CREAM", icon: "🍦", cn: "冰淇淋", cat: "food" },
-    { word: "RICE", icon: "🍚", cn: "米飯", cat: "food" }, { word: "WATER", icon: "💧", cn: "水", cat: "food" },
-    { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" }, { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
-    { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" }, { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
-    { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" }, { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
-    { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" }, { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
-    { word: "LEG", icon: "🦵", cn: "腿", cat: "body" }, { word: "ARM", icon: "💪", cn: "手臂", cat: "body" },
-    { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" }, { word: "FACE", icon: "😀", cn: "臉", cat: "body" },
-    { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" }, { word: "PENCIL", icon: "✏️", cn: "鉛筆", cat: "item" },
-    { word: "BOOK", icon: "📖", cn: "書", cat: "item" }, { word: "BAG", icon: "🎒", cn: "書包", cat: "item" },
-    { word: "RULER", icon: "📏", cn: "尺", cat: "item" }, { word: "BOX", icon: "📦", cn: "箱子", cat: "item" },
-    { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" }, { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
-    { word: "CAR", icon: "🚗", cn: "車子", cat: "item" }, { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
-    { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
-    { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
-    { word: "DAD", icon: "👨", cn: "爸爸" }, { word: "MOM", icon: "👩", cn: "媽媽" },
-    { word: "BOY", icon: "👦", cn: "男孩" }, { word: "GIRL", icon: "👧", cn: "女孩" },
-    { word: "BABY", icon: "👶", cn: "嬰兒" }, { word: "KING", icon: "👑", cn: "國王" }
-];
-
 window.onload = function() { 
     if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
+    
+    // ★ 關鍵：從外部 data.js 讀取單字庫，預設 Grade 3
+    if (typeof VOCAB_DB !== 'undefined') {
+        questionBank = VOCAB_DB['grade3']; 
+    } else {
+        alert("錯誤：找不到單字庫 data.js");
+    }
 };
 
 // ===================================================
@@ -118,12 +84,16 @@ function startGame(category) {
 function nextQuestion() {
     isFrozen = false;
     document.getElementById("freeze-overlay").style.display = "none";
-    questionCount++;
-    document.getElementById("q-count").innerText = questionCount;
-    currentInput = [];
+    if (!isReviewMode) {
+        questionCount++;
+        document.getElementById("q-count").innerText = questionCount;
+    } else {
+        document.getElementById("q-count").innerText = "🔥魔王關";
+    }
+    
+    errorCount = 0; currentInput = []; hasUsedHint = false;
     
     document.getElementById("message-area").innerText = "";
-    document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
     document.getElementById("btn-clear").disabled = false;
     document.getElementById("hint-overlay").classList.remove("visible");
@@ -146,7 +116,6 @@ function nextQuestion() {
 
     renderSlots();
     renderLetterPool();
-    
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
@@ -235,7 +204,7 @@ function checkAnswer() {
     const msgDiv = document.getElementById("message-area");
 
     if (playerAnswer === cleanWord) {
-        document.getElementById("next-btn").style.display = "inline-block";
+        // --- 答對 ---
         document.getElementById("btn-clear").disabled = true;
         document.getElementById("btn-hint").disabled = true;
         msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
@@ -252,7 +221,13 @@ function checkAnswer() {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
+        // ★ 自動跳轉 (如果沒有升級的話)
+        if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
+            setTimeout(nextQuestion, 1500); // 1.5秒後自動下一題
+        }
+
     } else {
+        // --- 答錯 ---
         loseXP(XP_LOSE);
         msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         try { speak("Try again"); cheerHouse("哎呀！扣分了！🛡️"); } catch(e){}
@@ -272,30 +247,52 @@ function checkAnswer() {
 }
 
 // ===================================================
-// 4. XP 系統 (★ 修正後的曲線)
+// 4. XP 系統 (★ 累加制)
 // ===================================================
 
-// ★ 計算該等級升級所需總經驗 (線性增加)
-function getRequiredXP(level) {
-    // 基礎 50，每級增加 50 XP
-    // Lv1: 100 XP (答對2題)
-    // Lv2: 150 XP (答對3題)
+// 計算升級所需的「總累加經驗值」門檻
+function getLevelThreshold(level) {
+    // 門檻累加公式：
+    // Lv1 -> Lv2: 100
+    // Lv2 -> Lv3: 100 + 150 = 250
+    // Lv3 -> Lv4: 250 + 200 = 450
     // ...
-    // Lv19: 1000 XP (答對20題)
-    return 50 * (level + 1);
+    let totalReq = 0;
+    for(let i = 1; i <= level; i++) {
+        totalReq += (50 * (i + 1)); // 每一級需要的單級經驗 (100, 150, 200...)
+    }
+    return totalReq;
+}
+
+// 取得上一級的總經驗值 (用來畫進度條起點)
+function getPrevLevelThreshold(level) {
+    if (level === 1) return 0;
+    return getLevelThreshold(level - 1);
 }
 
 function updateHUD() {
     document.getElementById("level-display").innerText = player.level;
     document.getElementById("ticket-count").innerText = player.freeHints;
     
-    const maxXP = getRequiredXP(player.level);
-    let percentage = (player.currentXP / maxXP) * 100;
+    // 計算進度條
+    const currentTotal = player.currentXP;
+    const nextLevelTotal = getLevelThreshold(player.level);
+    const prevLevelTotal = getPrevLevelThreshold(player.level);
+    
+    // 分母 = 這一級需要賺多少 XP
+    const levelRange = nextLevelTotal - prevLevelTotal;
+    // 分子 = 這一級已經賺了多少 XP
+    const levelProgress = currentTotal - prevLevelTotal;
+    
+    // 確保百分比在 0~100 之間
+    let percentage = (levelProgress / levelRange) * 100;
+    if (percentage < 0) percentage = 0;
     if (percentage > 100) percentage = 100;
     
     document.getElementById("xp-bar").style.width = percentage + "%";
-    document.getElementById("xp-current").innerText = player.currentXP;
-    document.getElementById("xp-max").innerText = maxXP;
+    
+    // ★ 顯示：總經驗 / 下一級門檻 (例如 120 / 250 XP)
+    document.getElementById("xp-display-text").innerText = `${currentTotal} / ${nextLevelTotal} XP`;
 }
 
 function showXPGainEffect(amount, isGain) {
@@ -317,9 +314,10 @@ function gainXP(amount) {
     player.currentXP += amount;
     showXPGainEffect(amount, true);
     
-    const reqXP = getRequiredXP(player.level);
-    if (player.currentXP >= reqXP) {
-        player.currentXP -= reqXP; // 保留溢出經驗
+    const threshold = getLevelThreshold(player.level);
+    
+    // 檢查升級 (累積經驗 >= 門檻)
+    if (player.currentXP >= threshold) {
         levelUp();
     } else {
         updateHUD();
@@ -329,7 +327,10 @@ function gainXP(amount) {
 function loseXP(amount) {
     if (isReviewMode) return;
     player.currentXP -= amount;
-    if (player.currentXP < 0) player.currentXP = 0;
+    // 不低於上一級的門檻 (保護等級不掉落)
+    const minXP = getPrevLevelThreshold(player.level);
+    if (player.currentXP < minXP) player.currentXP = minXP;
+    
     showXPGainEffect(amount, false);
     
     try {
@@ -367,7 +368,7 @@ function updateHouse() {
     document.getElementById("house-name").innerText = stage.name;
 }
 
-// ... (以下為輔助功能) ...
+// ... (以下輔助功能保持不變) ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if (player.freeHints > 0) {
@@ -386,8 +387,15 @@ function showHint() {
         updateHUD();
         updateHintButton();
     } else {
-        if (player.currentXP < HINT_COST) { player.currentXP = 0; } 
-        else { player.currentXP -= HINT_COST; }
+        // 確保扣分後不低於等級下限
+        const minXP = getPrevLevelThreshold(player.level);
+        if (player.currentXP - HINT_COST >= minXP) {
+            player.currentXP -= HINT_COST;
+        } else {
+            // 經驗不夠，不給看，或直接扣到底
+            alert("經驗值不足，無法偷看！");
+            return;
+        }
         hasUsedHint = true;
         updateHUD();
     }
@@ -438,7 +446,7 @@ function handleReviewVictory() {
         }
     }
     if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
-    else { try{ fireConfetti(); }catch(e){} }
+    else { try{ fireConfetti(); }catch(e){} setTimeout(nextQuestion, 1500); }
 }
 
 function checkLevelUpCondition() {
@@ -449,7 +457,6 @@ function checkLevelUpCondition() {
 function startReviewMode() {
     if (isReviewMode) return;
     isReviewMode = true; 
-    player.currentXP = getRequiredXP(player.level); 
     updateHUD();
     try{ speak("Boss Battle!"); }catch(e){}
     alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`);
