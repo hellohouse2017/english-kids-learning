@@ -23,7 +23,6 @@
                 <button onclick="goToCategorySelect('male')" class="btn-voice male"><span>👦</span> 男生</button>
                 <button onclick="goToCategorySelect('female')" class="btn-voice female"><span>👧</span> 女生</button>
             </div>
-            <p style="font-size:0.8rem; color:#888; margin-top:15px;">*請開啟聲音</p>
         </div>
     </div>
 
@@ -49,39 +48,46 @@
                 <span class="level-badge">Lv. <span id="level-display">1</span></span>
             </div>
             
-            <div class="hp-container" id="hp-display">❤️❤️❤️❤️❤️❤️❤️❤️</div>
-            <div class="item-container">🎟️ 券: <span id="ticket-count">0</span></div>
+            <div class="item-container">
+                🎟️ 券: <span id="ticket-count">0</span>
+            </div>
+
             <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
         <div class="xp-bar-container">
             <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
-            <div class="xp-text-overlay"><span id="xp-current">0</span> / <span id="xp-max">100</span> XP</div>
+            <div class="xp-text-overlay">
+                <span id="xp-current">0</span> / <span id="xp-max">100</span> XP
+            </div>
         </div>
+        
         <div id="combo-display" class="combo-text">Combo x2!</div>
     </div>
 
     <div class="container" id="game-container" style="display:none;">
+        
         <div class="dashboard-wrapper">
             <div class="house-section">
-                <div id="house-msg" class="house-bubble">一起蓋房子吧！💪</div>
+                <div id="house-msg" class="house-bubble">蓋房子囉！💪</div>
                 <div class="house-wrapper">
                     <div id="my-house-icon" class="house-icon">🌲</div>
                     <div class="house-base"></div>
                 </div>
                 <div class="house-info">
                     <div id="house-name" class="house-title">荒野樹林</div>
-                    <p class="next-level-hint">努力升級來開發土地！</p>
+                    <p class="next-level-hint">答對 +50 XP / 答錯 -30 XP</p>
                 </div>
             </div>
+
             <div class="game-rules-panel">
                 <h3>📜 冒險指南</h3>
                 <ul>
-                    <li>❤️ <b>生命：</b> 答錯扣 1 顆心。</li>
-                    <li>🏗️ <b>建設：</b> 經驗越高，房子越豪華！</li>
+                    <li>✨ <b>獲得經驗：</b> 答對 +50 XP，集滿升級！</li>
+                    <li>💥 <b>小心扣分：</b> 答錯會倒扣 30 XP 喔。</li>
+                    <li>🏗️ <b>建設：</b> 20 個等級，把樹林變宇宙基地！</li>
                     <li>🎟️ <b>獎勵：</b> 升級送免費提示券。</li>
-                    <li>🔒 <b>防亂猜：</b> 答錯鎖定 1.5 秒。</li>
-                    <li>💡 <b>提示：</b> 不會可偷看 (扣 0.5❤)。</li>
+                    <li>🔒 <b>冷卻：</b> 答錯會暫停 1.5 秒。</li>
                 </ul>
             </div>
         </div>
@@ -99,7 +105,7 @@
 
                 <div class="btn-group">
                     <button onclick="playCurrentWord()" class="btn-replay">🔊 再唸一次</button>
-                    <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看 (-0.5❤)</button>
+                    <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看 (-20 XP)</button>
                 </div>
             </div>
 
@@ -111,17 +117,12 @@
             </div>
 
             <div id="letter-pool" class="pool-container"></div>
+            
             <div id="freeze-overlay" class="freeze-msg" style="display:none;">🔒 想一下再按！</div>
             <div id="message-area" class="result-msg"></div>
 
             <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一關 ➔</button>
         </div>
-
-        <footer class="game-footer">
-            <div class="footer-content">
-                <div class="date-box">🕒 更新：<span id="last-updated">...</span></div>
-            </div>
-        </footer>
     </div>
 
     <div id="levelup-modal" class="overlay" style="display:none;">
@@ -133,17 +134,12 @@
             <div id="levelup-house" class="new-house-icon">🛖</div>
             <div class="reward-box">
                 <p>🎁 獲得獎勵：</p>
-                <div class="reward-item">❤️ 生命全滿</div>
                 <div class="reward-item">🎟️ 免費提示券 x 1</div>
             </div>
-            <button onclick="closeLevelUpModal()" class="btn-confirm">收下獎勵！</button>
+            <button onclick="closeLevelUpModal()" class="btn-confirm">太棒了！</button>
         </div>
     </div>
 
     <script src="game.js"></script>
-    <script>
-        const date = new Date(document.lastModified);
-        document.getElementById('last-updated').innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`;
-    </script>
 </body>
 </html>
