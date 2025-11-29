@@ -8,7 +8,7 @@ const HINT_COST = 20;   // 偷看 -20 XP
 const REQUIRED_REVIEW_WINS = 3;
 const MASTERY_THRESHOLD = 5;
 
-// 房屋進化表 (20階段)
+// 房屋進化表
 const HOUSE_STAGES = [
     { icon: "🌲", name: "荒野樹林" }, { icon: "🚜", name: "整地中..." }, { icon: "🟫", name: "平坦空地" },
     { icon: "⛺", name: "簡易帳篷" }, { icon: "🔥", name: "營火帳篷" }, { icon: "🛖", name: "茅草屋" },
@@ -19,7 +19,7 @@ const HOUSE_STAGES = [
     { icon: "☁️", name: "天空之城" }, { icon: "👑", name: "宇宙基地" }
 ];
 
-const HOUSE_CHEERS = ["好棒！", "磚塊+1 🧱", "離城堡近了！", "勇者太強了！", "繼續保持！🔥", "Nice Job!"];
+const HOUSE_CHEERS = ["好棒！", "磚塊+1 🧱", "離城堡近了！", "勇者太強了！", "Nice Job!"];
 
 // 玩家狀態
 let player = { name: "Player", level: 1, currentXP: 0, combo: 0, freeHints: 0 };
@@ -27,7 +27,7 @@ let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 // 遊戲局狀態
 let currentCategory = "ALL";
-let questionBank = []; // 空陣列，等待從 data.js 載入
+let questionBank = []; 
 let filteredQuestions = [];
 let currentQ = {};      
 let currentInput = [];  
@@ -36,130 +36,164 @@ let isReviewMode = false;
 let mistakeRegistry = {}; 
 let learningProgress = JSON.parse(localStorage.getItem('english_rpg_progress')) || {};
 
+// 備用題庫 (防止 data.js 沒讀到)
+const fallbackData = [
+    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" },
+    { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
+    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" },
+    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" },
+    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }
+];
+
 // 偵測打字模式
 const isTypingMode = () => document.getElementById('typing-input') !== null;
 
 // ===================================================
-// 2. 初始化 (讀取 window.VOCAB_DB)
+// 2. 初始化
 // ===================================================
 window.onload = function() { 
-    // 1. 預載語音
     if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     
-    // 2. ★ 關鍵：檢查 data.js 是否載入成功
-    if (window.VOCAB_DB && window.VOCAB_DB['grade3']) {
+    // 嘗試讀取 data.js
+    if (typeof window.VOCAB_DB !== 'undefined' && window.VOCAB_DB['grade3']) {
         questionBank = window.VOCAB_DB['grade3']; 
-        console.log("GameJS: 成功讀取單字庫，共 " + questionBank.length + " 個字。");
+        console.log("Loaded data.js");
     } else {
-        // 如果讀取失敗，使用一個緊急備用題庫，防止卡死
-        alert("⚠️ 警告：找不到單字庫 (data.js)。請檢查檔案是否在同一資料夾。目前使用備用題庫。");
-        questionBank = [
-            { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" },
-            { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }
-        ];
+        console.warn("data.js not found, using fallback.");
+        questionBank = fallbackData;
     }
 };
 
 // ===================================================
 // 3. 遊戲流程
 // ===================================================
-function goToCategorySelect(gender) {
-    const nameInput = document.getElementById('player-name-input').value.trim();
-    player.name = nameInput || "勇者";
-    if(document.getElementById('player-name-display')) {
-        document.getElementById('player-name-display').innerText = player.name;
-    }
+// 將函數掛載到 window 確保 HTML 按鈕找得到
+window.goToCategorySelect = function(gender) {
+    const nameInput = document.getElementById('player-name-input');
+    if(nameInput) player.name = nameInput.value.trim() || "勇者";
+    
+    const nameDisplay = document.getElementById('player-name-display');
+    if(nameDisplay) nameDisplay.innerText = player.name;
 
     voiceSettings.gender = gender;
     voiceSettings.pitch = (gender === 'male') ? 0.8 : 1.2;
 
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('category-screen').style.display = 'flex';
+    const startScreen = document.getElementById('start-screen');
+    const catScreen = document.getElementById('category-screen');
+    if(startScreen) startScreen.style.display = 'none';
+    if(catScreen) catScreen.style.display = 'flex';
 }
 
-function startGame(category) {
+window.startGame = function(category) {
     currentCategory = category;
-    
-    // 過濾題目
     if (category === 'ALL') {
         filteredQuestions = questionBank;
-        if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = "隨機挑戰";
+        const tag = document.getElementById('category-tag');
+        if(tag) tag.innerText = "隨機挑戰";
     } else {
         filteredQuestions = questionBank.filter(q => q.cat === category);
         const map = { 'animal': "動物園", 'food': "美食街", 'color': "顏色館", 'number': "數字谷", 'body': "身體檢查", 'item': "生活用品" };
-        if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = map[category] || category;
+        const tag = document.getElementById('category-tag');
+        if(tag) tag.innerText = map[category] || category;
     }
 
-    // 防呆：如果該類別沒題目
-    if (!filteredQuestions || filteredQuestions.length === 0) {
-        alert("這個類別沒有題目，將使用全部題目！");
-        filteredQuestions = questionBank;
-    }
+    if (!filteredQuestions || filteredQuestions.length === 0) filteredQuestions = questionBank;
 
-    document.getElementById('category-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    document.getElementById('game-container').style.display = 'block';
+    const catScreen = document.getElementById('category-screen');
+    const hud = document.getElementById('hud');
+    const container = document.getElementById('game-container');
+    
+    if(catScreen) catScreen.style.display = 'none';
+    if(hud) hud.style.display = 'block';
+    if(container) container.style.display = 'block';
     
     if(isTypingMode()) {
         const input = document.getElementById('typing-input');
-        input.addEventListener('input', handleTypingInput);
-        input.addEventListener('click', () => speak(currentQ.word));
+        if(input) {
+            input.addEventListener('input', handleTypingInput);
+            input.addEventListener('click', () => speak(currentQ.word));
+        }
     }
 
     updateHUD();
     updateHouse();
-    cheerHouse(`你好，${player.name}！開始蓋房子囉！`);
-    nextQuestion();
+    cheerHouse(`你好，${player.name}！加油！`);
+    
+    // 延遲一下確保畫面切換完成
+    setTimeout(nextQuestion, 100);
 }
 
-function nextQuestion() {
+window.nextQuestion = function() {
     isFrozen = false;
-    document.getElementById("freeze-overlay").style.display = "none";
+    const freezeOverlay = document.getElementById("freeze-overlay");
+    if(freezeOverlay) freezeOverlay.style.display = "none";
+
     if (!isReviewMode) {
         questionCount++;
-        document.getElementById("q-count").innerText = questionCount;
+        const qCountEl = document.getElementById("q-count");
+        if(qCountEl) qCountEl.innerText = questionCount;
     } else {
-        document.getElementById("q-count").innerText = "🔥魔王關";
+        const qCountEl = document.getElementById("q-count");
+        if(qCountEl) qCountEl.innerText = "🔥魔王關";
     }
     
     errorCount = 0; currentInput = []; hasUsedHint = false;
     
-    document.getElementById("message-area").innerText = "";
-    document.getElementById("next-btn").style.display = "none";
-    document.getElementById("btn-hint").disabled = false;
-    if(!isTypingMode()) document.getElementById("btn-clear").disabled = false;
-    document.getElementById("hint-overlay").classList.remove("visible");
+    const msgArea = document.getElementById("message-area");
+    if(msgArea) msgArea.innerText = "";
+    
+    const nextBtn = document.getElementById("next-btn");
+    if(nextBtn) nextBtn.style.display = "none";
+    
+    const btnHint = document.getElementById("btn-hint");
+    if(btnHint) btnHint.disabled = false;
+    
+    if(!isTypingMode()) {
+        const btnClear = document.getElementById("btn-clear");
+        if(btnClear) btnClear.disabled = false;
+    }
+    
+    const hintOverlay = document.getElementById("hint-overlay");
+    if(hintOverlay) hintOverlay.classList.remove("visible");
+    
     updateHintButton();
 
     if(isTypingMode()) {
         const input = document.getElementById('typing-input');
-        input.value = "";
-        input.disabled = false;
-        input.classList.remove('correct-anim', 'wrong-anim');
-        input.focus();
+        if(input) {
+            input.value = "";
+            input.disabled = false;
+            input.classList.remove('correct-anim', 'wrong-anim');
+            input.focus();
+        }
     } else {
-        document.getElementById("freeze-overlay").style.display = "none";
-        currentInput = [];
-        renderLetterPool(); // 產生按鈕
-        renderSlots();      // 產生格子
+        // ★ 安全清空：先檢查元素是否存在
+        const slotsDiv = document.getElementById("answer-slots");
+        const poolDiv = document.getElementById("letter-pool");
+        if(slotsDiv) slotsDiv.innerHTML = "";
+        if(poolDiv) poolDiv.innerHTML = "";
     }
 
     currentQ = getWeightedQuestion();
+    if (!currentQ) currentQ = fallbackData[0];
     
-    // ★ 防卡死檢查：確保 currentQ 是有效的
-    if (!currentQ || !currentQ.word) {
-        console.error("選題失敗！使用預設題目");
-        currentQ = { word: "BUG", icon: "🐛", cn: "錯誤", cat: "none" };
+    const imgArea = document.getElementById("image-area");
+    const cnArea = document.getElementById("cn-meaning");
+    
+    if(imgArea) imgArea.innerText = currentQ.icon;
+    if(hintOverlay) hintOverlay.innerText = currentQ.word;
+    if(cnArea) cnArea.innerText = currentQ.cn;
+
+    // ★ 關鍵：只有在元素存在時才渲染
+    if(!isTypingMode()) {
+        renderSlots();
+        renderLetterPool(); 
     }
     
-    document.getElementById("image-area").innerText = currentQ.icon;
-    document.getElementById("hint-overlay").innerText = currentQ.word;
-    document.getElementById("cn-meaning").innerText = currentQ.cn;
-
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
-// 智慧選題演算法
+// 智慧選題
 function getWeightedQuestion() {
     if (isReviewMode) {
         const mistakes = Object.keys(mistakeRegistry);
@@ -167,6 +201,7 @@ function getWeightedQuestion() {
         const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
         return mistakeRegistry[randomKey].wordObj;
     }
+    if (!filteredQuestions || filteredQuestions.length === 0) return fallbackData[0];
 
     let totalWeight = 0;
     const weightedPool = filteredQuestions.map(q => {
@@ -184,25 +219,12 @@ function getWeightedQuestion() {
     return filteredQuestions[0];
 }
 
-function updateLearningProgress(word, isCorrect) {
-    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
-    const data = learningProgress[word];
-    if (isCorrect) {
-        data.wins++;
-        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
-    } else {
-        data.wins = 0;
-        data.weight += 10;
-    }
-    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
-}
-
 // ===================================================
 // 4. 輸入處理
 // ===================================================
 function renderSlots() {
     const slotsDiv = document.getElementById("answer-slots");
-    if(!slotsDiv) return;
+    if(!slotsDiv) return; // ★ 防呆
     slotsDiv.innerHTML = "";
     for (let i = 0; i < currentQ.word.length; i++) {
         let slot = document.createElement("div");
@@ -215,7 +237,7 @@ function renderSlots() {
 
 function renderLetterPool() {
     const poolDiv = document.getElementById("letter-pool");
-    if(!poolDiv) return;
+    if(!poolDiv) return; // ★ 防呆
     poolDiv.innerHTML = "";
     let letters = currentQ.word.replace(/ /g, "").split('');
     letters.sort(() => Math.random() - 0.5);
@@ -245,7 +267,7 @@ function selectLetter(char, btnElement) {
     if (currentInput.length === cleanWord.length) { setTimeout(() => checkAnswer(currentInput.join("")), 100); }
 }
 
-function backspace() {
+window.backspace = function() {
     if (isFrozen || currentInput.length === 0) return;
     const lastChar = currentInput.pop();
     const btns = document.getElementsByClassName("letter-btn");
@@ -260,7 +282,7 @@ function backspace() {
     }
 }
 
-function resetInput() {
+window.resetInput = function() {
     if (isFrozen) return;
     currentInput = [];
     const slots = document.getElementsByClassName("slot");
@@ -287,13 +309,17 @@ function checkAnswer(playerAnswer) {
 
     if (cleanPlayerAns === cleanWord) {
         if(isTypingMode()) {
-            document.getElementById('typing-input').classList.add('correct-anim');
-            document.getElementById('typing-input').disabled = true;
+            const input = document.getElementById('typing-input');
+            if(input) { input.classList.add('correct-anim'); input.disabled = true; }
         } else {
-            document.getElementById("btn-clear").disabled = true;
+            const btnClear = document.getElementById("btn-clear");
+            if(btnClear) btnClear.disabled = true;
         }
-        document.getElementById("btn-hint").disabled = true;
-        msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
+        
+        const btnHint = document.getElementById("btn-hint");
+        if(btnHint) btnHint.disabled = true;
+        
+        if(msgDiv) msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
 
         gainXP(XP_WIN);
         updateLearningProgress(currentQ.word, true);
@@ -310,14 +336,15 @@ function checkAnswer(playerAnswer) {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
-        if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
+        const levelModal = document.getElementById("levelup-modal");
+        if (!levelModal || levelModal.style.display === "none") {
             setTimeout(nextQuestion, 1500); 
         }
 
     } else {
         loseXP(XP_LOSE);
         updateLearningProgress(currentQ.word, false);
-        msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
+        if(msgDiv) msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         try { speak("Try again"); cheerHouse("哎呀！扣分了！🛡️"); } catch(e){}
         
         registerMistake(currentQ);
@@ -326,26 +353,30 @@ function checkAnswer(playerAnswer) {
 
         if(isTypingMode()) {
             const input = document.getElementById('typing-input');
-            input.classList.add('wrong-anim');
-            setTimeout(() => {
-                isFrozen = false;
-                input.value = "";
-                input.classList.remove('wrong-anim');
-            }, 1000);
+            if(input) {
+                input.classList.add('wrong-anim');
+                setTimeout(() => {
+                    isFrozen = false;
+                    input.value = "";
+                    input.classList.remove('wrong-anim');
+                }, 1000);
+            }
         } else {
             const freezeOverlay = document.getElementById("freeze-overlay");
-            freezeOverlay.style.display = "flex";
-            setTimeout(() => {
-                isFrozen = false;
-                freezeOverlay.style.display = "none";
-                resetInput();
-            }, 1500);
+            if(freezeOverlay) {
+                freezeOverlay.style.display = "flex";
+                setTimeout(() => {
+                    isFrozen = false;
+                    freezeOverlay.style.display = "none";
+                    resetInput();
+                }, 1500);
+            }
         }
     }
 }
 
 // ===================================================
-// 6. XP 系統 (累加制)
+// 6. XP 系統
 // ===================================================
 function getLevelThreshold(level) {
     let totalReq = 0;
@@ -359,8 +390,11 @@ function getPrevLevelThreshold(level) {
 }
 
 function updateHUD() {
-    document.getElementById("level-display").innerText = player.level;
-    document.getElementById("ticket-count").innerText = player.freeHints;
+    const elLevel = document.getElementById("level-display");
+    if(elLevel) elLevel.innerText = player.level;
+    
+    const elTicket = document.getElementById("ticket-count");
+    if(elTicket) elTicket.innerText = player.freeHints;
     
     const nextLevelTotal = getLevelThreshold(player.level);
     const prevLevelTotal = getPrevLevelThreshold(player.level);
@@ -371,15 +405,12 @@ function updateHUD() {
     if (percentage < 0) percentage = 0;
     if (percentage > 100) percentage = 100;
     
-    document.getElementById("xp-bar").style.width = percentage + "%";
+    const bar = document.getElementById("xp-bar");
+    if(bar) bar.style.width = percentage + "%";
     
     const displayStr = `${player.currentXP} / ${nextLevelTotal} XP`;
-    if(document.getElementById("xp-display-text")) {
-        document.getElementById("xp-display-text").innerText = displayStr;
-    } else {
-        const overlay = document.querySelector(".xp-text-overlay");
-        if(overlay) overlay.innerText = displayStr;
-    }
+    const txtDisplay = document.getElementById("xp-display-text");
+    if(txtDisplay) txtDisplay.innerText = displayStr;
 }
 
 function showXPGainEffect(amount, isGain) {
@@ -400,7 +431,7 @@ function gainXP(amount) {
     player.currentXP += amount;
     showXPGainEffect(amount, true);
     if (player.currentXP >= getLevelThreshold(player.level)) {
-        levelUp(); // 升級時不歸零
+        levelUp();
     } else {
         updateHUD();
     }
@@ -425,7 +456,6 @@ function levelUp() {
     player.freeHints++; 
     updateHUD();
     try{ speak("Level Up!"); fireConfetti(); }catch(e){}
-    
     const modal = document.getElementById("levelup-modal");
     if(modal) {
         document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
@@ -446,11 +476,12 @@ function updateHouse() {
     if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
 }
 
+// ... 輔助 ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if(!btn) return;
     if (player.freeHints > 0) {
-        btn.innerHTML = "🎟️ 免費提示 (剩" + player.freeHints + ")";
+        btn.innerHTML = "🎟️ 免費 (剩" + player.freeHints + ")";
         btn.classList.add("use-ticket");
     } else {
         btn.innerHTML = "💡 偷看 (-" + HINT_COST + " XP)";
@@ -458,7 +489,7 @@ function updateHintButton() {
     }
 }
 
-function showHint() {
+window.showHint = function() {
     if (player.freeHints > 0) {
         player.freeHints--;
         hasUsedHint = true;
@@ -471,22 +502,26 @@ function showHint() {
             hasUsedHint = true;
             updateHUD();
         } else {
-            alert("經驗值不足，無法偷看！加油再試試！");
+            alert("經驗值不足，無法偷看！");
             return;
         }
     }
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
-    hintBox.classList.add("visible");
+    if(hintBox) hintBox.classList.add("visible");
     try {
         let utterance = new SpeechSynthesisUtterance(currentQ.word.toLowerCase());
         setVoice(utterance); utterance.rate = 0.5;
         window.speechSynthesis.speak(utterance);
     } catch(e){}
-    hintBtn.disabled = true;
+    
+    if(hintBtn) hintBtn.disabled = true;
     setTimeout(() => {
-        hintBox.classList.remove("visible");
-        if (document.getElementById("next-btn").style.display === "none") hintBtn.disabled = false;
+        if(hintBox) hintBox.classList.remove("visible");
+        const nextBtn = document.getElementById("next-btn");
+        if (nextBtn && nextBtn.style.display === "none") {
+            if(hintBtn) hintBtn.disabled = false;
+        }
     }, 2000);
 }
 
@@ -499,14 +534,43 @@ function cheerHouse(message) {
     }
 }
 
-function closeLevelUpModal() { document.getElementById("levelup-modal").style.display = "none"; nextQuestion(); }
-function registerMistake(wordObj) { if (!mistakeRegistry[wordObj.word]) { mistakeRegistry[wordObj.word] = { wordObj: wordObj, wins: 0 }; } else { mistakeRegistry[wordObj.word].wins = 0; } }
-function handleNormalVictory() {}
-function handleReviewVictory() { const wordKey = currentQ.word; if (mistakeRegistry[wordKey]) { mistakeRegistry[wordKey].wins++; if (mistakeRegistry[wordKey].wins >= REQUIRED_REVIEW_WINS) delete mistakeRegistry[wordKey]; } if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } else { try{ fireConfetti(); }catch(e){} setTimeout(nextQuestion, 1500); } }
-function checkLevelUpCondition() { if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } else { startReviewMode(); } }
-function startReviewMode() { if (isReviewMode) return; isReviewMode = true; updateHUD(); try{ speak("Boss Battle!"); }catch(e){} alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`); nextQuestion(); }
-function handleDamage() { try { document.body.classList.add("shake-screen"); setTimeout(() => document.body.classList.remove("shake-screen"), 500); } catch(e){} }
-function speak(text) { if (!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text.toLowerCase()); setVoice(utterance); window.speechSynthesis.speak(utterance); }
-function setVoice(utterance) { utterance.lang = 'en-US'; utterance.rate = voiceSettings.rate; utterance.pitch = voiceSettings.pitch; const voices = window.speechSynthesis.getVoices(); let targetVoice = (voiceSettings.gender === 'male') ? voices.find(v => v.name.includes('Male') && v.lang.includes('en')) : voices.find(v => v.name.includes('Female') && v.lang.includes('en')); if (targetVoice) utterance.voice = targetVoice; }
-function playCurrentWord() { try{ speak(currentQ.word); }catch(e){} }
+window.closeLevelUpModal = function() {
+    const modal = document.getElementById("levelup-modal");
+    if(modal) modal.style.display = "none";
+    nextQuestion();
+}
+
+function updateLearningProgress(word, isCorrect) {
+    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
+    const data = learningProgress[word];
+    if (isCorrect) {
+        data.wins++;
+        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
+    } else {
+        data.wins = 0;
+        data.weight += 10;
+    }
+    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
+}
+
+// 語音與特效
+window.playCurrentWord = function() { try{ speak(currentQ.word); }catch(e){} }
+
+function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.toLowerCase());
+    setVoice(utterance);
+    window.speechSynthesis.speak(utterance);
+}
+
+function setVoice(utterance) {
+    utterance.lang = 'en-US'; utterance.rate = voiceSettings.rate; utterance.pitch = voiceSettings.pitch;
+    const voices = window.speechSynthesis.getVoices();
+    let targetVoice = (voiceSettings.gender === 'male') ? 
+        voices.find(v => v.name.includes('Male') && v.lang.includes('en')) : 
+        voices.find(v => v.name.includes('Female') && v.lang.includes('en'));
+    if (targetVoice) utterance.voice = targetVoice;
+}
+
 function fireConfetti() { if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
