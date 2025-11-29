@@ -1,7 +1,7 @@
 // ===================================================
 // 1. 遊戲參數與狀態
 // ===================================================
-const MAX_HP = 8;       // (保留變數但不顯示血條)
+const MAX_HP = 8;
 const XP_WIN = 50;      // 答對 +50 XP
 const XP_LOSE = 30;     // 答錯 -30 XP
 const HINT_COST = 20;   // 偷看 -20 XP
@@ -27,7 +27,6 @@ let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 // 遊戲局狀態
 let currentCategory = "ALL";
-let questionBank = []; // 會從 data.js 載入
 let filteredQuestions = [];
 let currentQ = {};      
 let currentInput = [];  
@@ -40,18 +39,51 @@ let learningProgress = JSON.parse(localStorage.getItem('english_rpg_progress')) 
 const isTypingMode = () => document.getElementById('typing-input') !== null;
 
 // ===================================================
-// 2. 初始化
+// 2. 單字庫 (內建完整版)
 // ===================================================
+const questionBank = [
+    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
+    { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" }, { word: "BIRD", icon: "🐦", cn: "鳥", cat: "animal" },
+    { word: "FISH", icon: "🐟", cn: "魚", cat: "animal" }, { word: "DUCK", icon: "🦆", cn: "鴨子", cat: "animal" },
+    { word: "LION", icon: "🦁", cn: "獅子", cat: "animal" }, { word: "TIGER", icon: "🐯", cn: "老虎", cat: "animal" },
+    { word: "BEAR", icon: "🐻", cn: "熊", cat: "animal" }, { word: "RABBIT", icon: "🐰", cn: "兔子", cat: "animal" },
+    { word: "MONKEY", icon: "🐵", cn: "猴子", cat: "animal" }, { word: "ELEPHANT", icon: "🐘", cn: "大象", cat: "animal" },
+    { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" }, { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
+    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }, { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
+    { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" }, { word: "GREEN", icon: "🟢", cn: "綠色", cat: "color" },
+    { word: "ORANGE", icon: "🟠", cn: "橘色", cat: "color" }, { word: "PURPLE", icon: "🟣", cn: "紫色", cat: "color" },
+    { word: "BLACK", icon: "⚫", cn: "黑色", cat: "color" }, { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
+    { word: "PINK", icon: "🩷", cn: "粉紅色", cat: "color" },
+    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" }, { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
+    { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" }, { word: "FOUR", icon: "4️⃣", cn: "四", cat: "number" },
+    { word: "FIVE", icon: "5️⃣", cn: "五", cat: "number" }, { word: "SIX", icon: "6️⃣", cn: "六", cat: "number" },
+    { word: "SEVEN", icon: "7️⃣", cn: "七", cat: "number" }, { word: "EIGHT", icon: "8️⃣", cn: "八", cat: "number" },
+    { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" }, { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
+    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }, { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
+    { word: "ORANGE", icon: "🍊", cn: "柳橙", cat: "food" }, { word: "LEMON", icon: "🍋", cn: "檸檬", cat: "food" },
+    { word: "EGG", icon: "🥚", cn: "蛋", cat: "food" }, { word: "MILK", icon: "🥛", cn: "牛奶", cat: "food" },
+    { word: "CAKE", icon: "🍰", cn: "蛋糕", cat: "food" }, { word: "ICE CREAM", icon: "🍦", cn: "冰淇淋", cat: "food" },
+    { word: "RICE", icon: "🍚", cn: "米飯", cat: "food" }, { word: "WATER", icon: "💧", cn: "水", cat: "food" },
+    { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" }, { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
+    { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" }, { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
+    { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" }, { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
+    { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" }, { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
+    { word: "LEG", icon: "🦵", cn: "腿", cat: "body" }, { word: "ARM", icon: "💪", cn: "手臂", cat: "body" },
+    { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" }, { word: "FACE", icon: "😀", cn: "臉", cat: "body" },
+    { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" }, { word: "PENCIL", icon: "✏️", cn: "鉛筆", cat: "item" },
+    { word: "BOOK", icon: "📖", cn: "書", cat: "item" }, { word: "BAG", icon: "🎒", cn: "書包", cat: "item" },
+    { word: "RULER", icon: "📏", cn: "尺", cat: "item" }, { word: "BOX", icon: "📦", cn: "箱子", cat: "item" },
+    { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" }, { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
+    { word: "CAR", icon: "🚗", cn: "車子", cat: "item" }, { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
+    { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
+    { word: "HAT", icon: "👒", cn: "帽子", cat: "item" }, { word: "DAD", icon: "👨", cn: "爸爸" }, 
+    { word: "MOM", icon: "👩", cn: "媽媽" }, { word: "BOY", icon: "👦", cn: "男孩" }, 
+    { word: "GIRL", icon: "👧", cn: "女孩" }, { word: "BABY", icon: "👶", cn: "嬰兒" }, 
+    { word: "KING", icon: "👑", cn: "國王" }
+];
+
 window.onload = function() { 
     if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
-    
-    // 從 data.js 載入
-    if (typeof VOCAB_DB !== 'undefined') {
-        questionBank = VOCAB_DB['grade3']; 
-    } else {
-        alert("錯誤：找不到 data.js，請確認檔案存在！");
-        questionBank = [];
-    }
 };
 
 // ===================================================
@@ -63,10 +95,8 @@ function goToCategorySelect(gender) {
     if(document.getElementById('player-name-display')) {
         document.getElementById('player-name-display').innerText = player.name;
     }
-
     voiceSettings.gender = gender;
     voiceSettings.pitch = (gender === 'male') ? 0.8 : 1.2;
-
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('category-screen').style.display = 'flex';
 }
@@ -81,12 +111,10 @@ function startGame(category) {
         const map = { 'animal': "動物園", 'food': "美食街", 'color': "顏色館", 'number': "數字谷", 'body': "身體檢查", 'item': "生活用品" };
         if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = map[category] || category;
     }
-
     document.getElementById('category-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('game-container').style.display = 'block';
     
-    // 綁定打字輸入事件
     if(isTypingMode()) {
         const input = document.getElementById('typing-input');
         input.addEventListener('input', handleTypingInput);
@@ -101,7 +129,16 @@ function startGame(category) {
 
 function nextQuestion() {
     isFrozen = false;
-    // UI 重置
+    document.getElementById("freeze-overlay").style.display = "none";
+    if (!isReviewMode) {
+        questionCount++;
+        document.getElementById("q-count").innerText = questionCount;
+    } else {
+        document.getElementById("q-count").innerText = "🔥魔王關";
+    }
+    
+    errorCount = 0; currentInput = []; hasUsedHint = false;
+    
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
@@ -118,12 +155,33 @@ function nextQuestion() {
     } else {
         document.getElementById("freeze-overlay").style.display = "none";
         currentInput = [];
-        renderLetterPool(); // 產生按鈕
-        renderSlots();      // 產生格子
+        // ★ 關鍵：上一版就是這裡斷掉了，現在補回來了！
+        renderLetterPool(); 
+        renderSlots();
     }
 
-    // 選題 (智慧權重)
-    currentQ = getWeightedQuestion();
+    // 選題
+    if (isReviewMode) {
+        const mistakes = Object.keys(mistakeRegistry);
+        if (mistakes.length === 0) { levelUp(); return filteredQuestions[0]; }
+        const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
+        currentQ = mistakeRegistry[randomKey].wordObj;
+        document.getElementById("message-area").innerHTML = `<span style='color:#e91e63'>🔥 複習剩餘：${REQUIRED_REVIEW_WINS - mistakeRegistry[randomKey].wins} 次</span>`;
+    } else {
+        let totalWeight = 0;
+        const weightedPool = filteredQuestions.map(q => {
+            if (!learningProgress[q.word]) learningProgress[q.word] = { wins: 0, weight: 10 };
+            const data = learningProgress[q.word];
+            totalWeight += data.weight;
+            return { q: q, weight: data.weight };
+        });
+        let random = Math.random() * totalWeight;
+        currentQ = filteredQuestions[0];
+        for (let item of weightedPool) {
+            if (random < item.weight) { currentQ = item.q; break; }
+            random -= item.weight;
+        }
+    }
     
     document.getElementById("image-area").innerText = currentQ.icon;
     document.getElementById("hint-overlay").innerText = currentQ.word;
@@ -132,46 +190,8 @@ function nextQuestion() {
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
-// 智慧選題演算法
-function getWeightedQuestion() {
-    if (isReviewMode) {
-        const mistakes = Object.keys(mistakeRegistry);
-        if (mistakes.length === 0) { levelUp(); return filteredQuestions[0]; }
-        const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
-        return mistakeRegistry[randomKey].wordObj;
-    }
-
-    let totalWeight = 0;
-    const weightedPool = filteredQuestions.map(q => {
-        if (!learningProgress[q.word]) learningProgress[q.word] = { wins: 0, weight: 10 };
-        const data = learningProgress[q.word];
-        totalWeight += data.weight;
-        return { q: q, weight: data.weight };
-    });
-
-    let random = Math.random() * totalWeight;
-    for (let item of weightedPool) {
-        if (random < item.weight) return item.q;
-        random -= item.weight;
-    }
-    return filteredQuestions[0];
-}
-
-function updateLearningProgress(word, isCorrect) {
-    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
-    const data = learningProgress[word];
-    if (isCorrect) {
-        data.wins++;
-        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
-    } else {
-        data.wins = 0;
-        data.weight += 10;
-    }
-    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
-}
-
 // ===================================================
-// 4. 輸入處理
+// 4. 輸入與按鈕處理 (UI Logic)
 // ===================================================
 function renderSlots() {
     const slotsDiv = document.getElementById("answer-slots");
@@ -205,10 +225,8 @@ function selectLetter(char, btnElement) {
     if (isFrozen) return;
     const cleanWord = currentQ.word.replace(/ /g, "");
     if (currentInput.length >= cleanWord.length) return;
-    
     try { speak(char); } catch(e){}
     currentInput.push(char);
-    
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
         if (currentQ.word[i] !== " " && slot && slot.innerText === "") {
@@ -252,7 +270,7 @@ function handleTypingInput(e) {
 }
 
 // ===================================================
-// 5. 檢查答案
+// 5. 判斷對錯與XP
 // ===================================================
 function checkAnswer(playerAnswer) {
     const cleanWord = currentQ.word.replace(/ /g, "");
@@ -285,8 +303,8 @@ function checkAnswer(playerAnswer) {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
-        // 自動跳下一題 (如果有升級彈窗就不跳)
         if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
+            document.getElementById("next-btn").style.display = "inline-block";
             setTimeout(nextQuestion, 1500); 
         }
 
@@ -294,9 +312,8 @@ function checkAnswer(playerAnswer) {
         // --- 答錯 ---
         loseXP(XP_LOSE);
         updateLearningProgress(currentQ.word, false);
-        
         msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
-        try { speak("Try again"); cheerHouse("加油！再試一次！🛡️"); } catch(e){}
+        try { speak("Try again"); cheerHouse("哎呀！扣分了！🛡️"); } catch(e){}
         
         registerMistake(currentQ);
         errorCount++;
@@ -323,24 +340,14 @@ function checkAnswer(playerAnswer) {
 }
 
 // ===================================================
-// 6. XP 系統 (★ 累加制修正版)
+// 6. XP 累加制系統
 // ===================================================
-
-// 計算「升到下一級」所需的【總累積經驗值】
-// Lv1 -> 100
-// Lv2 -> 250 (100 + 150)
-// Lv3 -> 450 (250 + 200)
 function getLevelThreshold(level) {
     let totalReq = 0;
-    for(let i = 1; i <= level; i++) {
-        // 公式：每一級增加 50 * (等級+1)
-        // Lv1: 100, Lv2: 150, Lv3: 200...
-        totalReq += (50 * (i + 1)); 
-    }
+    for(let i = 1; i <= level; i++) totalReq += (50 * (i + 1));
     return totalReq;
 }
 
-// 取得「上一級」的門檻 (用來計算進度條的起點)
 function getPrevLevelThreshold(level) {
     if (level === 1) return 0;
     return getLevelThreshold(level - 1);
@@ -350,11 +357,8 @@ function updateHUD() {
     document.getElementById("level-display").innerText = player.level;
     document.getElementById("ticket-count").innerText = player.freeHints;
     
-    // 1. 計算區間
-    const nextLevelTotal = getLevelThreshold(player.level); // 下一級目標 (例: 250)
-    const prevLevelTotal = getPrevLevelThreshold(player.level); // 上一級門檻 (例: 100)
-    
-    // 2. 計算進度條百分比
+    const nextLevelTotal = getLevelThreshold(player.level);
+    const prevLevelTotal = getPrevLevelThreshold(player.level);
     const levelRange = nextLevelTotal - prevLevelTotal;
     const currentProgress = player.currentXP - prevLevelTotal;
     
@@ -364,7 +368,6 @@ function updateHUD() {
     
     document.getElementById("xp-bar").style.width = percentage + "%";
     
-    // 3. 顯示文字：目前總經驗 / 下一級總門檻
     const displayStr = `${player.currentXP} / ${nextLevelTotal} XP`;
     if(document.getElementById("xp-display-text")) {
         document.getElementById("xp-display-text").innerText = displayStr;
@@ -374,91 +377,72 @@ function updateHUD() {
     }
 }
 
-function showXPGainEffect(amount, isGain) {
-    const hud = document.querySelector('.xp-bar-container');
-    if(!hud) return;
-    
-    const floatText = document.createElement('div');
-    floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
-    floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
-    
-    const rect = hud.getBoundingClientRect();
-    floatText.style.top = (rect.top - 30) + 'px';
-    floatText.style.left = (rect.left + rect.width / 2) + 'px';
-    
-    document.body.appendChild(floatText);
-    setTimeout(() => { floatText.remove(); }, 1200);
-}
-
 function gainXP(amount) {
     if (isReviewMode) return;
-    
     player.currentXP += amount;
     showXPGainEffect(amount, true);
-    
-    // 檢查是否達到總門檻
-    const threshold = getLevelThreshold(player.level);
-    if (player.currentXP >= threshold) {
-        // 升級時【不歸零】，保留總經驗值
-        levelUp();
-    } else {
-        updateHUD();
-    }
+    if (player.currentXP >= getLevelThreshold(player.level)) levelUp();
+    else updateHUD();
 }
 
 function loseXP(amount) {
     if (isReviewMode) return;
-    
     player.currentXP -= amount;
-    
-    // 保護機制：經驗值不能低於「上一級的門檻」 (不掉級)
     const minXP = getPrevLevelThreshold(player.level);
-    if (player.currentXP < minXP) {
-        player.currentXP = minXP;
-    }
-    
+    if (player.currentXP < minXP) player.currentXP = minXP;
     showXPGainEffect(amount, false);
-    
     try {
         document.body.classList.add("shake-screen");
         setTimeout(() => document.body.classList.remove("shake-screen"), 500);
     } catch(e){}
-    
     updateHUD();
+}
+
+function showXPGainEffect(amount, isGain) {
+    const hud = document.querySelector('.xp-bar-container');
+    if(!hud) return;
+    const floatText = document.createElement('div');
+    floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
+    floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
+    const rect = hud.getBoundingClientRect();
+    floatText.style.top = (rect.top - 30) + 'px';
+    floatText.style.left = (rect.left + rect.width / 2) + 'px';
+    document.body.appendChild(floatText);
+    setTimeout(() => { floatText.remove(); }, 1200);
 }
 
 function levelUp() {
     player.level++;
     if (player.level > 20) player.level = 20;
     player.freeHints++; 
-    
     updateHUD();
     try{ speak("Level Up!"); fireConfetti(); }catch(e){}
-    
     const modal = document.getElementById("levelup-modal");
     if(modal) {
         document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
-        
         let nextStageIndex = player.level - 1;
         if (nextStageIndex >= HOUSE_STAGES.length) nextStageIndex = HOUSE_STAGES.length - 1;
         document.getElementById("levelup-house").innerText = HOUSE_STAGES[nextStageIndex].icon;
-        
         modal.style.display = "flex";
     }
-    
     updateHouse();
     cheerHouse("太棒了！房子升級囉！🎉");
 }
 
-function updateHouse() {
-    let stageIndex = player.level - 1;
-    if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
-    const stage = HOUSE_STAGES[stageIndex];
-    if(document.getElementById("my-house-icon")) document.getElementById("my-house-icon").innerText = stage.icon;
-    if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
+function updateLearningProgress(word, isCorrect) {
+    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
+    const data = learningProgress[word];
+    if (isCorrect) {
+        data.wins++;
+        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
+    } else {
+        data.wins = 0;
+        data.weight += 10;
+    }
+    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
 }
 
-// ... (以下為輔助功能) ...
+// ... (提示與輔助) ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if(!btn) return;
@@ -484,11 +468,10 @@ function showHint() {
             hasUsedHint = true;
             updateHUD();
         } else {
-            alert("經驗值不足，無法偷看！加油再試試！");
+            alert("經驗值不足，無法偷看！");
             return;
         }
     }
-
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
     hintBox.classList.add("visible");
@@ -497,12 +480,19 @@ function showHint() {
         setVoice(utterance); utterance.rate = 0.5;
         window.speechSynthesis.speak(utterance);
     } catch(e){}
-    
     hintBtn.disabled = true;
     setTimeout(() => {
         hintBox.classList.remove("visible");
         if (document.getElementById("next-btn").style.display === "none") hintBtn.disabled = false;
     }, 2000);
+}
+
+function updateHouse() {
+    let stageIndex = player.level - 1;
+    if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
+    const stage = HOUSE_STAGES[stageIndex];
+    if(document.getElementById("my-house-icon")) document.getElementById("my-house-icon").innerText = stage.icon;
+    if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
 }
 
 function cheerHouse(message) {
@@ -514,67 +504,14 @@ function cheerHouse(message) {
     }
 }
 
-function closeLevelUpModal() {
-    document.getElementById("levelup-modal").style.display = "none";
-    nextQuestion();
-}
-
-function registerMistake(wordObj) {
-    if (!mistakeRegistry[wordObj.word]) { mistakeRegistry[wordObj.word] = { wordObj: wordObj, wins: 0 }; } 
-    else { mistakeRegistry[wordObj.word].wins = 0; }
-}
-
+function closeLevelUpModal() { document.getElementById("levelup-modal").style.display = "none"; nextQuestion(); }
+function registerMistake(wordObj) { if (!mistakeRegistry[wordObj.word]) { mistakeRegistry[wordObj.word] = { wordObj: wordObj, wins: 0 }; } else { mistakeRegistry[wordObj.word].wins = 0; } }
 function handleNormalVictory() {}
-
-function handleReviewVictory() {
-    const wordKey = currentQ.word;
-    if (mistakeRegistry[wordKey]) {
-        mistakeRegistry[wordKey].wins++;
-        if (mistakeRegistry[wordKey].wins >= REQUIRED_REVIEW_WINS) {
-            delete mistakeRegistry[wordKey];
-        }
-    }
-    if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
-    else { try{ fireConfetti(); }catch(e){} setTimeout(nextQuestion, 1500); }
-}
-
-function checkLevelUpCondition() {
-    if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
-    else { startReviewMode(); }
-}
-
-function startReviewMode() {
-    if (isReviewMode) return;
-    isReviewMode = true; 
-    updateHUD();
-    try{ speak("Boss Battle!"); }catch(e){}
-    alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`);
-    nextQuestion(); 
-}
-
-function handleDamage() {
-    try {
-        document.body.classList.add("shake-screen");
-        setTimeout(() => document.body.classList.remove("shake-screen"), 500);
-    } catch(e){}
-}
-
-function speak(text) {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text.toLowerCase());
-    setVoice(utterance);
-    window.speechSynthesis.speak(utterance);
-}
-
-function setVoice(utterance) {
-    utterance.lang = 'en-US'; utterance.rate = voiceSettings.rate; utterance.pitch = voiceSettings.pitch;
-    const voices = window.speechSynthesis.getVoices();
-    let targetVoice = (voiceSettings.gender === 'male') ? 
-        voices.find(v => v.name.includes('Male') && v.lang.includes('en')) : 
-        voices.find(v => v.name.includes('Female') && v.lang.includes('en'));
-    if (targetVoice) utterance.voice = targetVoice;
-}
-
+function handleReviewVictory() { const wordKey = currentQ.word; if (mistakeRegistry[wordKey]) { mistakeRegistry[wordKey].wins++; if (mistakeRegistry[wordKey].wins >= REQUIRED_REVIEW_WINS) delete mistakeRegistry[wordKey]; } if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } else { try{ fireConfetti(); }catch(e){} setTimeout(nextQuestion, 1500); } }
+function checkLevelUpCondition() { if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } else { startReviewMode(); } }
+function startReviewMode() { if (isReviewMode) return; isReviewMode = true; updateHUD(); try{ speak("Boss Battle!"); }catch(e){} alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`); nextQuestion(); }
+function handleDamage() { try { document.body.classList.add("shake-screen"); setTimeout(() => document.body.classList.remove("shake-screen"), 500); } catch(e){} }
+function speak(text) { if (!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text.toLowerCase()); setVoice(utterance); window.speechSynthesis.speak(utterance); }
+function setVoice(utterance) { utterance.lang = 'en-US'; utterance.rate = voiceSettings.rate; utterance.pitch = voiceSettings.pitch; const voices = window.speechSynthesis.getVoices(); let targetVoice = (voiceSettings.gender === 'male') ? voices.find(v => v.name.includes('Male') && v.lang.includes('en')) : voices.find(v => v.name.includes('Female') && v.lang.includes('en')); if (targetVoice) utterance.voice = targetVoice; }
 function playCurrentWord() { try{ speak(currentQ.word); }catch(e){} }
 function fireConfetti() { if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }
