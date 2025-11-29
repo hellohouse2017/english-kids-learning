@@ -112,7 +112,14 @@ body {
 
 .player-stats { display: flex; align-items: center; gap: 15px; }
 .level-badge { background: #FFD700; color: #333; font-weight: 900; padding: 5px 10px; border-radius: 5px; border: 2px solid #fff; }
-.hp-container { font-size: 1.5rem; letter-spacing: 5px; }
+/* 修改 style.css 中的 .hp-container */
+.hp-container {
+    font-size: 1.2rem; /* 原本 1.5rem 改小一點 */
+    letter-spacing: 2px; /* 間距縮小 */
+    word-break: break-all; /* 如果真的太長，允許換行 */
+    max-width: 200px;
+    line-height: 1.2;
+}
 
 /* 經驗條 */
 .xp-bar-container { width: 100%; height: 10px; background: #555; border-radius: 5px; overflow: hidden; border: 1px solid #777; margin-top: 5px; }

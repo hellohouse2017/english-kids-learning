@@ -1,12 +1,13 @@
-// 檔案名稱：game.js (完整 RPG 版)
+// 檔案名稱：game.js (錯題複習機制版)
 
 // ===================================================
 // 1. 遊戲參數與狀態設定
 // ===================================================
-const MAX_HP = 3;           // 最大血量 (3顆心)
-const XP_PER_LEVEL = 100;   // 升級所需經驗值
-const XP_PER_WIN = 20;      // 答對基礎經驗值
-let comboMultiplier = 2;    // 連擊加成係數
+const MAX_HP = 10;          // 最大血量提升到 10
+const XP_PER_LEVEL = 100;   // 升級所需經驗
+const XP_PER_WIN = 20;      // 答對基礎經驗
+const HINT_HP_COST = 0.5;   // 偷看一眼扣 0.5 顆心
+const REQUIRED_REVIEW_WINS = 3; // 錯題必須答對幾次才能消除
 
 // 玩家狀態
 let player = {
@@ -16,15 +17,20 @@ let player = {
     combo: 0
 };
 
-// 當前局狀態
-let currentQ = {};      // 目前題目
-let currentInput = [];  // 玩家拼的字
-let errorCount = 0;     // 這題錯幾次
-let questionCount = 0;  // 總題數計數
-let hasUsedHint = false; // 是否偷看過答案
+// 遊戲局狀態
+let currentQ = {};      
+let currentInput = [];  
+let errorCount = 0;     
+let questionCount = 0;  
+let hasUsedHint = false;
+
+// === 核心：錯題記錄系統 ===
+// 格式: { "CAT": { wordObj: object, wins: 0 }, ... }
+let mistakeRegistry = {}; 
+let isReviewMode = false; // 是否處於「升級前的魔王挑戰」狀態
 
 // ===================================================
-// 2. 完整單字庫 (國小三年級程度)
+// 2. 完整單字庫
 // ===================================================
 const questionBank = [
     // === 動物 ===
@@ -85,62 +91,80 @@ const questionBank = [
 // 3. 遊戲初始化
 // ===================================================
 window.onload = function() {
-    updateHUD(); // 更新介面數據
-    nextQuestion(); // 開始第一題
+    updateHUD();
+    nextQuestion();
 };
 
 // ===================================================
-// 4. 核心流程：出題與互動
+// 4. 出題邏輯 (包含複習模式判斷)
 // ===================================================
 
 function nextQuestion() {
-    // 1. 重置單題變數
-    questionCount++;
-    document.getElementById("q-count").innerText = questionCount;
+    // 重置單題狀態
+    if (!isReviewMode) {
+        questionCount++;
+        document.getElementById("q-count").innerText = questionCount;
+    } else {
+        document.getElementById("q-count").innerText = "🔥魔王關"; // 複習模式顯示
+    }
+    
     errorCount = 0;
     currentInput = [];
     hasUsedHint = false;
     
-    // 2. 重置介面元素
+    // UI 重置
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
-    
     const hintBox = document.getElementById("hint-overlay");
     hintBox.classList.remove("visible");
     
-    // 3. 隨機選題
-    const randomIndex = Math.floor(Math.random() * questionBank.length);
-    currentQ = questionBank[randomIndex];
+    // --- 選題邏輯 ---
+    if (isReviewMode) {
+        // [複習模式] 從錯題本中選題
+        const mistakes = Object.keys(mistakeRegistry);
+        if (mistakes.length === 0) {
+            // 萬一發生錯誤沒題目了，直接升級
+            levelUp();
+            return;
+        }
+        // 隨機選一個還沒通過複習的字
+        const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
+        currentQ = mistakeRegistry[randomKey].wordObj;
+        
+        // 提示玩家還剩多少字
+        speak("Review time! " + currentQ.word);
+        document.getElementById("message-area").innerHTML = `<span style='color:#e91e63'>🔥 複習挑戰：這個字還要答對 ${REQUIRED_REVIEW_WINS - mistakeRegistry[randomKey].wins} 次</span>`;
+    } else {
+        // [一般模式] 隨機選題
+        const randomIndex = Math.floor(Math.random() * questionBank.length);
+        currentQ = questionBank[randomIndex];
+    }
     
-    // 4. 更新畫面 (圖片 & 隱藏提示)
+    // --- 渲染畫面 ---
     document.getElementById("image-area").innerText = currentQ.icon;
     hintBox.innerText = currentQ.word;
 
-    // 5. 建立底線 (Slots)
+    // 建立底線
     const slotsDiv = document.getElementById("answer-slots");
     slotsDiv.innerHTML = "";
     for (let i = 0; i < currentQ.word.length; i++) {
         let slot = document.createElement("div");
         slot.className = "slot";
         slot.id = "slot-" + i;
-        
-        // 處理空格 (如 ICE CREAM)
         if (currentQ.word[i] === " ") {
             slot.style.borderBottom = "none";
             slot.innerHTML = "&nbsp;";
-            currentInput.push(" "); // 自動填入空格
+            currentInput.push(" ");
         }
-        
         slotsDiv.appendChild(slot);
     }
 
-    // 6. 建立字母按鈕 (Pool)
+    // 建立字母
     const poolDiv = document.getElementById("letter-pool");
     poolDiv.innerHTML = "";
-    
-    let letters = currentQ.word.replace(/ /g, "").split(''); // 去掉空格後打散
-    letters.sort(() => Math.random() - 0.5); // 洗牌
+    let letters = currentQ.word.replace(/ /g, "").split('');
+    letters.sort(() => Math.random() - 0.5);
 
     letters.forEach((char) => {
         let btn = document.createElement("button");
@@ -150,7 +174,7 @@ function nextQuestion() {
         poolDiv.appendChild(btn);
     });
     
-    // 7. 自動發音 (延遲 0.5秒)
+    // 一般模式才自動發音，複習模式讓孩子先看圖想一下，增加難度 (或保留發音皆可，這裡保留發音)
     setTimeout(() => {
         speak(currentQ.word);
     }, 500);
@@ -158,30 +182,23 @@ function nextQuestion() {
 
 function selectLetter(char, btnElement) {
     if (currentInput.length >= currentQ.word.length) return;
-
-    speak(char); // 唸出字母
+    speak(char);
     currentInput.push(char);
     
-    // 找到下一個還沒填的格子
     const slotIndex = currentInput.length - 1;
     const slot = document.getElementById("slot-" + slotIndex);
+    if (slot) slot.innerText = char;
     
-    if (slot) {
-        slot.innerText = char;
-    }
-    
-    // 停用按鈕
     btnElement.classList.add("used");
     btnElement.disabled = true;
 
-    // 檢查是否拼完
     if (currentInput.length === currentQ.word.length) {
         checkAnswer();
     }
 }
 
 // ===================================================
-// 5. 核心流程：檢查答案與結果
+// 5. 檢查答案
 // ===================================================
 
 function checkAnswer() {
@@ -189,141 +206,278 @@ function checkAnswer() {
     const msgDiv = document.getElementById("message-area");
 
     if (playerAnswer === currentQ.word) {
-        // --- 答對了 (Victory) ---
-        handleVictory();
+        // --- 答對 ---
+        if (isReviewMode) {
+            handleReviewVictory(); // 處理複習模式的勝利
+        } else {
+            handleNormalVictory(); // 處理一般模式的勝利
+        }
         
-        msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>⚔️ Nice Hit! 答對了！</span>";
+        msgDiv.innerHTML += " <span style='color:green; font-size:24px;'>⚔️ Correct!</span>";
         speak("Correct! " + currentQ.word);
         
         document.getElementById("next-btn").style.display = "inline-block";
         document.getElementById("btn-hint").disabled = true;
 
     } else {
-        // --- 答錯了 (Damage) ---
+        // --- 答錯 ---
         handleDamage();
-        
-        msgDiv.innerHTML = "<span style='color:red'>🛡️ Blocked! 錯囉！</span>";
+        msgDiv.innerHTML = "<span style='color:red'>🛡️ Wrong!</span>";
         speak("Try again");
+
+        // 記錄錯題 (不管是不是複習模式，錯了都要加進去/重置次數)
+        registerMistake(currentQ);
         
-        // 錯誤累計與提示引導
         errorCount++;
         if (errorCount >= 2) {
-            msgDiv.innerHTML += "<br><span style='color:#e91e63; font-size:0.9rem'>💡 點上面的按鈕偷看一眼吧！</span>";
-            // 震動提示按鈕
-            const hintBtn = document.getElementById("btn-hint");
-            hintBtn.style.transform = "scale(1.2)";
-            setTimeout(() => hintBtn.style.transform = "scale(1)", 300);
+             msgDiv.innerHTML += "<br><span style='color:#e91e63; font-size:0.9rem'>💡 用提示吧！(扣 0.5 愛心)</span>";
+             const hintBtn = document.getElementById("btn-hint");
+             hintBtn.style.transform = "scale(1.2)";
+             setTimeout(() => hintBtn.style.transform = "scale(1)", 300);
         }
+        
+        setTimeout(() => resetCurrentLevel(), 1200);
+    }
+}
 
-        // 1秒後重置這一題 (讓小孩重拼)
-        setTimeout(() => {
-            resetCurrentLevel();
-        }, 1200);
+// 記錄錯題的函式
+function registerMistake(wordObj) {
+    if (!mistakeRegistry[wordObj.word]) {
+        // 如果是新錯題，加入名單
+        mistakeRegistry[wordObj.word] = {
+            wordObj: wordObj,
+            wins: 0 // 累積勝利次數歸零
+        };
+    } else {
+        // 如果已經在名單裡又錯了，勝利次數歸零 (嚴格制)
+        mistakeRegistry[wordObj.word].wins = 0;
     }
 }
 
 // ===================================================
-// 6. RPG 系統 (XP, HP, Level, Combo)
+// 6. 勝利與升級邏輯
 // ===================================================
 
-function handleVictory() {
-    // 1. 計算經驗值
-    // 如果用過提示或錯太多次，經驗值減少 (但至少給 5 分鼓勵)
+function handleNormalVictory() {
+    // 計算經驗
     let gainedXP = XP_PER_WIN;
-    if (hasUsedHint || errorCount > 0) {
-        gainedXP = 5; 
-    }
-
-    // 2. 連擊系統
+    if (hasUsedHint || errorCount > 0) gainedXP = 5; 
+    
     player.combo++;
     showCombo(player.combo);
-    
-    // 連擊加成：每多 1 Combo 多送 XP
-    if (player.combo > 1) {
-        gainedXP += (player.combo * comboMultiplier);
-    }
+    if (player.combo > 1) gainedXP += (player.combo * 2);
 
-    // 3. 給予經驗並檢查升級
     gainXP(gainedXP);
-    
-    // 4. 特效
     fireConfetti();
 }
 
-function handleDamage() {
-    // 1. 扣血
-    player.hp--;
+function handleReviewVictory() {
+    // 複習模式下，不給經驗值，而是累積「通過次數」
+    const wordKey = currentQ.word;
+    if (mistakeRegistry[wordKey]) {
+        mistakeRegistry[wordKey].wins++;
+        
+        // 檢查是否達成 3 次
+        if (mistakeRegistry[wordKey].wins >= REQUIRED_REVIEW_WINS) {
+            delete mistakeRegistry[wordKey]; // 移除這題
+            alert(`恭喜！你已經完全學會 ${wordKey} 了！`);
+        }
+    }
     
-    // 2. 連擊中斷
+    // 檢查是否還有剩餘錯題
+    if (Object.keys(mistakeRegistry).length === 0) {
+        // 全部複習完畢！
+        levelUp(); 
+    } else {
+        fireConfetti(); // 小慶祝
+    }
+}
+
+function gainXP(amount) {
+    if (isReviewMode) return; // 複習模式不加經驗
+
+    player.currentXP += amount;
+    
+    // 檢查是否滿足升級條件
+    if (player.currentXP >= XP_PER_LEVEL) {
+        checkLevelUpCondition();
+    } else {
+        updateHUD();
+    }
+}
+
+function checkLevelUpCondition() {
+    const mistakeCount = Object.keys(mistakeRegistry).length;
+    
+    if (mistakeCount === 0) {
+        // 沒有錯題，直接升級
+        levelUp();
+    } else {
+        // 有錯題，進入複習模式
+        startReviewMode();
+    }
+}
+
+function startReviewMode() {
+    if (isReviewMode) return; // 已經在裡面了
+    isReviewMode = true;
+    
+    player.currentXP = XP_PER_LEVEL; // 鎖定經驗條在滿的狀態
+    updateHUD();
+    
+    speak("Boss Battle!");
+    alert(`🚨 升級檢定！\n\n你有 ${Object.keys(mistakeRegistry).length} 個單字還不熟。\n\n請通過魔王複習挑戰才能升級！\n(每個字要答對 3 次)`);
+    
+    // 強制重新整理介面顯示下一題
+    nextQuestion(); 
+}
+
+function levelUp() {
+    isReviewMode = false; // 解除複習模式
+    player.level++;
+    player.currentXP = 0;
+    player.hp = MAX_HP;   // 補滿血
+    
+    updateHUD();
+    
+    speak("Level Up! Congratulations!");
+    fireConfetti();
+    
+    // 升級大獎勵提示
+    setTimeout(() => {
+        alert(`🎉 LEVEL UP! 恭喜升到 Lv. ${player.level}！\n\n🎁 獎勵：血量完全恢復！\n繼續挑戰吧！`);
+        nextQuestion();
+    }, 500);
+}
+
+// ===================================================
+// 7. 受傷與提示
+// ===================================================
+
+function handleDamage() {
+    player.hp--;
     player.combo = 0;
     hideCombo();
 
-    // 3. 畫面震動特效
     document.body.classList.add("shake-screen");
     setTimeout(() => document.body.classList.remove("shake-screen"), 500);
 
-    // 4. 更新介面
     updateHUD();
 
-    // 5. 檢查 Game Over
     if (player.hp <= 0) {
         setTimeout(gameOver, 500);
     }
 }
 
-function gainXP(amount) {
-    player.currentXP += amount;
-    
-    // 檢查是否升級
-    if (player.currentXP >= XP_PER_LEVEL) {
-        levelUp();
+function showHint() {
+    // 檢查血量是否足夠
+    if (player.hp <= HINT_HP_COST) {
+        alert("血量不足，不能偷看！加油！");
+        return;
     }
-    updateHUD();
+
+    // 扣除 0.5 血量
+    player.hp -= HINT_HP_COST;
+    hasUsedHint = true;
+    updateHUD(); // 更新血條顯示
+
+    const hintBox = document.getElementById("hint-overlay");
+    const hintBtn = document.getElementById("btn-hint");
+    
+    hintBox.classList.add("visible");
+    let utterance = new SpeechSynthesisUtterance(currentQ.word);
+    utterance.rate = 0.5;
+    window.speechSynthesis.speak(utterance);
+    
+    hintBtn.disabled = true;
+    setTimeout(() => {
+        hintBox.classList.remove("visible");
+        if (document.getElementById("next-btn").style.display === "none") {
+             hintBtn.disabled = false;
+        }
+    }, 2000);
 }
 
-function levelUp() {
-    player.level++;
-    player.currentXP = 0; // 歸零 (或是保留溢出的 XP: player.currentXP -= XP_PER_LEVEL)
-    player.hp = MAX_HP;   // 升級補滿血！
-    
-    speak("Level Up!");
-    alert(`🎉 LEVEL UP! 恭喜升到 Lv. ${player.level}！\n血量補滿了！`);
-}
-
-function gameOver() {
-    speak("Game Over");
-    alert("💀 Game Over! 血量歸零了！\n別灰心，按確定重新挑戰！");
-    
-    // 重置所有數值
-    player.hp = MAX_HP;
-    player.level = 1;
-    player.currentXP = 0;
-    player.combo = 0;
-    questionCount = 0;
-    
-    updateHUD();
-    nextQuestion();
-}
+// ===================================================
+// 8. 介面更新 (HUD) - 支援 0.5 顆心
+// ===================================================
 
 function updateHUD() {
-    // 更新等級
     document.getElementById("level-display").innerText = player.level;
     
-    // 更新血量 (愛心)
+    // 血量顯示邏輯 (支援半顆心)
     let hearts = "";
-    for(let i=0; i<MAX_HP; i++) {
-        if (i < player.hp) hearts += "❤️";
-        else hearts += "🖤"; // 空心
+    const fullHearts = Math.floor(player.hp);
+    const hasHalfHeart = (player.hp % 1 !== 0);
+    
+    // 畫全心
+    for(let i=0; i<fullHearts; i++) {
+        hearts += "❤️";
     }
+    // 畫半心 (用破碎的心或特殊符號代替，這裡用 💔 表示受傷/半心，或者用 🌗)
+    if (hasHalfHeart) {
+        hearts += "💔"; 
+    }
+    // 畫空心
+    const emptyHearts = MAX_HP - Math.ceil(player.hp);
+    for(let i=0; i<emptyHearts; i++) {
+        hearts += "🖤";
+    }
+    
     document.getElementById("hp-display").innerText = hearts;
 
-    // 更新經驗條長度
+    // 經驗條
     let percentage = (player.currentXP / XP_PER_LEVEL) * 100;
     if (percentage > 100) percentage = 100;
     document.getElementById("xp-bar").style.width = percentage + "%";
 }
 
-// 連擊顯示控制
+// ... (以下保留通用的輔助函式：speak, fireConfetti, resetCurrentLevel, gameOver 等) ...
+// 為了程式碼完整性，這裡補上必要的輔助函式
+
+function gameOver() {
+    speak("Game Over");
+    alert("💀 Game Over! 血量歸零了！\n\n別灰心，重新挑戰吧！");
+    // 重置
+    player.hp = MAX_HP;
+    player.level = 1;
+    player.currentXP = 0;
+    player.combo = 0;
+    mistakeRegistry = {}; // 錯題本清空 (或是選擇保留讓孩子繼續練，這裡先清空重來)
+    isReviewMode = false;
+    
+    updateHUD();
+    nextQuestion();
+}
+
+function resetCurrentLevel() {
+    currentInput = [];
+    if (currentQ.word.includes(" ")) currentInput.push(" ");
+    document.getElementById("message-area").innerText = "";
+    
+    const slots = document.getElementsByClassName("slot");
+    for(let s of slots) if(s.innerHTML !== "&nbsp;") s.innerText = "";
+    
+    const btns = document.getElementsByClassName("letter-btn");
+    for(let b of btns) {
+        b.classList.remove("used");
+        b.disabled = false;
+    }
+    speak(currentQ.word);
+}
+
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.8; 
+    window.speechSynthesis.speak(utterance);
+}
+
+function playCurrentWord() {
+    speak(currentQ.word);
+}
+
 function showCombo(count) {
     if (count < 2) return;
     const comboDiv = document.getElementById("combo-display");
@@ -335,90 +489,5 @@ function hideCombo() {
     document.getElementById("combo-display").classList.remove("show");
 }
 
-// ===================================================
-// 7. 輔助功能 (重置、發音、提示)
-// ===================================================
-
-function resetCurrentLevel() {
-    // 只重置輸入與按鈕，不換題目
-    currentInput = [];
-    
-    // 如果單字原本有空格，先填回去
-    if (currentQ.word.includes(" ")) {
-        currentInput.push(" ");
-    }
-
-    document.getElementById("message-area").innerText = "";
-    
-    // 清空格子
-    const slots = document.getElementsByClassName("slot");
-    for(let s of slots) {
-        if(s.innerHTML !== "&nbsp;") s.innerText = "";
-    }
-    
-    // 恢復按鈕
-    const btns = document.getElementsByClassName("letter-btn");
-    for(let b of btns) {
-        b.classList.remove("used");
-        b.disabled = false;
-    }
-    
-    playCurrentWord();
-}
-
-function playCurrentWord() {
-    speak(currentQ.word);
-    
-    // 按鈕特效
-    const btn = document.querySelector('.btn-replay');
-    if(btn) {
-        btn.style.transform = "scale(1.1)";
-        setTimeout(() => btn.style.transform = "scale(1)", 200);
-    }
-}
-
-function showHint() {
-    // 標記已使用提示 (會影響得分)
-    hasUsedHint = true;
-    
-    const hintBox = document.getElementById("hint-overlay");
-    const hintBtn = document.getElementById("btn-hint");
-    
-    // 顯示
-    hintBox.classList.add("visible");
-    
-    // 慢速唸
-    let utterance = new SpeechSynthesisUtterance(currentQ.word);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.5;
-    window.speechSynthesis.speak(utterance);
-    
-    // 暫時鎖定
-    hintBtn.disabled = true;
-    setTimeout(() => {
-        hintBox.classList.remove("visible");
-        // 如果還沒答對，按鈕恢復可用，讓小孩可以多看幾次
-        if (document.getElementById("next-btn").style.display === "none") {
-             hintBtn.disabled = false;
-        }
-    }, 2000); // 2秒後消失
-}
-
-function speak(text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.8; 
-    window.speechSynthesis.speak(utterance);
-}
-
 function fireConfetti() {
-    if (typeof confetti === 'function') {
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
-        });
-    }
-}
+    if (typeof
