@@ -27,7 +27,7 @@ let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
 // 遊戲局狀態
 let currentCategory = "ALL";
-let filteredQuestions = [];
+let filteredQuestions = []; // 題目池
 let currentQ = {};      
 let currentInput = [];  
 let isFrozen = false;
@@ -39,46 +39,89 @@ let learningProgress = JSON.parse(localStorage.getItem('english_rpg_progress')) 
 const isTypingMode = () => document.getElementById('typing-input') !== null;
 
 // ===================================================
-// 2. 單字庫 (內建完整版)
+// 2. ★ 單字庫 (直接內建，確保絕對不會讀不到)
 // ===================================================
 const questionBank = [
-    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
-    { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" }, { word: "BIRD", icon: "🐦", cn: "鳥", cat: "animal" },
-    { word: "FISH", icon: "🐟", cn: "魚", cat: "animal" }, { word: "DUCK", icon: "🦆", cn: "鴨子", cat: "animal" },
-    { word: "LION", icon: "🦁", cn: "獅子", cat: "animal" }, { word: "TIGER", icon: "🐯", cn: "老虎", cat: "animal" },
-    { word: "BEAR", icon: "🐻", cn: "熊", cat: "animal" }, { word: "RABBIT", icon: "🐰", cn: "兔子", cat: "animal" },
-    { word: "MONKEY", icon: "🐵", cn: "猴子", cat: "animal" }, { word: "ELEPHANT", icon: "🐘", cn: "大象", cat: "animal" },
-    { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" }, { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
-    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }, { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
-    { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" }, { word: "GREEN", icon: "🟢", cn: "綠色", cat: "color" },
-    { word: "ORANGE", icon: "🟠", cn: "橘色", cat: "color" }, { word: "PURPLE", icon: "🟣", cn: "紫色", cat: "color" },
-    { word: "BLACK", icon: "⚫", cn: "黑色", cat: "color" }, { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
+    // 動物
+    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" }, 
+    { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
+    { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" }, 
+    { word: "BIRD", icon: "🐦", cn: "鳥", cat: "animal" },
+    { word: "FISH", icon: "🐟", cn: "魚", cat: "animal" }, 
+    { word: "DUCK", icon: "🦆", cn: "鴨子", cat: "animal" },
+    { word: "LION", icon: "🦁", cn: "獅子", cat: "animal" }, 
+    { word: "TIGER", icon: "🐯", cn: "老虎", cat: "animal" },
+    { word: "BEAR", icon: "🐻", cn: "熊", cat: "animal" }, 
+    { word: "RABBIT", icon: "🐰", cn: "兔子", cat: "animal" },
+    { word: "MONKEY", icon: "🐵", cn: "猴子", cat: "animal" }, 
+    { word: "ELEPHANT", icon: "🐘", cn: "大象", cat: "animal" },
+    { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" }, 
+    { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
+    // 顏色
+    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" }, 
+    { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
+    { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" }, 
+    { word: "GREEN", icon: "🟢", cn: "綠色", cat: "color" },
+    { word: "ORANGE", icon: "🟠", cn: "橘色", cat: "color" }, 
+    { word: "PURPLE", icon: "🟣", cn: "紫色", cat: "color" },
+    { word: "BLACK", icon: "⚫", cn: "黑色", cat: "color" }, 
+    { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
     { word: "PINK", icon: "🩷", cn: "粉紅色", cat: "color" },
-    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" }, { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
-    { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" }, { word: "FOUR", icon: "4️⃣", cn: "四", cat: "number" },
-    { word: "FIVE", icon: "5️⃣", cn: "五", cat: "number" }, { word: "SIX", icon: "6️⃣", cn: "六", cat: "number" },
-    { word: "SEVEN", icon: "7️⃣", cn: "七", cat: "number" }, { word: "EIGHT", icon: "8️⃣", cn: "八", cat: "number" },
-    { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" }, { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
-    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }, { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
-    { word: "ORANGE", icon: "🍊", cn: "柳橙", cat: "food" }, { word: "LEMON", icon: "🍋", cn: "檸檬", cat: "food" },
-    { word: "EGG", icon: "🥚", cn: "蛋", cat: "food" }, { word: "MILK", icon: "🥛", cn: "牛奶", cat: "food" },
-    { word: "CAKE", icon: "🍰", cn: "蛋糕", cat: "food" }, { word: "ICE CREAM", icon: "🍦", cn: "冰淇淋", cat: "food" },
-    { word: "RICE", icon: "🍚", cn: "米飯", cat: "food" }, { word: "WATER", icon: "💧", cn: "水", cat: "food" },
-    { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" }, { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
-    { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" }, { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
-    { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" }, { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
-    { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" }, { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
-    { word: "LEG", icon: "🦵", cn: "腿", cat: "body" }, { word: "ARM", icon: "💪", cn: "手臂", cat: "body" },
-    { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" }, { word: "FACE", icon: "😀", cn: "臉", cat: "body" },
-    { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" }, { word: "PENCIL", icon: "✏️", cn: "鉛筆", cat: "item" },
-    { word: "BOOK", icon: "📖", cn: "書", cat: "item" }, { word: "BAG", icon: "🎒", cn: "書包", cat: "item" },
-    { word: "RULER", icon: "📏", cn: "尺", cat: "item" }, { word: "BOX", icon: "📦", cn: "箱子", cat: "item" },
-    { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" }, { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
-    { word: "CAR", icon: "🚗", cn: "車子", cat: "item" }, { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
-    { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
-    { word: "HAT", icon: "👒", cn: "帽子", cat: "item" }, { word: "DAD", icon: "👨", cn: "爸爸" }, 
-    { word: "MOM", icon: "👩", cn: "媽媽" }, { word: "BOY", icon: "👦", cn: "男孩" }, 
-    { word: "GIRL", icon: "👧", cn: "女孩" }, { word: "BABY", icon: "👶", cn: "嬰兒" }, 
+    // 數字
+    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" }, 
+    { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
+    { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" }, 
+    { word: "FOUR", icon: "4️⃣", cn: "四", cat: "number" },
+    { word: "FIVE", icon: "5️⃣", cn: "五", cat: "number" }, 
+    { word: "SIX", icon: "6️⃣", cn: "六", cat: "number" },
+    { word: "SEVEN", icon: "7️⃣", cn: "七", cat: "number" }, 
+    { word: "EIGHT", icon: "8️⃣", cn: "八", cat: "number" },
+    { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" }, 
+    { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
+    // 食物
+    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" }, 
+    { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
+    { word: "ORANGE", icon: "🍊", cn: "柳橙", cat: "food" }, 
+    { word: "LEMON", icon: "🍋", cn: "檸檬", cat: "food" },
+    { word: "EGG", icon: "🥚", cn: "蛋", cat: "food" }, 
+    { word: "MILK", icon: "🥛", cn: "牛奶", cat: "food" },
+    { word: "CAKE", icon: "🍰", cn: "蛋糕", cat: "food" }, 
+    { word: "ICE CREAM", icon: "🍦", cn: "冰淇淋", cat: "food" },
+    { word: "RICE", icon: "🍚", cn: "米飯", cat: "food" }, 
+    { word: "WATER", icon: "💧", cn: "水", cat: "food" },
+    { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" }, 
+    { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
+    // 身體
+    { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" }, 
+    { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
+    { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" }, 
+    { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
+    { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" }, 
+    { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
+    { word: "LEG", icon: "🦵", cn: "腿", cat: "body" }, 
+    { word: "ARM", icon: "💪", cn: "手臂", cat: "body" },
+    { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" }, 
+    { word: "FACE", icon: "😀", cn: "臉", cat: "body" },
+    // 用品
+    { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" }, 
+    { word: "PENCIL", icon: "✏️", cn: "鉛筆", cat: "item" },
+    { word: "BOOK", icon: "📖", cn: "書", cat: "item" }, 
+    { word: "BAG", icon: "🎒", cn: "書包", cat: "item" },
+    { word: "RULER", icon: "📏", cn: "尺", cat: "item" }, 
+    { word: "BOX", icon: "📦", cn: "箱子", cat: "item" },
+    { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" }, 
+    { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
+    { word: "CAR", icon: "🚗", cn: "車子", cat: "item" }, 
+    { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
+    { word: "BIKE", icon: "🚲", cn: "腳踏車", cat: "item" }, 
+    { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
+    { word: "HAT", icon: "👒", cn: "帽子", cat: "item" },
+    // 家庭
+    { word: "DAD", icon: "👨", cn: "爸爸" }, 
+    { word: "MOM", icon: "👩", cn: "媽媽" },
+    { word: "BOY", icon: "👦", cn: "男孩" }, 
+    { word: "GIRL", icon: "👧", cn: "女孩" },
+    { word: "BABY", icon: "👶", cn: "嬰兒" }, 
     { word: "KING", icon: "👑", cn: "國王" }
 ];
 
@@ -95,14 +138,18 @@ function goToCategorySelect(gender) {
     if(document.getElementById('player-name-display')) {
         document.getElementById('player-name-display').innerText = player.name;
     }
+
     voiceSettings.gender = gender;
     voiceSettings.pitch = (gender === 'male') ? 0.8 : 1.2;
+
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('category-screen').style.display = 'flex';
 }
 
 function startGame(category) {
     currentCategory = category;
+    
+    // 過濾題目
     if (category === 'ALL') {
         filteredQuestions = questionBank;
         if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = "隨機挑戰";
@@ -111,10 +158,18 @@ function startGame(category) {
         const map = { 'animal': "動物園", 'food': "美食街", 'color': "顏色館", 'number': "數字谷", 'body': "身體檢查", 'item': "生活用品" };
         if(document.getElementById('category-tag')) document.getElementById('category-tag').innerText = map[category] || category;
     }
+
+    // ★ 防呆機制：如果該類別沒有題目，就載入全部
+    if (filteredQuestions.length === 0) {
+        console.warn("Category empty, fallback to ALL");
+        filteredQuestions = questionBank;
+    }
+
     document.getElementById('category-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('game-container').style.display = 'block';
     
+    // 綁定打字輸入事件 (如果有的話)
     if(isTypingMode()) {
         const input = document.getElementById('typing-input');
         input.addEventListener('input', handleTypingInput);
@@ -129,7 +184,8 @@ function startGame(category) {
 
 function nextQuestion() {
     isFrozen = false;
-    document.getElementById("freeze-overlay").style.display = "none";
+    
+    // 1. 更新題號
     if (!isReviewMode) {
         questionCount++;
         document.getElementById("q-count").innerText = questionCount;
@@ -139,11 +195,13 @@ function nextQuestion() {
     
     errorCount = 0; currentInput = []; hasUsedHint = false;
     
+    // 2. UI 重置
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
     if(!isTypingMode()) document.getElementById("btn-clear").disabled = false;
     document.getElementById("hint-overlay").classList.remove("visible");
+    document.getElementById("freeze-overlay").style.display = "none"; // 確保遮罩消失
     updateHintButton();
 
     if(isTypingMode()) {
@@ -153,45 +211,72 @@ function nextQuestion() {
         input.classList.remove('correct-anim', 'wrong-anim');
         input.focus();
     } else {
-        document.getElementById("freeze-overlay").style.display = "none";
-        currentInput = [];
-        // ★ 關鍵：上一版就是這裡斷掉了，現在補回來了！
-        renderLetterPool(); 
-        renderSlots();
+        // ★ 確保容器被清空
+        document.getElementById("answer-slots").innerHTML = "";
+        document.getElementById("letter-pool").innerHTML = "";
     }
 
-    // 選題
-    if (isReviewMode) {
-        const mistakes = Object.keys(mistakeRegistry);
-        if (mistakes.length === 0) { levelUp(); return filteredQuestions[0]; }
-        const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
-        currentQ = mistakeRegistry[randomKey].wordObj;
-        document.getElementById("message-area").innerHTML = `<span style='color:#e91e63'>🔥 複習剩餘：${REQUIRED_REVIEW_WINS - mistakeRegistry[randomKey].wins} 次</span>`;
-    } else {
-        let totalWeight = 0;
-        const weightedPool = filteredQuestions.map(q => {
-            if (!learningProgress[q.word]) learningProgress[q.word] = { wins: 0, weight: 10 };
-            const data = learningProgress[q.word];
-            totalWeight += data.weight;
-            return { q: q, weight: data.weight };
-        });
-        let random = Math.random() * totalWeight;
-        currentQ = filteredQuestions[0];
-        for (let item of weightedPool) {
-            if (random < item.weight) { currentQ = item.q; break; }
-            random -= item.weight;
-        }
-    }
+    // 3. 選題
+    currentQ = getWeightedQuestion();
     
+    // 4. 渲染畫面
     document.getElementById("image-area").innerText = currentQ.icon;
     document.getElementById("hint-overlay").innerText = currentQ.word;
     document.getElementById("cn-meaning").innerText = currentQ.cn;
 
+    // ★ 關鍵：只有在非打字模式才產生按鈕
+    if(!isTypingMode()) {
+        renderSlots();
+        renderLetterPool(); // 這裡產生按鈕！
+    }
+    
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
+// 智慧選題演算法
+function getWeightedQuestion() {
+    if (isReviewMode) {
+        const mistakes = Object.keys(mistakeRegistry);
+        if (mistakes.length === 0) { levelUp(); return filteredQuestions[0]; }
+        const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
+        return mistakeRegistry[randomKey].wordObj;
+    }
+
+    // 簡單隨機 fallback (以防萬一)
+    if (!filteredQuestions || filteredQuestions.length === 0) return questionBank[0];
+
+    // 加權隨機
+    let totalWeight = 0;
+    const weightedPool = filteredQuestions.map(q => {
+        if (!learningProgress[q.word]) learningProgress[q.word] = { wins: 0, weight: 10 };
+        const data = learningProgress[q.word];
+        totalWeight += data.weight;
+        return { q: q, weight: data.weight };
+    });
+
+    let random = Math.random() * totalWeight;
+    for (let item of weightedPool) {
+        if (random < item.weight) return item.q;
+        random -= item.weight;
+    }
+    return filteredQuestions[0];
+}
+
+function updateLearningProgress(word, isCorrect) {
+    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
+    const data = learningProgress[word];
+    if (isCorrect) {
+        data.wins++;
+        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
+    } else {
+        data.wins = 0;
+        data.weight += 10;
+    }
+    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
+}
+
 // ===================================================
-// 4. 輸入與按鈕處理 (UI Logic)
+// 4. 輸入處理 (UI Logic)
 // ===================================================
 function renderSlots() {
     const slotsDiv = document.getElementById("answer-slots");
@@ -210,8 +295,11 @@ function renderLetterPool() {
     const poolDiv = document.getElementById("letter-pool");
     if(!poolDiv) return;
     poolDiv.innerHTML = "";
+    
+    // 取得字母並打散
     let letters = currentQ.word.replace(/ /g, "").split('');
     letters.sort(() => Math.random() - 0.5);
+
     letters.forEach((char) => {
         let btn = document.createElement("button");
         btn.innerText = char;
@@ -225,31 +313,47 @@ function selectLetter(char, btnElement) {
     if (isFrozen) return;
     const cleanWord = currentQ.word.replace(/ /g, "");
     if (currentInput.length >= cleanWord.length) return;
+    
     try { speak(char); } catch(e){}
     currentInput.push(char);
+    
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
         if (currentQ.word[i] !== " " && slot && slot.innerText === "") {
-            slot.innerText = char; break;
+            slot.innerText = char;
+            break;
         }
     }
+    
     btnElement.classList.add("used");
     btnElement.disabled = true;
-    if (currentInput.length === cleanWord.length) { setTimeout(() => checkAnswer(currentInput.join("")), 100); }
+
+    if (currentInput.length === cleanWord.length) {
+        setTimeout(checkAnswer, 100); 
+    }
 }
 
 function backspace() {
     if (isFrozen || currentInput.length === 0) return;
     const lastChar = currentInput.pop();
+    
+    // 恢復按鈕
     const btns = document.getElementsByClassName("letter-btn");
     for (let i = 0; i < btns.length; i++) {
         if (btns[i].innerText === lastChar && btns[i].classList.contains("used")) {
-            btns[i].classList.remove("used"); btns[i].disabled = false; break; 
+            btns[i].classList.remove("used");
+            btns[i].disabled = false;
+            break; 
         }
     }
+    
+    // 清除格子
     const slots = document.getElementsByClassName("slot");
     for (let i = slots.length - 1; i >= 0; i--) {
-        if (slots[i].innerText !== "" && slots[i].innerHTML !== "&nbsp;") { slots[i].innerText = ""; break; }
+        if (slots[i].innerText !== "" && slots[i].innerHTML !== "&nbsp;") {
+            slots[i].innerText = "";
+            break; 
+        }
     }
 }
 
@@ -273,6 +377,11 @@ function handleTypingInput(e) {
 // 5. 判斷對錯與XP
 // ===================================================
 function checkAnswer(playerAnswer) {
+    // 若是按鈕模式，組成字串
+    if (!playerAnswer && !isTypingMode()) {
+        playerAnswer = currentInput.join("");
+    }
+
     const cleanWord = currentQ.word.replace(/ /g, "");
     const cleanPlayerAns = playerAnswer.replace(/ /g, "").toUpperCase();
     const msgDiv = document.getElementById("message-area");
@@ -303,8 +412,8 @@ function checkAnswer(playerAnswer) {
             speak("Correct! " + currentQ.word);
         } catch(e) {}
 
+        // 自動跳轉
         if (!document.getElementById("levelup-modal").style.display || document.getElementById("levelup-modal").style.display === "none") {
-            document.getElementById("next-btn").style.display = "inline-block";
             setTimeout(nextQuestion, 1500); 
         }
 
@@ -340,7 +449,7 @@ function checkAnswer(playerAnswer) {
 }
 
 // ===================================================
-// 6. XP 累加制系統
+// 6. XP 系統 (累加制)
 // ===================================================
 function getLevelThreshold(level) {
     let totalReq = 0;
@@ -368,6 +477,7 @@ function updateHUD() {
     
     document.getElementById("xp-bar").style.width = percentage + "%";
     
+    // 顯示文字
     const displayStr = `${player.currentXP} / ${nextLevelTotal} XP`;
     if(document.getElementById("xp-display-text")) {
         document.getElementById("xp-display-text").innerText = displayStr;
@@ -377,12 +487,32 @@ function updateHUD() {
     }
 }
 
+function showXPGainEffect(amount, isGain) {
+    const hud = document.querySelector('.xp-bar-container');
+    if(!hud) return;
+    const floatText = document.createElement('div');
+    floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
+    floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
+    
+    const rect = hud.getBoundingClientRect();
+    floatText.style.top = (rect.top - 30) + 'px';
+    floatText.style.left = (rect.left + rect.width / 2) + 'px';
+    
+    document.body.appendChild(floatText);
+    setTimeout(() => { floatText.remove(); }, 1200);
+}
+
 function gainXP(amount) {
     if (isReviewMode) return;
     player.currentXP += amount;
     showXPGainEffect(amount, true);
-    if (player.currentXP >= getLevelThreshold(player.level)) levelUp();
-    else updateHUD();
+    
+    const threshold = getLevelThreshold(player.level);
+    if (player.currentXP >= threshold) {
+        levelUp();
+    } else {
+        updateHUD();
+    }
 }
 
 function loseXP(amount) {
@@ -390,6 +520,7 @@ function loseXP(amount) {
     player.currentXP -= amount;
     const minXP = getPrevLevelThreshold(player.level);
     if (player.currentXP < minXP) player.currentXP = minXP;
+    
     showXPGainEffect(amount, false);
     try {
         document.body.classList.add("shake-screen");
@@ -398,25 +529,14 @@ function loseXP(amount) {
     updateHUD();
 }
 
-function showXPGainEffect(amount, isGain) {
-    const hud = document.querySelector('.xp-bar-container');
-    if(!hud) return;
-    const floatText = document.createElement('div');
-    floatText.className = 'floating-text ' + (isGain ? 'xp-plus' : 'xp-minus');
-    floatText.innerText = (isGain ? '+' : '-') + amount + ' XP';
-    const rect = hud.getBoundingClientRect();
-    floatText.style.top = (rect.top - 30) + 'px';
-    floatText.style.left = (rect.left + rect.width / 2) + 'px';
-    document.body.appendChild(floatText);
-    setTimeout(() => { floatText.remove(); }, 1200);
-}
-
 function levelUp() {
     player.level++;
     if (player.level > 20) player.level = 20;
     player.freeHints++; 
+    
     updateHUD();
     try{ speak("Level Up!"); fireConfetti(); }catch(e){}
+    
     const modal = document.getElementById("levelup-modal");
     if(modal) {
         document.getElementById("levelup-title").innerText = `升到 Lv. ${player.level}！`;
@@ -429,20 +549,14 @@ function levelUp() {
     cheerHouse("太棒了！房子升級囉！🎉");
 }
 
-function updateLearningProgress(word, isCorrect) {
-    if (!learningProgress[word]) learningProgress[word] = { wins: 0, weight: 10 };
-    const data = learningProgress[word];
-    if (isCorrect) {
-        data.wins++;
-        if (data.wins >= MASTERY_THRESHOLD) data.weight = 1; else data.weight = Math.max(1, data.weight - 2);
-    } else {
-        data.wins = 0;
-        data.weight += 10;
-    }
-    localStorage.setItem('english_rpg_progress', JSON.stringify(learningProgress));
+function updateHouse() {
+    let stageIndex = player.level - 1;
+    if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
+    const stage = HOUSE_STAGES[stageIndex];
+    if(document.getElementById("my-house-icon")) document.getElementById("my-house-icon").innerText = stage.icon;
+    if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
 }
 
-// ... (提示與輔助) ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if(!btn) return;
@@ -468,10 +582,11 @@ function showHint() {
             hasUsedHint = true;
             updateHUD();
         } else {
-            alert("經驗值不足，無法偷看！");
+            alert("經驗值不足，無法偷看！加油再試試！");
             return;
         }
     }
+
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
     hintBox.classList.add("visible");
@@ -485,14 +600,6 @@ function showHint() {
         hintBox.classList.remove("visible");
         if (document.getElementById("next-btn").style.display === "none") hintBtn.disabled = false;
     }, 2000);
-}
-
-function updateHouse() {
-    let stageIndex = player.level - 1;
-    if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
-    const stage = HOUSE_STAGES[stageIndex];
-    if(document.getElementById("my-house-icon")) document.getElementById("my-house-icon").innerText = stage.icon;
-    if(document.getElementById("house-name")) document.getElementById("house-name").innerText = stage.name;
 }
 
 function cheerHouse(message) {
