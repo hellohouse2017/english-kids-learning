@@ -1,14 +1,13 @@
 // ===================================================
-// 1. 遊戲參數與狀態
+// 1. 遊戲參數與狀態 (數值已平衡)
 // ===================================================
-const MAX_HP = 8;
-const HINT_HP_COST = 0.5;
-const XP_WIN = 50;      // 答對獲得
-const XP_LOSE = 30;     // 答錯扣除
-const HINT_COST = 20;   // 偷看扣除 XP
+const MAX_HP = 8;       // (此變數保留但不顯示)
+const XP_WIN = 50;      // ★ 答對 +50 XP
+const XP_LOSE = 30;     // ★ 答錯 -30 XP
+const HINT_COST = 20;   // ★ 偷看 -20 XP
 const REQUIRED_REVIEW_WINS = 3;
 
-// 房屋進化表 (20階段)
+// 房屋進化表 (20階段：樹林 -> 整地 -> 建築 -> 城堡)
 const HOUSE_STAGES = [
     { icon: "🌲", name: "荒野樹林" }, { icon: "🚜", name: "整地中..." }, { icon: "🟫", name: "平坦空地" },
     { icon: "⛺", name: "簡易帳篷" }, { icon: "🔥", name: "營火帳篷" }, { icon: "🛖", name: "茅草屋" },
@@ -21,7 +20,7 @@ const HOUSE_STAGES = [
 
 const HOUSE_CHEERS = ["好棒！", "磚塊+1 🧱", "離城堡近了！", "勇者太強了！", "繼續保持！🔥", "Nice Job!"];
 
-// 玩家狀態 (移除血條 HP，改用 XP 核心)
+// 玩家狀態
 let player = { name: "Player", hp: MAX_HP, level: 1, currentXP: 0, combo: 0, freeHints: 0 };
 let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 
@@ -91,10 +90,8 @@ function goToCategorySelect(gender) {
     const nameInput = document.getElementById('player-name-input').value.trim();
     player.name = nameInput || "勇者";
     document.getElementById('player-name-display').innerText = player.name;
-
     voiceSettings.gender = gender;
     voiceSettings.pitch = (gender === 'male') ? 0.8 : 1.2;
-
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('category-screen').style.display = 'flex';
 }
@@ -109,11 +106,9 @@ function startGame(category) {
         const map = { 'animal': "動物園", 'food': "美食街", 'color': "顏色館", 'number': "數字谷", 'body': "身體檢查", 'item': "生活用品" };
         document.getElementById('category-tag').innerText = map[category] || category;
     }
-
     document.getElementById('category-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('game-container').style.display = 'block';
-
     updateHUD();
     updateHouse();
     cheerHouse(`你好，${player.name}！開始蓋房子囉！`);
@@ -123,15 +118,9 @@ function startGame(category) {
 function nextQuestion() {
     isFrozen = false;
     document.getElementById("freeze-overlay").style.display = "none";
-
-    if (!isReviewMode) {
-        questionCount++;
-        document.getElementById("q-count").innerText = questionCount;
-    } else {
-        document.getElementById("q-count").innerText = "🔥魔王關";
-    }
-    
-    errorCount = 0; currentInput = []; hasUsedHint = false;
+    questionCount++;
+    document.getElementById("q-count").innerText = questionCount;
+    currentInput = [];
     
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
@@ -156,7 +145,7 @@ function nextQuestion() {
     document.getElementById("cn-meaning").innerText = currentQ.cn;
 
     renderSlots();
-    renderLetterPool(); // ★ 關鍵：產生字母按鈕
+    renderLetterPool();
     
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
@@ -173,15 +162,11 @@ function renderSlots() {
     }
 }
 
-// ★ 這個函式就是上一版漏掉的，現在補上了！
 function renderLetterPool() {
     const poolDiv = document.getElementById("letter-pool");
     poolDiv.innerHTML = "";
-    
-    // 取得字母並打散
     let letters = currentQ.word.replace(/ /g, "").split('');
     letters.sort(() => Math.random() - 0.5);
-
     letters.forEach((char) => {
         let btn = document.createElement("button");
         btn.innerText = char;
@@ -193,7 +178,6 @@ function renderLetterPool() {
 
 function selectLetter(char, btnElement) {
     if (isFrozen) return;
-    
     const cleanWord = currentQ.word.replace(/ /g, "");
     if (currentInput.length >= cleanWord.length) return;
     
@@ -219,7 +203,6 @@ function selectLetter(char, btnElement) {
 function backspace() {
     if (isFrozen || currentInput.length === 0) return;
     const lastChar = currentInput.pop();
-    
     const btns = document.getElementsByClassName("letter-btn");
     for (let i = 0; i < btns.length; i++) {
         if (btns[i].innerText === lastChar && btns[i].classList.contains("used")) {
@@ -257,7 +240,7 @@ function checkAnswer() {
         document.getElementById("btn-hint").disabled = true;
         msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
 
-        gainXP(XP_WIN); // +50 XP
+        gainXP(XP_WIN); 
 
         try {
             const randomCheer = HOUSE_CHEERS[Math.floor(Math.random() * HOUSE_CHEERS.length)];
@@ -270,14 +253,12 @@ function checkAnswer() {
         } catch(e) {}
 
     } else {
-        loseXP(XP_LOSE); // -30 XP
-        
+        loseXP(XP_LOSE);
         msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         try { speak("Try again"); cheerHouse("哎呀！扣分了！🛡️"); } catch(e){}
         
         registerMistake(currentQ);
         errorCount++;
-        
         isFrozen = true;
         const freezeOverlay = document.getElementById("freeze-overlay");
         freezeOverlay.style.display = "flex";
@@ -291,21 +272,23 @@ function checkAnswer() {
 }
 
 // ===================================================
-// 4. XP 系統 (純經驗值版)
+// 4. XP 系統 (★ 修正後的曲線)
 // ===================================================
+
+// ★ 計算該等級升級所需總經驗 (線性增加)
 function getRequiredXP(level) {
-    if (level <= 5) return 100;
-    if (level <= 10) return 200;
-    return 300 + (level - 11) * 50;
+    // 基礎 50，每級增加 50 XP
+    // Lv1: 100 XP (答對2題)
+    // Lv2: 150 XP (答對3題)
+    // ...
+    // Lv19: 1000 XP (答對20題)
+    return 50 * (level + 1);
 }
 
 function updateHUD() {
     document.getElementById("level-display").innerText = player.level;
     document.getElementById("ticket-count").innerText = player.freeHints;
     
-    // 移除血條相關邏輯，保留 item-container
-    // document.getElementById("hp-display").innerText = ...; // 已刪除
-
     const maxXP = getRequiredXP(player.level);
     let percentage = (player.currentXP / maxXP) * 100;
     if (percentage > 100) percentage = 100;
@@ -336,7 +319,7 @@ function gainXP(amount) {
     
     const reqXP = getRequiredXP(player.level);
     if (player.currentXP >= reqXP) {
-        player.currentXP = 0; // 歸零
+        player.currentXP -= reqXP; // 保留溢出經驗
         levelUp();
     } else {
         updateHUD();
@@ -384,7 +367,7 @@ function updateHouse() {
     document.getElementById("house-name").innerText = stage.name;
 }
 
-// ... (以下為輔助功能，保持不變) ...
+// ... (以下為輔助功能) ...
 function updateHintButton() {
     const btn = document.getElementById("btn-hint");
     if (player.freeHints > 0) {
@@ -444,9 +427,7 @@ function registerMistake(wordObj) {
     else { mistakeRegistry[wordObj.word].wins = 0; }
 }
 
-function handleNormalVictory() {
-    // 這裡留空，因為我們改成在 checkAnswer 直接 gainXP
-}
+function handleNormalVictory() {}
 
 function handleReviewVictory() {
     const wordKey = currentQ.word;
@@ -458,6 +439,28 @@ function handleReviewVictory() {
     }
     if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
     else { try{ fireConfetti(); }catch(e){} }
+}
+
+function checkLevelUpCondition() {
+    if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
+    else { startReviewMode(); }
+}
+
+function startReviewMode() {
+    if (isReviewMode) return;
+    isReviewMode = true; 
+    player.currentXP = getRequiredXP(player.level); 
+    updateHUD();
+    try{ speak("Boss Battle!"); }catch(e){}
+    alert(`🚨 升級檢定！\n需複習 ${Object.keys(mistakeRegistry).length} 個錯字。`);
+    nextQuestion(); 
+}
+
+function handleDamage() {
+    try {
+        document.body.classList.add("shake-screen");
+        setTimeout(() => document.body.classList.remove("shake-screen"), 500);
+    } catch(e){}
 }
 
 function speak(text) {
