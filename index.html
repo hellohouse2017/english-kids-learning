@@ -3,38 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>快樂學英文</title>
+    <title>快樂學英文 English for Kids</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="main-container">
         <header>
-            <h1>🎈 快樂學英文 Level 1</h1>
-            <p>請選擇一個單元開始冒險！</p>
+            <h1 class="main-title">🎈 Happy English</h1>
+            <p>準備好開始冒險了嗎？</p>
         </header>
 
-        <div class="unit-list">
-            <div class="unit-card locked">Unit 1: Hello (建置中)</div>
-            <div class="unit-card locked">Unit 2: Numbers (建置中)</div>
-            
-            <a href="unit3.html" class="unit-card active">
-                <span class="unit-icon">🎨</span>
-                <div class="unit-info">
-                    <h2>Unit 3: Colors</h2>
-                    <p>認識顏色、喜歡/不喜歡</p>
+        <div class="menu-grid">
+            <a href="learn.html" class="menu-card level-1">
+                <div class="card-icon">📖</div>
+                <div class="card-content">
+                    <h2>Level 1: 單字圖鑑</h2>
+                    <p>Vocabulary Learning</p>
+                    <span class="tag">先來這裡練習！</span>
                 </div>
-                <span class="btn-go">GO! ➔</span>
             </a>
             
-            <a href="game.html" class="unit-card active" style="border-color: #e91e63;">
-    <span class="unit-icon">🧩</span>
-    <div class="unit-info">
-        <h2>Level 2: Spelling Challenge</h2>
-        <p>拼字大考驗！(進階版)</p>
-    </div>
-    <span class="btn-go" style="background: #e91e63;">GO! ➔</span>
-</a>
+            <a href="game.html" class="menu-card level-2">
+                <div class="card-icon">⚔️</div>
+                <div class="card-content">
+                    <h2>Level 2: 拼字大冒險</h2>
+                    <p>RPG Spelling Battle</p>
+                    <span class="tag">打怪升級！</span>
+                </div>
+            </a>
         </div>
+        
+        <footer>
+            <p>Keep going! You are the best! 🌟</p>
+        </footer>
     </div>
 </body>
 </html>

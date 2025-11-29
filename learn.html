@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level 1: 單字圖鑑</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav style="background: #4caf50; padding: 15px; color: white; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 1.2rem; font-weight: bold;">📖 Level 1: Vocabulary</span>
+        <a href="index.html" style="color: white; text-decoration: none; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px;">🏠 回首頁</a>
+    </nav>
+
+    <div class="container">
+        <p>點擊卡片聽聽看怎麼唸！(Click to listen)</p>
+        
+        <div id="vocab-container"></div>
+    </div>
+
+    <script>
+        // === 單字資料庫 (分類版) ===
+        const vocabData = {
+            "🐶 動物 (Animals)": [
+                { w: "Cat", i: "🐱" }, { w: "Dog", i: "🐶" }, { w: "Pig", i: "🐷" },
+                { w: "Bird", i: "🐦" }, { w: "Fish", i: "🐟" }, { w: "Lion", i: "🦁" },
+                { w: "Tiger", i: "🐯" }, { w: "Bear", i: "🐻" }, { w: "Elephant", i: "🐘" }
+            ],
+            "🎨 顏色 (Colors)": [
+                { w: "Red", i: "🔴" }, { w: "Blue", i: "🔵" }, { w: "Yellow", i: "🟡" },
+                { w: "Green", i: "🟢" }, { w: "Orange", i: "🟠" }, { w: "Purple", i: "🟣" },
+                { w: "Black", i: "⚫" }, { w: "White", i: "⚪" }
+            ],
+            "🔢 數字 (Numbers)": [
+                { w: "One", i: "1️⃣" }, { w: "Two", i: "2️⃣" }, { w: "Three", i: "3️⃣" },
+                { w: "Four", i: "4️⃣" }, { w: "Five", i: "5️⃣" }, { w: "Six", i: "6️⃣" },
+                { w: "Seven", i: "7️⃣" }, { w: "Eight", i: "8️⃣" }, { w: "Nine", i: "9️⃣" }, { w: "Ten", i: "🔟" }
+            ],
+            "🍎 食物 (Food)": [
+                { w: "Apple", i: "🍎" }, { w: "Banana", i: "🍌" }, { w: "Egg", i: "🥚" },
+                { w: "Milk", i: "🥛" }, { w: "Cake", i: "🍰" }, { w: "Ice Cream", i: "🍦" },
+                { w: "Pizza", i: "🍕" }, { w: "Hamburger", i: "🍔" }
+            ],
+            "🖐️ 身體 (Body)": [
+                { w: "Head", i: "🗣️" }, { w: "Eye", i: "👁️" }, { w: "Ear", i: "👂" },
+                { w: "Nose", i: "👃" }, { w: "Mouth", i: "👄" }, { w: "Hand", i: "🖐️" }
+            ]
+        };
+
+        // === 自動產生卡片 ===
+        const container = document.getElementById('vocab-container');
+
+        for (const [category, words] of Object.entries(vocabData)) {
+            // 1. 建立分類標題
+            const title = document.createElement('h2');
+            title.className = 'category-title';
+            title.innerText = category;
+            container.appendChild(title);
+
+            // 2. 建立卡片容器
+            const grid = document.createElement('div');
+            grid.className = 'vocab-grid';
+
+            // 3. 建立每一張卡片
+            words.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'vocab-card';
+                card.onclick = () => speak(item.w); // 點擊發音
+                
+                card.innerHTML = `
+                    <div class="vocab-icon">${item.i}</div>
+                    <div class="vocab-word">${item.w}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        // === 發音功能 ===
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
