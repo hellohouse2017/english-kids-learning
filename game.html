@@ -9,14 +9,29 @@
 </head>
 <body>
 
-    <div class="game-hud">
-        <div class="top-row">
+    <div id="start-screen" class="overlay">
+        <div class="modal">
+            <h1>🎮 準備好了嗎？</h1>
+            <p>請選擇你喜歡的老師聲音：</p>
+            <div class="voice-selection">
+                <button onclick="startGame('male')" class="btn-voice male">
+                    👦 男生老師
+                </button>
+                <button onclick="startGame('female')" class="btn-voice female">
+                    👧 女生老師
+                </button>
+            </div>
+            <p class="note">*聲音取決於您的裝置，若無區別將以音調模擬</p>
+        </div>
+    </div>
+
+    <div class="game-hud" id="hud" style="display:none;"> <div class="top-row">
             <div class="player-stats">
                 <div class="level-badge">Lv. <span id="level-display">1</span></div>
                 <div class="hp-container" id="hp-display">
-                    ❤️❤️❤️ </div>
+                    ❤️❤️❤️❤️❤️❤️❤️❤️
+                </div>
             </div>
-            
             <a href="index.html" class="btn-home">🏠 離開</a>
         </div>
 
@@ -28,7 +43,7 @@
         <div id="combo-display" class="combo-text">Combo x2!</div>
     </div>
 
-    <div class="container">
+    <div class="container" id="game-container" style="display:none;">
         
         <div class="game-header">
             <span class="level-badge" style="background:#2196f3;">Question <span id="q-count">1</span></span>
@@ -39,31 +54,44 @@
             
             <div class="question-area">
                 <div id="image-area" class="big-icon">❓</div>
-                
                 <div id="hint-overlay" class="hint-text">APPLE</div>
 
                 <div class="btn-group">
                     <button onclick="playCurrentWord()" class="btn-replay">
                         🔊 再唸一次
                     </button>
-                    
                     <button onclick="showHint()" id="btn-hint" class="btn-hint">
-                        💡 偷看一眼
+                        💡 偷看一眼 (-0.5❤)
                     </button>
                 </div>
             </div>
 
-            <div id="answer-slots" class="slots-container">
-                </div>
+            <div id="answer-slots" class="slots-container"></div>
 
-            <div id="letter-pool" class="pool-container">
-                </div>
+            <div class="control-row">
+                 <button onclick="resetInput()" class="btn-clear" id="btn-clear">
+                    🧹 全部重寫
+                 </button>
+            </div>
+
+            <div id="letter-pool" class="pool-container"></div>
 
             <div id="message-area" class="result-msg"></div>
 
             <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">
                 下一關 ➔
             </button>
+        </div>
+
+        <div class="game-rules">
+            <h3>📜 冒險指南 (Game Rules)</h3>
+            <ul>
+                <li>❤️ <b>生命值 (HP)：</b> 你有 <b>8 顆心</b>，答錯扣 1 顆，歸零就 Game Over！</li>
+                <li>💡 <b>提示 (Hint)：</b> 遇到不會的字可以「偷看一眼」，但會扣 <b>0.5 顆心</b>喔。</li>
+                <li>🧹 <b>重寫：</b> 拼錯沒關係，按「全部重寫」就可以把字母拿回來重新拼。</li>
+                <li>⚔️ <b>魔王挑戰：</b> 答錯的字會被記在「錯題本」。經驗值滿了之後，必須把錯題本裡的每個字都<b>答對 3 次</b>，才能升級並補滿血！</li>
+                <li>🔥 <b>Combo：</b> 連續答對分數會越來越高！</li>
+            </ul>
         </div>
     </div>
 
