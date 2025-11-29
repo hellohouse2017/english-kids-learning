@@ -3,71 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Level 1: 單字圖鑑</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="data.js"></script>
-</head>
-<body>
-    <nav class="game-hud" style="justify-content: space-between; display: flex; align-items: center;">
-        <span style="font-size: 1.2rem; font-weight: bold; color: #5d4037;">📖 單字圖鑑</span>
-        <a href="index.html" class="btn-home">🏠 回首頁</a>
-    </nav>
-
-    <div class="container">
-        <p style="margin: 20px 0; color: #795548;">點擊卡片聽聽看怎麼唸！(Click to listen)</p>
-        <div id="vocab-container"></div>
-        <footer class="game-footer">
-            <div class="footer-content">
-                <div class="date-box">🕒 更新：<span id="last-updated">...</span></div>
-            </div>
-        </footer>
-    </div>
+    <title>單字卡學習 | Vocabulary Cards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 
     <script>
-        function loadVocab() {
-            if (typeof VOCAB_DB === 'undefined') return;
-            const rawData = VOCAB_DB['grade3'];
-            const categories = {
-                "animal": "🐶 動物 (Animals)",
-                "food": "🍎 食物 (Food)",
-                "color": "🎨 顏色 (Colors)",
-                "number": "🔢 數字 (Numbers)",
-                "body": "🖐️ 身體 (Body)",
-                "item": "🎒 用品 (Items)",
-                "family": "👨‍👩‍👧 家庭 (Family)"
-            };
-            const groupedData = {};
-            rawData.forEach(item => {
-                const catName = categories[item.cat] || "其他";
-                if (!groupedData[catName]) groupedData[catName] = [];
-                groupedData[catName].push({ w: item.word, i: item.icon, c: item.cn });
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        game: ['"Fredoka"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#10b981', // Emerald 500
+                        secondary: '#3b82f6', // Blue 500
+                        bg: '#f0fdf4', // Green 50
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f0fdf4; }
+        .vocab-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border-bottom: 4px solid #e5e7eb;
+        }
+        .vocab-card:active {
+            transform: translateY(4px);
+            border-bottom-width: 0px;
+            box-shadow: none !important;
+        }
+        .vocab-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-color: #10b981;
+        }
+        /* 隱藏捲軸但保留功能 */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans text-gray-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl">📖</span>
+                <h1 class="text-xl font-bold tracking-wide text-gray-800">單字卡學習</h1>
+            </div>
+            <a href="index.html" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-home text-xl"></i>
+            </a>
+        </div>
+        
+        <div class="border-t border-gray-100">
+            <div class="max-w-5xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide" id="category-bar">
+                <button onclick="filterCards('ALL')" class="px-4 py-1.5 rounded-full bg-gray-800 text-white text-sm font-bold whitespace-nowrap hover:bg-gray-700 transition">全部</button>
+                <button onclick="filterCards('animal')" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold whitespace-nowrap hover:border-primary hover:text-primary transition">動物 🦁</button>
+                <button onclick="filterCards('fruit')" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold whitespace-nowrap hover:border-primary hover:text-primary transition">水果 🍎</button>
+                <button onclick="filterCards('color')" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold whitespace-nowrap hover:border-primary hover:text-primary transition">顏色 🎨</button>
+                <button onclick="filterCards('body')" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold whitespace-nowrap hover:border-primary hover:text-primary transition">身體 👀</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 max-w-5xl mx-auto w-full">
+        
+        <div class="text-center mb-6 animate-bounce">
+            <span class="inline-block bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm font-bold shadow-sm border border-yellow-200">
+                👇 點擊卡片聽聽看怎麼唸！
+            </span>
+        </div>
+
+        <div id="error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-center">
+            <strong class="font-bold">⚠️ 讀取不到 data.js</strong>
+            <p class="text-sm mt-1">請確認 data.js 檔案是否存在於同一目錄下。</p>
+        </div>
+
+        <div id="cards-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
+            </div>
+
+    </main>
+
+    <script src="data.js"></script>
+
+    <script>
+        // 初始化
+        window.onload = function() {
+            // 檢查資料是否載入成功
+            if (typeof window.VOCAB_LIST === 'undefined' || !Array.isArray(window.VOCAB_LIST)) {
+                document.getElementById('error-msg').classList.remove('hidden');
+                return;
+            }
+            
+            // 預設顯示全部
+            renderCards(window.VOCAB_LIST);
+        };
+
+        // 渲染卡片
+        function renderCards(data) {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = ''; // 清空舊內容
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'vocab-card bg-white rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden';
+                
+                // 點擊發音
+                card.onclick = () => speak(item.word);
+
+                card.innerHTML = `
+                    <div class="absolute top-3 right-3 text-gray-300">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="text-6xl mb-4 filter drop-shadow-sm transform transition-transform group-hover:scale-110">${item.icon}</div>
+                    <div class="text-2xl font-game font-bold text-gray-800 tracking-wide mb-1">${item.word}</div>
+                    <div class="text-sm text-gray-500 font-bold bg-gray-100 px-3 py-1 rounded-full">${item.cn}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 篩選功能
+        function filterCards(category) {
+            // 更新按鈕樣式 (簡單實作：重置所有，再亮起當前)
+            const buttons = document.querySelectorAll('#category-bar button');
+            buttons.forEach(btn => {
+                // 這裡簡化樣式切換邏輯，實際專案可做得更細緻
+                if(btn.innerText.includes(category === 'ALL' ? '全部' : category) || (category!=='ALL' && btn.innerText.toLowerCase().includes(category))) {
+                    btn.className = "px-4 py-1.5 rounded-full bg-gray-800 text-white text-sm font-bold whitespace-nowrap transition shadow-md";
+                } else {
+                    btn.className = "px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold whitespace-nowrap hover:border-primary hover:text-primary transition";
+                }
             });
 
-            const container = document.getElementById('vocab-container');
-            for (const [category, words] of Object.entries(groupedData)) {
-                const title = document.createElement('h2');
-                title.style.cssText = "background:#fff; padding:10px 20px; border-radius:20px; color:#ff9800; display:inline-block; margin-top:30px;";
-                title.innerText = category;
-                container.appendChild(title);
-
-                const grid = document.createElement('div');
-                grid.className = 'pool-container'; grid.style.marginBottom = "20px";
-
-                words.forEach(item => {
-                    const card = document.createElement('div');
-                    card.style.cssText = "background:white; border:2px solid #ddd; border-radius:15px; padding:15px; width:120px; cursor:pointer; box-shadow:0 4px 0 #ddd; transition:0.1s;";
-                    card.onclick = () => { card.style.transform = "scale(0.95)"; setTimeout(()=>card.style.transform="scale(1)",100); speak(item.w); };
-                    card.innerHTML = `<div style="font-size:3rem; margin-bottom:5px;">${item.i}</div><div style="font-weight:bold; color:#333;">${item.w}</div><div style="font-size:0.9rem; color:#888;">${item.c}</div>`;
-                    grid.appendChild(card);
-                });
-                container.appendChild(grid);
+            if (category === 'ALL') {
+                renderCards(window.VOCAB_LIST);
+            } else {
+                // 模糊比對，讓分類更彈性 (例如 'animal' 也能抓到 'animals')
+                const filtered = window.VOCAB_LIST.filter(item => item.cat.includes(category));
+                renderCards(filtered);
             }
         }
 
-        function speak(text) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.toLowerCase()); u.lang='en-US'; window.speechSynthesis.speak(u); }
-        window.onload = loadVocab;
-        const date = new Date(document.lastModified);
-        document.getElementById('last-updated').innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`;
+        // 發音函式
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text.toLowerCase());
+                u.lang = 'en-US';
+                u.rate = 0.8;
+                window.speechSynthesis.speak(u);
+            }
+        }
     </script>
 </body>
 </html>

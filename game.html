@@ -3,138 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拼字大冒險 RPG</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <title>拼字冒險 | Spelling Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], game: ['"Fredoka"', 'sans-serif'] },
+                    colors: { primary: '#6366f1', secondary: '#ec4899', accent: '#f59e0b', bg: '#f3f4f6' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f3f4f6; }
+        .slot { width: 3rem; height: 3.5rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 2rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
+        .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 8px; border: 2px dashed #cbd5e1; }
+        .btn-char { width: 3.5rem; height: 3.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border-bottom: 4px solid #e5e7eb; }
+        .btn-char:active { transform: translateY(2px); border-bottom-width: 1px; box-shadow: none; }
+        .btn-char.used { background-color: #e5e7eb; color: #9ca3af; border-color: #d1d5db; cursor: default; transform: none; opacity: 0.6; }
+        #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
+        #role-msg.show { opacity: 1; transform: translateY(0); }
+        .hint-box { opacity: 0; transform: scale(0.9); transition: all 0.3s; filter: blur(5px); }
+        .hint-box.visible { opacity: 1; transform: scale(1); filter: blur(0); }
+        #ready-overlay { z-index: 9999 !important; }
+    </style>
 </head>
-<body>
+<body class="h-screen flex flex-col font-sans overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
 
-    <div id="start-screen" class="overlay">
-        <div class="modal start-modal">
-            <h1>🎮 歡迎來到拼字冒險！</h1>
-            <div class="input-group">
-                <label>勇者的名字：</label>
-                <input type="text" id="player-name-input" placeholder="請輸入英文名字" maxlength="10">
+    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-20 w-full">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🧩</span>
+                <h1 class="text-lg font-bold text-gray-800">拼字冒險</h1>
             </div>
-            <p>請選擇老師的聲音：</p>
-            <div class="voice-selection">
-                <button onclick="goToCategorySelect('male')" class="btn-voice male"><span>👦</span> 男生</button>
-                <button onclick="goToCategorySelect('female')" class="btn-voice female"><span>👧</span> 女生</button>
+            <a href="index.html" class="text-gray-400 hover:text-primary transition p-2"><i class="fas fa-home text-xl"></i></a>
+        </div>
+    </header>
+
+    <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 text-center border-4 border-white w-full mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">歡迎挑戰！</h2>
+            <p class="text-gray-500 mb-6 text-sm">STEP 2: 聽音辨位，拼出單字</p>
+            <div class="space-y-4">
+                <input type="text" id="player-name" placeholder="輸入你的名字" class="w-full px-6 py-3 bg-gray-100 rounded-xl text-center text-lg focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
+                <button id="btn-start-game" class="w-full py-3 bg-primary text-white text-lg font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition active:scale-95">
+                    開始遊戲 <i class="fas fa-play ml-2"></i>
+                </button>
             </div>
+        </div>
+        <div class="w-full bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white">
+            <h3 class="text-sm font-bold text-gray-600 mb-2"><i class="fas fa-info-circle mr-1"></i> 規則說明</h3>
+            <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                <li>答對 +50 XP，答錯 -30 XP。</li>
+                <li>Lv.1~6 簡單模式 (字母照順序)。</li>
+                <li>Lv.7 以上 困難模式 (字母會亂跑！)。</li>
+            </ul>
         </div>
     </div>
 
-    <div id="category-screen" class="overlay" style="display:none;">
-        <div class="modal category-modal">
-            <h2>🌍 請選擇挑戰區域</h2>
-            <div class="category-grid">
-                <button onclick="startGame('ALL')" class="btn-cat rainbow">🎲 全部隨機</button>
-                <button onclick="startGame('animal')" class="btn-cat">🐶 動物園</button>
-                <button onclick="startGame('food')" class="btn-cat">🍎 美食街</button>
-                <button onclick="startGame('color')" class="btn-cat">🎨 顏色館</button>
-                <button onclick="startGame('number')" class="btn-cat">🔢 數字谷</button>
-                <button onclick="startGame('body')" class="btn-cat">👀 身體檢查</button>
-                <button onclick="startGame('item')" class="btn-cat">🎒 生活用品</button>
-            </div>
+    <div id="screen-category" class="hidden flex-grow w-full max-w-md mx-auto p-4 flex-col">
+        <div class="text-center mb-4">
+            <p class="text-gray-500 text-sm">嗨 <span id="display-name" class="text-primary font-bold"></span>，請選擇題庫：</p>
+        </div>
+        <div class="grid grid-cols-1 gap-3 flex-grow overflow-y-auto pb-10">
+            <button onclick="startGame('ALL')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
+                <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🔥</div>
+                <div class="text-left"><h3 class="font-bold text-gray-700">全部單字混合</h3><p class="text-xs text-gray-400">最完整的挑戰</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+            </button>
+            <button onclick="startGame('animal')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🦁</div>
+                <div class="text-left"><h3 class="font-bold text-gray-700">可愛動物區</h3><p class="text-xs text-gray-400">Lion, Cat, Dog...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+            </button>
+            <button onclick="startGame('fruit')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🍎</div>
+                <div class="text-left"><h3 class="font-bold text-gray-700">美味水果區</h3><p class="text-xs text-gray-400">Apple, Banana...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+            </button>
+             <button onclick="startGame('color')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🎨</div>
+                <div class="text-left"><h3 class="font-bold text-gray-700">繽紛顏色區</h3><p class="text-xs text-gray-400">Red, Blue, Green...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+            </button>
         </div>
     </div>
 
-    <div class="game-hud" id="hud" style="display:none;">
-        <div class="top-row">
-            <div class="player-info">
-                <span id="player-name-display" class="player-name">Player</span>
-                <span class="level-badge">Lv. <span id="level-display">1</span></span>
-            </div>
-            <div class="item-container">🎟️ 券: <span id="ticket-count">0</span></div>
-            <a href="index.html" class="btn-home">🏠 離開</a>
+    <div id="screen-game" class="hidden flex-grow w-full max-w-md mx-auto relative flex-col h-full">
+        
+        <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl">
+            <div class="text-6xl mb-4 animate-bounce">🚀</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
+            <p class="text-gray-400 mb-6 font-game">Are you ready?</p>
+            <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg hover:scale-105 transition active:scale-95">
+                GO! 開始 Start
+            </button>
         </div>
-        <div class="xp-bar-container">
-            <div class="xp-bar-fill" id="xp-bar" style="width: 0%;"></div>
-            <div class="xp-text-overlay" id="xp-display-text">0 / 100 XP</div>
-        </div>
-        <div id="combo-display" class="combo-text">Combo x2!</div>
-    </div>
 
-    <div class="container" id="game-container" style="display:none;">
-        <div class="dashboard-wrapper">
-            <div class="house-section">
-                <div id="house-msg" class="house-bubble">蓋房子囉！💪</div>
-                <div class="house-wrapper">
-                    <div id="my-house-icon" class="house-icon">🌲</div>
-                    <div class="house-base"></div>
+        <div id="hud" class="bg-white px-4 py-3 shadow-sm z-10 flex items-center justify-between border-t border-gray-100">
+            <div class="flex items-center gap-2 flex-grow">
+                <div class="relative">
+                    <div id="role-icon" class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">👶</div>
+                    <div class="absolute -bottom-1 -right-1 bg-gray-800 text-white text-[8px] px-1.5 py-0.5 rounded-full border border-white" id="lv-num">1</div>
                 </div>
-                <div class="house-info">
-                    <div id="house-name" class="house-title">荒野樹林</div>
-                    <p class="next-level-hint">答對自動下一題！</p>
+                <div class="flex-grow">
+                    <div id="role-name" class="text-xs font-bold text-gray-800">Lv.1 新生兒 (Newborn)</div>
+                    <div class="w-full h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                        <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="game-rules-panel">
-                <h3>📜 冒險指南</h3>
-                <ul>
-                    <li>✨ <b>累積經驗：</b> 經驗值累加不歸零。</li>
-                    <li>⏩ <b>自動前進：</b> 答對後自動下一關。</li>
-                    <li>🏗️ <b>建設：</b> 20 個等級，邁向宇宙！</li>
-                    <li>🎟️ <b>獎勵：</b> 升級送免費提示券。</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="game-stage">
-            <div class="question-header">
-                <span id="category-tag" class="q-tag">隨機挑戰</span>
-                <span style="font-weight:bold; color:#aaa;">Q.<span id="q-count">1</span></span>
             </div>
             
-            <div class="question-area">
-                <div id="image-area" class="big-icon">❓</div>
-                <div id="cn-meaning" class="cn-text">載入中...</div>
-                <div id="hint-overlay" class="hint-text">LOADING</div>
-                <div class="btn-group">
-                    <button onclick="playCurrentWord()" class="btn-replay">🔊 再唸一次</button>
-                    <button onclick="showHint()" id="btn-hint" class="btn-hint">💡 偷看 (-20 XP)</button>
+            <div class="flex flex-col items-end">
+                <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
+                    <span class="text-lg mr-1">🎟️</span>
+                    <span class="text-sm font-bold text-yellow-700" id="ticket-num">0</span>
+                </div>
+                <span class="text-[9px] text-gray-400 mt-1">提示券 Hints</span>
+            </div>
+        </div>
+
+        <div class="w-full px-4 mt-2 mb-0 z-0">
+            <div class="bg-white/70 backdrop-blur-md rounded-xl p-3 shadow-sm border-2 border-white/50 text-xs text-gray-600 space-y-1">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-1 mb-1">
+                    <span class="font-bold text-primary"><i class="fas fa-scroll mr-1"></i> 冒險規則 Game Rules</span>
+                    <span class="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-500">共 20 關 (Levels)</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                    <span>✅ 答對 (Correct): <span class="text-green-600 font-bold">+50 XP</span></span>
+                    <span>❌ 答錯 (Wrong): <span class="text-red-500 font-bold">-30 XP</span></span>
+                    <span>💡 提示 (Hint): <span class="text-yellow-600 font-bold">-1 券/ -20 XP</span></span>
+                    <span>🎁 升級 (Level Up): <span class="text-blue-500 font-bold">獲得 1 券 (+1 Ticket)</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="role-msg" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm px-4 py-2 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
+
+        <div class="flex-grow flex flex-col items-center justify-center p-4 space-y-4">
+            <div class="bg-white w-full rounded-3xl shadow-xl p-6 text-center relative border-b-4 border-gray-200">
+                <div id="q-icon" class="text-8xl mb-2 filter drop-shadow-sm">🍎</div>
+                <div id="q-cn" class="text-2xl font-bold text-gray-700">蘋果</div>
+                <div id="hint-text" class="hint-box text-4xl font-game font-bold text-yellow-500 tracking-wider mt-2 absolute top-2 right-4 opacity-0">APPLE</div>
+                <div id="msg-area" class="h-8 mt-2 font-bold text-lg transition-all"></div>
+
+                <div class="flex justify-center gap-3 mt-4 border-t pt-4">
+                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1">
+                        <span><i class="fas fa-volume-up mr-1"></i> 再次發音</span>
+                        <span class="text-[9px] opacity-70 font-normal">Speak Again</span>
+                    </button>
+                    <button onclick="useHint()" class="flex-1 px-2 py-2 bg-yellow-50 text-yellow-600 rounded-xl text-sm font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1">
+                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看答案</span>
+                        <span class="text-[9px] opacity-70 font-normal">Show Answer</span>
+                    </button>
                 </div>
             </div>
 
-            <div id="answer-slots" class="slots-container"></div>
-
-            <div class="control-row">
-                 <button onclick="backspace()" class="btn-backspace">⌫ 退格</button>
-                 <button onclick="resetInput()" class="btn-clear" id="btn-clear">🧹 全部重寫</button>
-            </div>
-
-            <div id="letter-pool" class="pool-container"></div>
-            <div id="freeze-overlay" class="freeze-msg" style="display:none;">🔒 想一下再按！</div>
-            <div id="message-area" class="result-msg"></div>
-
-            <button onclick="nextQuestion()" id="next-btn" class="btn-next" style="display:none;">下一關 ➔</button>
+            <div id="slots-box" class="flex flex-wrap justify-center gap-2 min-h-[60px]"></div>
         </div>
 
-        <footer class="game-footer">
-            <div class="footer-content">
-                <div class="date-box">🕒 更新：<span id="last-updated">...</span></div>
+        <div class="bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-6 pb-10">
+            <div class="flex justify-between items-center mb-4 gap-2">
+                <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl text-xs font-bold hover:bg-gray-200 transition flex flex-col items-center leading-none gap-1">
+                    <span><i class="fas fa-redo mr-1"></i> 重置本題</span>
+                    <span class="text-[9px] font-normal">Reset</span>
+                </button>
+                <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl text-xs font-bold hover:bg-red-100 transition flex flex-col items-center leading-none gap-1">
+                    <span><i class="fas fa-backspace mr-1"></i> 刪除字母</span>
+                    <span class="text-[9px] font-normal">Delete</span>
+                </button>
             </div>
-        </footer>
-    </div>
-
-    <div id="levelup-modal" class="overlay" style="display:none;">
-        <div class="modal levelup-card">
-            <div class="levelup-header">🎉 LEVEL UP!</div>
-            <h2 id="levelup-title">恭喜升級！</h2>
-            <div id="levelup-house" class="new-house-icon">🛖</div>
-            <div class="reward-box">
-                <p>🎁 獲得獎勵：</p>
-                <div class="reward-item">🎟️ 免費提示券 x 1</div>
-            </div>
-            <button onclick="closeLevelUpModal()" class="btn-confirm">繼續挑戰！</button>
+            <div id="pool-box" class="flex flex-wrap justify-center gap-3"></div>
         </div>
     </div>
 
     <script src="data.js"></script>
     <script src="game.js"></script>
-    
-    <script>
-        const date = new Date(document.lastModified);
-        document.getElementById('last-updated').innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`;
-    </script>
 </body>
 </html>
