@@ -72,3 +72,70 @@ nav a { color: white; text-decoration: none; }
 .btn-reset { background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1.1rem; }
 
 .result-msg { font-size: 1.5rem; margin-top: 15px; font-weight: bold; min-height: 1.5em; }
+
+/* --- style.css 新增樣式 --- */
+
+/* 頂部資訊列 */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.score-box {
+    background: #fff;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: 3px solid #ff9800;
+    color: #ff9800;
+}
+
+.level-badge {
+    background: #2196f3;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* 題目區排版 */
+.question-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.big-icon {
+    font-size: 100px;
+    line-height: 1.2;
+    animation: float 3s ease-in-out infinite; /* 讓圖片輕微浮動，增加活潑感 */
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* 重聽按鈕 - 設計成黃色圓潤風格 */
+.btn-replay {
+    background-color: #ffeb3b;
+    border: 2px solid #fbc02d;
+    color: #333;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px #f9a825;
+    transition: transform 0.1s;
+}
+
+.btn-replay:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px #f9a825;
+}
