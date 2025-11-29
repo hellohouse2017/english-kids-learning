@@ -156,7 +156,6 @@ function nextQuestion() {
     renderSlots();
     renderLetterPool();
     
-    // 安全播放聲音
     setTimeout(() => { try { speak(currentQ.word); } catch(e){} }, 500);
 }
 
@@ -190,20 +189,14 @@ function renderLetterPool() {
 function selectLetter(char, btnElement) {
     if (isFrozen) return;
     
-    // 去除空格後的目標單字長度
     const cleanWord = currentQ.word.replace(/ /g, "");
-    
     if (currentInput.length >= cleanWord.length) return;
     
-    // 嘗試播放聲音，失敗不卡死
     try { speak(char); } catch(e){}
-    
     currentInput.push(char);
     
-    // 填入對應的格子
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
-        // 找到第一個不是空格，而且還是空的格子
         if (currentQ.word[i] !== " " && slot && slot.innerText === "") {
             slot.innerText = char;
             break;
@@ -213,9 +206,7 @@ function selectLetter(char, btnElement) {
     btnElement.classList.add("used");
     btnElement.disabled = true;
 
-    // ★ 強制檢查：只要長度滿了，就一定觸發檢查
     if (currentInput.length === cleanWord.length) {
-        // 給一點點延遲讓使用者看到最後一個字填進去
         setTimeout(checkAnswer, 100); 
     }
 }
@@ -250,26 +241,20 @@ function resetInput() {
     for(let b of btns) { b.classList.remove("used"); b.disabled = false; }
 }
 
-// ★ 修復版 checkAnswer：安全優先
 function checkAnswer() {
     const cleanWord = currentQ.word.replace(/ /g, "");
     const playerAnswer = currentInput.join("");
     const msgDiv = document.getElementById("message-area");
 
     if (playerAnswer === cleanWord) {
-        // --- 答對 ---
-        
-        // 1. 【關鍵修復】優先顯示按鈕，確保遊戲可以繼續
         document.getElementById("next-btn").style.display = "inline-block";
         document.getElementById("btn-clear").disabled = true;
         document.getElementById("btn-hint").disabled = true;
         msgDiv.innerHTML = "<span style='color:green; font-size:24px;'>🎉 Correct!</span>";
 
-        // 2. 處理邏輯與特效 (包在 try-catch 裡)
         try {
             const randomCheer = HOUSE_CHEERS[Math.floor(Math.random() * HOUSE_CHEERS.length)];
             cheerHouse(randomCheer);
-            
             const houseIcon = document.getElementById("my-house-icon");
             houseIcon.classList.add("bounce");
             setTimeout(() => houseIcon.classList.remove("bounce"), 1000);
@@ -277,12 +262,9 @@ function checkAnswer() {
             if (isReviewMode) handleReviewVictory(); else handleNormalVictory();
             
             speak("Correct! " + currentQ.word);
-        } catch(e) {
-            console.log("Effects error:", e); // 萬一特效壞了，只會印在控制台，不會卡住遊戲
-        }
+        } catch(e) { console.log("Effect Error", e); }
 
     } else {
-        // --- 答錯 ---
         try {
             handleDamage();
             speak("Try again");
@@ -310,7 +292,7 @@ function checkAnswer() {
 }
 
 // ===================================================
-// 4. 其他邏輯
+// 4. 其他邏輯 (XP & 升級)
 // ===================================================
 function getRequiredXP(level) {
     if (level <= 5) return 100;
@@ -337,6 +319,24 @@ function updateHUD() {
     document.getElementById("xp-bar").style.width = percentage + "%";
     document.getElementById("xp-current").innerText = player.currentXP;
     document.getElementById("xp-max").innerText = maxXP;
+}
+
+// ★ 新增：XP 獲得時的飄字特效
+function showXPGainEffect(amount) {
+    const hud = document.querySelector('.xp-bar-container');
+    const floatText = document.createElement('div');
+    floatText.className = 'floating-text';
+    floatText.innerText = `+${amount} XP`;
+    
+    // 讓文字出現在 XP 條上方
+    const rect = hud.getBoundingClientRect();
+    floatText.style.top = (rect.top - 30) + 'px';
+    floatText.style.left = (rect.left + rect.width / 2) + 'px';
+    
+    document.body.appendChild(floatText);
+    
+    // 動畫結束後移除
+    setTimeout(() => { floatText.remove(); }, 1200);
 }
 
 function updateHintButton() {
@@ -381,6 +381,10 @@ function showHint() {
 
 function gainXP(amount) {
     if (isReviewMode) return;
+    
+    // 觸發飄字特效
+    showXPGainEffect(amount);
+    
     player.currentXP += amount;
     const reqXP = getRequiredXP(player.level);
     if (player.currentXP >= reqXP) { checkLevelUpCondition(); } 
