@@ -1,125 +1,130 @@
 // ===================================================
-// 1. 遊戲參數與狀態設定
+// 1. 遊戲參數與狀態
 // ===================================================
-const MAX_HP = 8;           // 最大血量改為 8 顆心
-const XP_PER_LEVEL = 100;   // 升級所需經驗
-const XP_PER_WIN = 20;      // 答對基礎經驗
-const HINT_HP_COST = 0.5;   // 偷看一眼扣 0.5 顆心
-const REQUIRED_REVIEW_WINS = 3; // 錯題複習次數
+const MAX_HP = 8;
+const XP_PER_LEVEL = 100;
+const XP_PER_WIN = 20;
+const HINT_HP_COST = 0.5;
+const REQUIRED_REVIEW_WINS = 3;
 
-// 玩家狀態
+// 房屋進化表 (Emoji + 名稱)
+const HOUSE_STAGES = [
+    { icon: "⛺", name: "破舊帳篷" },
+    { icon: "🛖", name: "小木屋" },
+    { icon: "🏠", name: "磚塊屋" },
+    { icon: "🏡", name: "花園別墅" },
+    { icon: "🏰", name: "豪華城堡" },
+    { icon: "🏯", name: "東方宮殿" },
+    { icon: "🌌", name: "天空之城" },
+    { icon: "👑", name: "國王的家" }
+];
+
 let player = {
+    name: "Player",
     hp: MAX_HP,
     level: 1,
     currentXP: 0,
     combo: 0
 };
 
-// 聲音設定
-let voiceSettings = {
-    gender: 'female', // 預設女生
-    pitch: 1.1,       // 預設音調
-    rate: 0.8         // 預設語速
-};
-
-// 遊戲局狀態
+let voiceSettings = { gender: 'female', pitch: 1.1, rate: 0.8 };
 let currentQ = {};      
 let currentInput = [];  
 let errorCount = 0;     
 let questionCount = 0;  
 let hasUsedHint = false;
-
-// 錯題記錄
 let mistakeRegistry = {}; 
 let isReviewMode = false;
+let isFrozen = false; // 是否處於答錯冷卻狀態
 
 // ===================================================
-// 2. 完整單字庫
+// 2. 完整單字庫 (已修正 Desk, 增加中文)
 // ===================================================
 const questionBank = [
     // === 動物 ===
-    { word: "CAT", icon: "🐱" }, { word: "DOG", icon: "🐶" },
-    { word: "PIG", icon: "🐷" }, { word: "BIRD", icon: "🐦" },
-    { word: "FISH", icon: "🐟" }, { word: "DUCK", icon: "🦆" },
-    { word: "LION", icon: "🦁" }, { word: "TIGER", icon: "🐯" },
-    { word: "BEAR", icon: "🐻" }, { word: "RABBIT", icon: "🐰" },
-    { word: "MONKEY", icon: "🐵" }, { word: "ELEPHANT", icon: "🐘" },
-    { word: "ZEBRA", icon: "🦓" }, { word: "ANT", icon: "🐜" },
+    { word: "CAT", icon: "🐱", cn: "貓咪" }, { word: "DOG", icon: "🐶", cn: "狗狗" },
+    { word: "PIG", icon: "🐷", cn: "豬" }, { word: "BIRD", icon: "🐦", cn: "鳥" },
+    { word: "FISH", icon: "🐟", cn: "魚" }, { word: "DUCK", icon: "🦆", cn: "鴨子" },
+    { word: "LION", icon: "🦁", cn: "獅子" }, { word: "TIGER", icon: "🐯", cn: "老虎" },
+    { word: "BEAR", icon: "🐻", cn: "熊" }, { word: "RABBIT", icon: "🐰", cn: "兔子" },
+    { word: "MONKEY", icon: "🐵", cn: "猴子" }, { word: "ELEPHANT", icon: "🐘", cn: "大象" },
+    { word: "ZEBRA", icon: "🦓", cn: "斑馬" }, { word: "ANT", icon: "🐜", cn: "螞蟻" },
+    
     // === 顏色 ===
-    { word: "RED", icon: "🔴" }, { word: "BLUE", icon: "🔵" },
-    { word: "YELLOW", icon: "🟡" }, { word: "GREEN", icon: "🟢" },
-    { word: "ORANGE", icon: "🟠" }, { word: "PURPLE", icon: "🟣" },
-    { word: "BLACK", icon: "⚫" }, { word: "WHITE", icon: "⚪" },
-    { word: "PINK", icon: "🩷" },
+    { word: "RED", icon: "🔴", cn: "紅色" }, { word: "BLUE", icon: "🔵", cn: "藍色" },
+    { word: "YELLOW", icon: "🟡", cn: "黃色" }, { word: "GREEN", icon: "🟢", cn: "綠色" },
+    { word: "ORANGE", icon: "🟠", cn: "橘色" }, { word: "PURPLE", icon: "🟣", cn: "紫色" },
+    { word: "BLACK", icon: "⚫", cn: "黑色" }, { word: "WHITE", icon: "⚪", cn: "白色" },
+    { word: "PINK", icon: "🩷", cn: "粉紅色" },
+
     // === 數字 ===
-    { word: "ONE", icon: "1️⃣" }, { word: "TWO", icon: "2️⃣" },
-    { word: "THREE", icon: "3️⃣" }, { word: "FOUR", icon: "4️⃣" },
-    { word: "FIVE", icon: "5️⃣" }, { word: "SIX", icon: "6️⃣" },
-    { word: "SEVEN", icon: "7️⃣" }, { word: "EIGHT", icon: "8️⃣" },
-    { word: "NINE", icon: "9️⃣" }, { word: "TEN", icon: "🔟" },
+    { word: "ONE", icon: "1️⃣", cn: "一" }, { word: "TWO", icon: "2️⃣", cn: "二" },
+    { word: "THREE", icon: "3️⃣", cn: "三" }, { word: "FOUR", icon: "4️⃣", cn: "四" },
+    { word: "FIVE", icon: "5️⃣", cn: "五" }, { word: "SIX", icon: "6️⃣", cn: "六" },
+    { word: "SEVEN", icon: "7️⃣", cn: "七" }, { word: "EIGHT", icon: "8️⃣", cn: "八" },
+    { word: "NINE", icon: "9️⃣", cn: "九" }, { word: "TEN", icon: "🔟", cn: "十" },
+
     // === 食物 ===
-    { word: "APPLE", icon: "🍎" }, { word: "BANANA", icon: "🍌" },
-    { word: "ORANGE", icon: "🍊" }, { word: "LEMON", icon: "🍋" },
-    { word: "EGG", icon: "🥚" }, { word: "MILK", icon: "🥛" },
-    { word: "CAKE", icon: "🍰" }, { word: "ICE CREAM", icon: "🍦" },
-    { word: "RICE", icon: "🍚" }, { word: "WATER", icon: "💧" },
-    { word: "PIZZA", icon: "🍕" }, { word: "HOT DOG", icon: "🌭" },
-    { word: "HAMBURGER", icon: "🍔" },
+    { word: "APPLE", icon: "🍎", cn: "蘋果" }, { word: "BANANA", icon: "🍌", cn: "香蕉" },
+    { word: "ORANGE", icon: "🍊", cn: "柳橙" }, { word: "LEMON", icon: "🍋", cn: "檸檬" },
+    { word: "EGG", icon: "🥚", cn: "蛋" }, { word: "MILK", icon: "🥛", cn: "牛奶" },
+    { word: "CAKE", icon: "🍰", cn: "蛋糕" }, { word: "ICE CREAM", icon: "🍦", cn: "冰淇淋" },
+    { word: "RICE", icon: "🍚", cn: "米飯" }, { word: "WATER", icon: "💧", cn: "水" },
+    { word: "PIZZA", icon: "🍕", cn: "披薩" }, { word: "HOT DOG", icon: "🌭", cn: "熱狗" },
+    { word: "HAMBURGER", icon: "🍔", cn: "漢堡" },
+
     // === 身體 ===
-    { word: "HEAD", icon: "🗣️" }, { word: "EYE", icon: "👁️" },
-    { word: "EAR", icon: "👂" }, { word: "NOSE", icon: "👃" },
-    { word: "MOUTH", icon: "👄" }, { word: "HAND", icon: "🖐️" },
-    { word: "LEG", icon: "🦵" }, { word: "ARM", icon: "💪" },
-    { word: "FOOT", icon: "🦶" }, { word: "FACE", icon: "😀" },
-    // === 文具與生活 ===
-    { word: "PEN", icon: "🖊️" }, { word: "PENCIL", icon: "✏️" },
-    { word: "BOOK", icon: "📖" }, { word: "BAG", icon: "🎒" },
-    { word: "RULER", icon: "📏" }, { word: "BOX", icon: "📦" },
-    { word: "DESK", icon: "🏫" }, { word: "CHAIR", icon: "🪑" },
-    { word: "CAR", icon: "🚗" }, { word: "BUS", icon: "🚌" },
-    { word: "BIKE", icon: "🚲" }, { word: "BALL", icon: "⚽" },
-    { word: "ROBOT", icon: "🤖" }, { word: "HAT", icon: "👒" },
+    { word: "HEAD", icon: "🗣️", cn: "頭" }, { word: "EYE", icon: "👁️", cn: "眼睛" },
+    { word: "EAR", icon: "👂", cn: "耳朵" }, { word: "NOSE", icon: "👃", cn: "鼻子" },
+    { word: "MOUTH", icon: "👄", cn: "嘴巴" }, { word: "HAND", icon: "🖐️", cn: "手" },
+    { word: "LEG", icon: "🦵", cn: "腿" }, { word: "ARM", icon: "💪", cn: "手臂" },
+    { word: "FOOT", icon: "🦶", cn: "腳" }, { word: "FACE", icon: "😀", cn: "臉" },
+
+    // === 文具與生活 (修正 DESK) ===
+    { word: "PEN", icon: "🖊️", cn: "原子筆" }, { word: "PENCIL", icon: "✏️", cn: "鉛筆" },
+    { word: "BOOK", icon: "📖", cn: "書" }, { word: "BAG", icon: "🎒", cn: "書包" },
+    { word: "RULER", icon: "📏", cn: "尺" }, { word: "BOX", icon: "📦", cn: "箱子" },
+    { word: "CHAIR", icon: "🪑", cn: "椅子" }, // 改 DESK 為 CHAIR 避免混淆
+    { word: "DESK", icon: "✍️", cn: "書桌" }, // 換一個更像桌子的圖示
+    { word: "CAR", icon: "🚗", cn: "車子" }, { word: "BUS", icon: "🚌", cn: "公車" },
+    { word: "BIKE", icon: "🚲", cn: "腳踏車" }, { word: "BALL", icon: "⚽", cn: "球" },
+    { word: "ROBOT", icon: "🤖", cn: "機器人" }, { word: "HAT", icon: "👒", cn: "帽子" },
+    
     // === 家庭 ===
-    { word: "DAD", icon: "👨" }, { word: "MOM", icon: "👩" },
-    { word: "BOY", icon: "👦" }, { word: "GIRL", icon: "👧" },
-    { word: "BABY", icon: "👶" }, { word: "KING", icon: "👑" }
+    { word: "DAD", icon: "👨", cn: "爸爸" }, { word: "MOM", icon: "👩", cn: "媽媽" },
+    { word: "BOY", icon: "👦", cn: "男孩" }, { word: "GIRL", icon: "👧", cn: "女孩" },
+    { word: "BABY", icon: "👶", cn: "嬰兒" }, { word: "KING", icon: "👑", cn: "國王" }
 ];
 
-// ===================================================
-// 3. 遊戲初始化 (選聲音)
-// ===================================================
+window.onload = function() { window.speechSynthesis.getVoices(); };
 
-// 網頁載入時不直接開始，等待使用者選聲音
-window.onload = function() {
-    // 預先載入聲音列表 (Chrome 需要)
-    window.speechSynthesis.getVoices();
-};
-
+// ===================================================
+// 3. 遊戲流程
+// ===================================================
 function startGame(gender) {
-    // 1. 設定聲音參數
+    // 取得名字
+    const nameInput = document.getElementById('player-name-input').value.trim();
+    player.name = nameInput || "勇者";
+    document.getElementById('player-name-display').innerText = player.name;
+
+    // 設定聲音
     voiceSettings.gender = gender;
-    
-    if (gender === 'male') {
-        voiceSettings.pitch = 0.8; // 男生音調低
-    } else {
-        voiceSettings.pitch = 1.2; // 女生音調高
-    }
+    voiceSettings.pitch = (gender === 'male') ? 0.8 : 1.2;
 
-    // 2. 切換介面
+    // 切換畫面
     document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'block'; // 顯示血條
-    document.getElementById('game-container').style.display = 'block'; // 顯示遊戲區
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('game-container').style.display = 'block';
 
-    // 3. 開始遊戲
     updateHUD();
+    updateHouse(); // 初始化房屋
     nextQuestion();
 }
 
-// ===================================================
-// 4. 出題邏輯
-// ===================================================
 function nextQuestion() {
-    // 重置單題狀態
+    isFrozen = false; // 解除鎖定
+    document.getElementById("freeze-overlay").style.display = "none";
+
     if (!isReviewMode) {
         questionCount++;
         document.getElementById("q-count").innerText = questionCount;
@@ -127,26 +132,22 @@ function nextQuestion() {
         document.getElementById("q-count").innerText = "🔥魔王關";
     }
     
-    errorCount = 0;
-    currentInput = [];
-    hasUsedHint = false;
+    errorCount = 0; currentInput = []; hasUsedHint = false;
     
     // UI 重置
     document.getElementById("message-area").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("btn-hint").disabled = false;
-    document.getElementById("btn-clear").disabled = false; // 啟用重寫按鈕
+    document.getElementById("btn-clear").disabled = false;
+    document.getElementById("hint-overlay").classList.remove("visible");
     
-    const hintBox = document.getElementById("hint-overlay");
-    hintBox.classList.remove("visible");
-    
-    // 選題邏輯
+    // 選題
     if (isReviewMode) {
         const mistakes = Object.keys(mistakeRegistry);
         if (mistakes.length === 0) { levelUp(); return; }
         const randomKey = mistakes[Math.floor(Math.random() * mistakes.length)];
         currentQ = mistakeRegistry[randomKey].wordObj;
-        document.getElementById("message-area").innerHTML = `<span style='color:#e91e63'>🔥 複習挑戰：剩 ${REQUIRED_REVIEW_WINS - mistakeRegistry[randomKey].wins} 次</span>`;
+        document.getElementById("message-area").innerHTML = `<span style='color:#e91e63'>🔥 複習剩餘：${REQUIRED_REVIEW_WINS - mistakeRegistry[randomKey].wins} 次</span>`;
     } else {
         const randomIndex = Math.floor(Math.random() * questionBank.length);
         currentQ = questionBank[randomIndex];
@@ -154,12 +155,11 @@ function nextQuestion() {
     
     // 渲染畫面
     document.getElementById("image-area").innerText = currentQ.icon;
-    hintBox.innerText = currentQ.word;
+    document.getElementById("hint-overlay").innerText = currentQ.word;
+    document.getElementById("cn-meaning").innerText = currentQ.cn; // 顯示中文
 
-    // 建立底線
     renderSlots();
 
-    // 建立字母
     const poolDiv = document.getElementById("letter-pool");
     poolDiv.innerHTML = "";
     let letters = currentQ.word.replace(/ /g, "").split('');
@@ -170,15 +170,12 @@ function nextQuestion() {
         btn.innerText = char;
         btn.className = "letter-btn";
         btn.onclick = function() { selectLetter(char, this); };
-        // 把按鈕物件存起來方便之後「重寫」時恢復
-        btn.dataset.char = char; 
         poolDiv.appendChild(btn);
     });
     
     setTimeout(() => { speak(currentQ.word); }, 500);
 }
 
-// 渲染底線的函式 (獨立出來給重寫用)
 function renderSlots() {
     const slotsDiv = document.getElementById("answer-slots");
     slotsDiv.innerHTML = "";
@@ -189,26 +186,21 @@ function renderSlots() {
         if (currentQ.word[i] === " ") {
             slot.style.borderBottom = "none";
             slot.innerHTML = "&nbsp;";
-            // 空格不推入 currentInput，由邏輯自動判斷忽略
         }
         slotsDiv.appendChild(slot);
     }
 }
 
 function selectLetter(char, btnElement) {
-    // 注意：這裡不計算空格，直接比對實際長度
+    if (isFrozen) return; // 冷卻中不可點
+
     const cleanWord = currentQ.word.replace(/ /g, "");
     if (currentInput.length >= cleanWord.length) return;
     
     speak(char);
     currentInput.push(char);
     
-    // 填入底線 (要跳過空格)
-    // 邏輯：我們要算出現在填的是第幾個「非空格」位置，然後對應到正確的 slot ID
-    let fillIndex = 0; // 目前要填的 slot 索引
-    let inputCount = 0; // 已經填入的字母數
-    
-    // 尋找下一個空的 slot
+    // 填入格子
     for(let i=0; i<currentQ.word.length; i++) {
         const slot = document.getElementById("slot-" + i);
         if (currentQ.word[i] !== " " && slot.innerText === "") {
@@ -225,88 +217,115 @@ function selectLetter(char, btnElement) {
     }
 }
 
-// ===================================================
-// 5. 新增：重寫功能 (Reset Input)
-// ===================================================
 function resetInput() {
-    // 1. 清空玩家輸入陣列
+    if (isFrozen) return;
     currentInput = [];
-    
-    // 2. 清空底線顯示
     const slots = document.getElementsByClassName("slot");
-    for(let s of slots) {
-        if(s.innerHTML !== "&nbsp;") s.innerText = "";
-    }
-    
-    // 3. 恢復所有按鈕狀態
+    for(let s of slots) if(s.innerHTML !== "&nbsp;") s.innerText = "";
     const btns = document.getElementsByClassName("letter-btn");
-    for(let b of btns) {
-        b.classList.remove("used");
-        b.disabled = false;
-    }
-    
-    // 4. (選用) 播放一個擦除的音效或提示音
-    // speak("Clear"); 
+    for(let b of btns) { b.classList.remove("used"); b.disabled = false; }
 }
 
-// ===================================================
-// 6. 檢查答案
-// ===================================================
 function checkAnswer() {
-    // 比對時要把題目的空格拿掉
     const cleanWord = currentQ.word.replace(/ /g, "");
     const playerAnswer = currentInput.join("");
     const msgDiv = document.getElementById("message-area");
 
     if (playerAnswer === cleanWord) {
-        // 禁用重寫按鈕，避免答對後還按到
+        // --- 答對 ---
         document.getElementById("btn-clear").disabled = true;
-        
-        if (isReviewMode) handleReviewVictory();
-        else handleNormalVictory();
+        if (isReviewMode) handleReviewVictory(); else handleNormalVictory();
         
         msgDiv.innerHTML += " <span style='color:green; font-size:24px;'>⚔️ Correct!</span>";
         speak("Correct! " + currentQ.word);
-        
         document.getElementById("next-btn").style.display = "inline-block";
         document.getElementById("btn-hint").disabled = true;
 
     } else {
+        // --- 答錯 (啟動防亂猜) ---
         handleDamage();
-        msgDiv.innerHTML = "<span style='color:red'>🛡️ Wrong!</span>";
+        msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         speak("Try again");
 
         registerMistake(currentQ);
-        
         errorCount++;
-        if (errorCount >= 2) {
-             msgDiv.innerHTML += "<br><span style='color:#e91e63; font-size:0.9rem'>💡 用提示吧！(-0.5❤)</span>";
-             const hintBtn = document.getElementById("btn-hint");
-             hintBtn.style.transform = "scale(1.2)";
-             setTimeout(() => hintBtn.style.transform = "scale(1)", 300);
-        }
         
-        // 答錯自動重置，給予 1.2 秒反應時間
-        setTimeout(() => resetInput(), 1200);
+        // ★ 防亂猜機制：凍結畫面 1.5 秒
+        isFrozen = true;
+        const freezeOverlay = document.getElementById("freeze-overlay");
+        freezeOverlay.style.display = "flex";
+        
+        setTimeout(() => {
+            isFrozen = false;
+            freezeOverlay.style.display = "none";
+            resetInput(); // 自動清空讓他重拼
+        }, 1500);
+
+        if (errorCount >= 2) {
+             setTimeout(() => {
+                 msgDiv.innerHTML += "<br><span style='color:#e91e63; font-size:0.9rem'>💡 用提示吧！(-0.5❤)</span>";
+             }, 1500);
+        }
     }
 }
 
-// ... (registerMistake, handleNormalVictory, handleReviewVictory 等邏輯維持不變) ...
+// ===================================================
+// 4. 升級與房屋系統 (重點更新)
+// ===================================================
+
+// 更新房屋顯示
+function updateHouse() {
+    // 根據等級決定房屋階段 (Level 1 對應 index 0)
+    let stageIndex = player.level - 1;
+    if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
+    
+    const stage = HOUSE_STAGES[stageIndex];
+    document.getElementById("my-house-icon").innerText = stage.icon;
+    document.getElementById("house-name").innerText = stage.name;
+}
+
+function levelUp() {
+    isReviewMode = false;
+    player.level++;
+    player.currentXP = 0;
+    player.hp = MAX_HP;
+    
+    updateHUD();
+    speak("Level Up!");
+    fireConfetti();
+    
+    // ★ 顯示精緻升級卡片
+    const modal = document.getElementById("levelup-modal");
+    document.getElementById("levelup-title").innerText = `恭喜 ${player.name} 升到 Lv. ${player.level}！`;
+    
+    // 預覽下一階房屋
+    let nextStageIndex = player.level - 1;
+    if (nextStageIndex >= HOUSE_STAGES.length) nextStageIndex = HOUSE_STAGES.length - 1;
+    document.getElementById("levelup-house").innerText = HOUSE_STAGES[nextStageIndex].icon;
+    
+    modal.style.display = "flex";
+    
+    // 實際更新房屋
+    updateHouse();
+}
+
+function closeLevelUpModal() {
+    document.getElementById("levelup-modal").style.display = "none";
+    nextQuestion();
+}
+
+// ... (以下為維持不變的邏輯：registerMistake, handleNormalVictory, XP/Damage 等) ...
 // 為了程式碼完整性，以下重複必要邏輯
 
 function registerMistake(wordObj) {
-    if (!mistakeRegistry[wordObj.word]) {
-        mistakeRegistry[wordObj.word] = { wordObj: wordObj, wins: 0 };
-    } else {
-        mistakeRegistry[wordObj.word].wins = 0;
-    }
+    if (!mistakeRegistry[wordObj.word]) { mistakeRegistry[wordObj.word] = { wordObj: wordObj, wins: 0 }; } 
+    else { mistakeRegistry[wordObj.word].wins = 0; }
 }
 
 function handleNormalVictory() {
     let gainedXP = XP_PER_WIN;
     if (hasUsedHint || errorCount > 0) gainedXP = 5; 
     player.combo++;
-    showCombo(player.combo);
     if (player.combo > 1) gainedXP += (player.combo * 2);
     gainXP(gainedXP);
     fireConfetti();
@@ -318,191 +337,94 @@ function handleReviewVictory() {
         mistakeRegistry[wordKey].wins++;
         if (mistakeRegistry[wordKey].wins >= REQUIRED_REVIEW_WINS) {
             delete mistakeRegistry[wordKey];
-            alert(`恭喜！你已經完全學會 ${wordKey} 了！`);
         }
     }
-    if (Object.keys(mistakeRegistry).length === 0) {
-        levelUp(); 
-    } else {
-        fireConfetti();
-    }
+    if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
+    else { fireConfetti(); }
 }
 
 function gainXP(amount) {
     if (isReviewMode) return;
     player.currentXP += amount;
-    if (player.currentXP >= XP_PER_LEVEL) {
-        checkLevelUpCondition();
-    } else {
-        updateHUD();
-    }
+    if (player.currentXP >= XP_PER_LEVEL) { checkLevelUpCondition(); } 
+    else { updateHUD(); }
 }
 
 function checkLevelUpCondition() {
-    const mistakeCount = Object.keys(mistakeRegistry).length;
-    if (mistakeCount === 0) {
-        levelUp();
-    } else {
-        startReviewMode();
-    }
+    if (Object.keys(mistakeRegistry).length === 0) { levelUp(); } 
+    else { startReviewMode(); }
 }
 
 function startReviewMode() {
     if (isReviewMode) return;
-    isReviewMode = true;
-    player.currentXP = XP_PER_LEVEL;
-    updateHUD();
+    isReviewMode = true; player.currentXP = XP_PER_LEVEL; updateHUD();
     speak("Boss Battle!");
-    alert(`🚨 魔王挑戰！\n\n有 ${Object.keys(mistakeRegistry).length} 個錯字要複習。\n通過才能升級！`);
+    alert(`🚨 升級檢定！\n有 ${Object.keys(mistakeRegistry).length} 個錯字要複習。\n通過才能升級！`);
     nextQuestion(); 
 }
 
-function levelUp() {
-    isReviewMode = false;
-    player.level++;
-    player.currentXP = 0;
-    player.hp = MAX_HP;
-    updateHUD();
-    speak("Level Up! Congratulations!");
-    fireConfetti();
-    setTimeout(() => {
-        alert(`🎉 LEVEL UP! 升到 Lv. ${player.level}！\n🎁 血量補滿！`);
-        nextQuestion();
-    }, 500);
-}
-
 function handleDamage() {
-    player.hp--;
-    player.combo = 0;
-    hideCombo();
+    player.hp--; player.combo = 0;
     document.body.classList.add("shake-screen");
     setTimeout(() => document.body.classList.remove("shake-screen"), 500);
     updateHUD();
-    if (player.hp <= 0) {
-        setTimeout(gameOver, 500);
-    }
+    if (player.hp <= 0) setTimeout(gameOver, 500);
 }
 
 function showHint() {
-    if (player.hp <= HINT_HP_COST) {
-        alert("血量不足，不能偷看！加油！");
-        return;
-    }
-    player.hp -= HINT_HP_COST;
-    hasUsedHint = true;
-    updateHUD();
+    if (player.hp <= HINT_HP_COST) { alert("血量不足！"); return; }
+    player.hp -= HINT_HP_COST; hasUsedHint = true; updateHUD();
     const hintBox = document.getElementById("hint-overlay");
     const hintBtn = document.getElementById("btn-hint");
     hintBox.classList.add("visible");
     
-    // 提示時也轉成小寫，確保發音正確
     let utterance = new SpeechSynthesisUtterance(currentQ.word.toLowerCase());
-    setVoice(utterance);
-    utterance.rate = 0.5;
+    setVoice(utterance); utterance.rate = 0.5;
     window.speechSynthesis.speak(utterance);
     
     hintBtn.disabled = true;
     setTimeout(() => {
         hintBox.classList.remove("visible");
-        if (document.getElementById("next-btn").style.display === "none") {
-             hintBtn.disabled = false;
-        }
+        if (document.getElementById("next-btn").style.display === "none") hintBtn.disabled = false;
     }, 2000);
 }
 
-// ===================================================
-// 7. 語音功能 (關鍵修正：小寫 + 聲音選擇)
-// ===================================================
 function speak(text) {
     window.speechSynthesis.cancel();
-    // ★ 關鍵修正：將文字轉為小寫 (.toLowerCase())
-    // 這樣瀏覽器就會把它當成單字唸，而不是拼字母 (dog vs D-O-G)
     const utterance = new SpeechSynthesisUtterance(text.toLowerCase());
-    
     setVoice(utterance);
-    
     window.speechSynthesis.speak(utterance);
 }
 
 function setVoice(utterance) {
-    utterance.lang = 'en-US';
-    utterance.rate = voiceSettings.rate;
-    utterance.pitch = voiceSettings.pitch;
-    
-    // 嘗試尋找對應性別的聲音 (這部分取決於瀏覽器支援度)
-    // 如果找不到特定性別，我們主要依賴上面的 pitch (音調) 來區分
+    utterance.lang = 'en-US'; utterance.rate = voiceSettings.rate; utterance.pitch = voiceSettings.pitch;
     const voices = window.speechSynthesis.getVoices();
-    let targetVoice = null;
-
-    if (voiceSettings.gender === 'male') {
-        // 嘗試找名字裡有 Male 的聲音 (如 Google US English Male)
-        targetVoice = voices.find(v => v.name.includes('Male') && v.lang.includes('en'));
-    } else {
-        // 嘗試找名字裡有 Female 的聲音
-        targetVoice = voices.find(v => v.name.includes('Female') && v.lang.includes('en'));
-    }
-
-    // 如果找到了就設定，沒找到就用系統預設 (但音調 pitch 已經有調整了)
-    if (targetVoice) {
-        utterance.voice = targetVoice;
-    }
+    let targetVoice = (voiceSettings.gender === 'male') ? 
+        voices.find(v => v.name.includes('Male') && v.lang.includes('en')) : 
+        voices.find(v => v.name.includes('Female') && v.lang.includes('en'));
+    if (targetVoice) utterance.voice = targetVoice;
 }
 
-function playCurrentWord() {
-    speak(currentQ.word);
-}
+function playCurrentWord() { speak(currentQ.word); }
 
-// ===================================================
-// 8. 介面更新
-// ===================================================
 function updateHUD() {
     document.getElementById("level-display").innerText = player.level;
-    
     let hearts = "";
     const fullHearts = Math.floor(player.hp);
     const hasHalfHeart = (player.hp % 1 !== 0);
-    
     for(let i=0; i<fullHearts; i++) hearts += "❤️";
     if (hasHalfHeart) hearts += "💔";
-    
-    // 計算空心 (總共 8 顆)
     const emptyHearts = MAX_HP - Math.ceil(player.hp);
     for(let i=0; i<emptyHearts; i++) hearts += "🖤";
-    
     document.getElementById("hp-display").innerText = hearts;
-
     let percentage = (player.currentXP / XP_PER_LEVEL) * 100;
     if (percentage > 100) percentage = 100;
     document.getElementById("xp-bar").style.width = percentage + "%";
 }
 
-function showCombo(count) {
-    if (count < 2) return;
-    const comboDiv = document.getElementById("combo-display");
-    comboDiv.innerText = `Combo x${count}!`;
-    comboDiv.classList.add("show");
-}
-
-function hideCombo() {
-    document.getElementById("combo-display").classList.remove("show");
-}
-
 function gameOver() {
-    speak("Game Over");
-    alert("💀 Game Over! 血量歸零了！\n\n請重新挑戰！");
-    // 重置
-    player.hp = MAX_HP;
-    player.level = 1;
-    player.currentXP = 0;
-    player.combo = 0;
-    mistakeRegistry = {}; 
-    isReviewMode = false;
-    updateHUD();
-    nextQuestion();
+    speak("Game Over"); alert("💀 血量歸零了！請重新挑戰！");
+    location.reload(); // 直接重新整理頁面
 }
 
-function fireConfetti() {
-    if (typeof confetti === 'function') {
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    }
-}
+function fireConfetti() { if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); }

@@ -1,92 +1,115 @@
 :root {
-    --bg-color: #fff9c4;
+    --bg-color: #e0f7fa;
     --primary-color: #ff9800;
-    --accent-color: #2196f3;
-    --level1-color: #4caf50;
-    --level2-color: #e91e63;
+    --accent-color: #00bcd4;
     --text-color: #333;
 }
 
 body {
     font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif;
     background-color: var(--bg-color);
-    margin: 0;
-    padding: 0;
-    color: var(--text-color);
-    text-align: center;
+    margin: 0; padding: 0; color: var(--text-color); text-align: center;
 }
 
-/* === 開始畫面 (Overlay) === */
+/* === 通用遮罩 (Overlay) === */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); z-index: 999;
+    background: rgba(0,0,0,0.85); z-index: 999;
     display: flex; justify-content: center; align-items: center;
+    backdrop-filter: blur(5px);
 }
-.modal {
-    background: white; padding: 30px; border-radius: 20px;
-    max-width: 400px; width: 90%;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    border: 5px solid var(--primary-color);
+
+/* === 開始畫面 === */
+.start-modal {
+    background: white; padding: 40px; border-radius: 25px; width: 90%; max-width: 450px;
+    border: 5px solid var(--accent-color); box-shadow: 0 0 30px rgba(0,255,255,0.5);
 }
-.voice-selection { display: flex; gap: 20px; justify-content: center; margin: 20px 0; }
-.btn-voice {
-    padding: 15px 20px; font-size: 1.2rem; border: none; border-radius: 15px; cursor: pointer;
-    font-weight: bold; color: white; transition: 0.2s;
+.input-group { margin: 20px 0; text-align: left; }
+.input-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 1.2rem; }
+.input-group input { 
+    width: 100%; padding: 10px; font-size: 1.2rem; border-radius: 10px; 
+    border: 2px solid #ccc; box-sizing: border-box; 
 }
+.voice-selection { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
+.btn-voice { padding: 15px 30px; font-size: 1.2rem; border: none; border-radius: 50px; cursor: pointer; color: white; transition: 0.2s; font-weight: bold; }
 .btn-voice:active { transform: scale(0.95); }
-.male { background: #2196f3; box-shadow: 0 4px #1976d2; }
-.female { background: #e91e63; box-shadow: 0 4px #c2185b; }
-.note { font-size: 0.8rem; color: #666; margin-top: 10px; }
+.male { background: #2196f3; box-shadow: 0 5px #1565c0; }
+.female { background: #e91e63; box-shadow: 0 5px #ad1457; }
 
-/* === 遊戲說明區 === */
-.game-rules {
-    margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.6);
-    border-radius: 15px; text-align: left; border: 2px dashed #aaa;
+/* === 升級彈窗 (Level Up) === */
+.levelup-card {
+    background: linear-gradient(135deg, #fff, #fff9c4);
+    padding: 30px; border-radius: 30px; width: 90%; max-width: 400px;
+    border: 5px solid #FFD700; text-align: center;
+    animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.game-rules h3 { margin-top: 0; color: #555; text-align: center;}
-.game-rules ul { padding-left: 20px; }
-.game-rules li { margin-bottom: 8px; line-height: 1.5; color: #444; }
+@keyframes zoomIn { from { transform: scale(0); } to { transform: scale(1); } }
+.levelup-header { font-size: 2.5rem; color: #ff9800; font-weight: 900; text-shadow: 2px 2px 0 #fff; margin-bottom: 10px; }
+.levelup-icon { font-size: 4rem; margin: 10px 0; animation: bounce 1s infinite; }
+.new-house-icon { font-size: 6rem; margin: 10px 0; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+.reward-text { color: #e91e63; font-weight: bold; font-size: 1.2rem; background: #fce4ec; padding: 10px; border-radius: 10px; display: inline-block; }
+.btn-confirm { background: #4caf50; color: white; border: none; padding: 15px 40px; font-size: 1.5rem; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: 0 5px #2e7d32; }
+.btn-confirm:active { transform: translateY(3px); box-shadow: none; }
 
-/* === 按鈕與操作 === */
-.control-row { margin: 10px 0 20px; }
-.btn-clear {
-    background: #607d8b; color: white; border: none; padding: 8px 20px;
-    border-radius: 20px; font-size: 1rem; cursor: pointer;
-    box-shadow: 0 3px #455a64; display: inline-flex; align-items: center; gap: 5px;
+/* === HUD === */
+.game-hud { background: #263238; color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.top-row { display: flex; justify-content: space-between; align-items: center; }
+.player-info { display: flex; flex-direction: column; align-items: flex-start; }
+.player-name { font-size: 1.2rem; font-weight: bold; color: #4fc3f7; }
+.level-badge { font-size: 0.9rem; color: #FFD700; }
+.hp-container { font-size: 1.2rem; letter-spacing: 2px; color: #ff5252; }
+.xp-bar-container { width: 100%; height: 8px; background: #455a64; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #00e676, #69f0ae); width: 0%; transition: width 0.5s ease-out; }
+.btn-home { color: #bdbdbd; text-decoration: none; font-size: 0.9rem; border: 1px solid #78909c; padding: 5px 10px; border-radius: 5px; }
+
+/* === 房屋養成區 === */
+.house-container {
+    background: white; border-radius: 20px; padding: 15px; margin: 15px auto; max-width: 600px;
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 2px solid #b2ebf2;
 }
-.btn-clear:active { transform: translateY(2px); box-shadow: none; }
+.house-label { font-weight: bold; color: #00bcd4; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 3px; }
+.house-icon { font-size: 4rem; transition: transform 0.3s; }
+.house-icon:hover { transform: scale(1.1); }
+#house-name { font-size: 1.2rem; font-weight: bold; color: #555; }
 
-/* === 其他既有樣式 (保留之前的) === */
-.main-container, .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-.game-hud { background: #333; color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-.top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.btn-home { color: #fff; text-decoration: none; font-size: 0.9rem; background: #555; padding: 5px 10px; border-radius: 5px; }
-.player-stats { display: flex; align-items: center; gap: 10px; }
-.level-badge { background: #FFD700; color: #333; font-weight: 900; padding: 5px 10px; border-radius: 5px; }
-/* 修改 HP 字體大小以容納 8 顆心 */
-.hp-container { font-size: 1.2rem; letter-spacing: 2px; line-height: 1.2; max-width: 250px; word-wrap: break-word;}
-.xp-bar-container { width: 100%; height: 10px; background: #555; border-radius: 5px; overflow: hidden; border: 1px solid #777; margin-top: 5px; }
-.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); width: 0%; transition: width 0.5s ease-out; }
-.game-stage { background: white; border-radius: 20px; padding: 30px 20px; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-.big-icon { font-size: 6rem; margin: 10px 0; animation: float 3s ease-in-out infinite; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-.btn-group { display: flex; gap: 15px; justify-content: center; margin: 10px 0; }
-.btn-replay { background-color: #ffeb3b; border: 2px solid #fbc02d; color: #333; padding: 8px 15px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px #f9a825; }
-.btn-hint { background-color: #9c27b0; border: 2px solid #7b1fa2; color: white; padding: 8px 15px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 4px #7b1fa2; }
-.btn-replay:active, .btn-hint:active { transform: translateY(3px); box-shadow: none; }
-.btn-hint:disabled { background: #ccc; border-color: #aaa; box-shadow: none; cursor: not-allowed; }
-.hint-text { font-size: 3rem; font-weight: bold; color: var(--level2-color); letter-spacing: 5px; margin: 10px 0; opacity: 0; transition: opacity 0.5s; height: 60px; }
+/* === 遊戲區 === */
+.container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
+.game-stage { background: white; border-radius: 20px; padding: 20px; margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative; }
+.question-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.q-tag { background: #00bcd4; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+.big-icon { font-size: 5rem; margin-top: 10px; }
+.cn-text { font-size: 1.5rem; color: #555; font-weight: bold; margin-bottom: 10px; background: #f5f5f5; display: inline-block; padding: 5px 20px; border-radius: 10px; }
+
+/* 按鈕與操作 */
+.btn-group { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+.btn-replay, .btn-hint { padding: 8px 15px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 0.9rem; color: white; box-shadow: 0 4px rgba(0,0,0,0.2); }
+.btn-replay { background: #ffca28; color: #333; }
+.btn-hint { background: #ab47bc; }
+.btn-replay:active, .btn-hint:active { transform: translateY(2px); box-shadow: none; }
+.hint-text { font-size: 3rem; font-weight: bold; color: #e91e63; letter-spacing: 5px; opacity: 0; transition: 0.5s; height: 50px; }
 .hint-text.visible { opacity: 1; }
-.slots-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; min-height: 50px; flex-wrap: wrap; }
-.slot { width: 35px; height: 45px; border-bottom: 3px solid #333; font-size: 28px; font-weight: bold; color: var(--level2-color); display: flex; align-items: center; justify-content: center; }
-.pool-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; max-width: 500px; margin: 0 auto; }
-.letter-btn { width: 45px; height: 45px; background: var(--level2-color); color: white; font-size: 22px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #ad1457; transition: 0.1s; }
+
+.slots-container { display: flex; justify-content: center; gap: 5px; min-height: 50px; margin: 10px 0; flex-wrap: wrap; }
+.slot { width: 40px; height: 50px; border-bottom: 4px solid #333; font-size: 30px; font-weight: bold; color: #0097a7; display: flex; align-items: center; justify-content: center; }
+.btn-clear { background: #78909c; color: white; border: none; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-bottom: 15px; }
+
+/* 字母按鈕與鎖定 */
+.pool-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.letter-btn { width: 50px; height: 50px; background: #00bcd4; color: white; font-size: 24px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px #00838f; transition: 0.1s; }
 .letter-btn:active { transform: translateY(4px); box-shadow: none; }
-.letter-btn.used { background: #ccc; box-shadow: none; cursor: default; opacity: 0.5; }
-.result-msg { font-size: 1.5rem; margin: 20px 0; font-weight: bold; min-height: 1.5em; }
-.btn-next { background: #4caf50; color: white; border: none; padding: 10px 40px; border-radius: 50px; font-size: 1.5rem; cursor: pointer; animation: pop 0.5s infinite alternate; box-shadow: 0 6px 0 #388e3c; }
-@keyframes pop { from { transform: scale(1); } to { transform: scale(1.05); } }
-.shake-screen { animation: shake 0.5s; background-color: #ffebee; }
-@keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
-.combo-text { position: absolute; top: 70px; right: 20px; font-size: 2rem; font-weight: 900; color: #ffeb3b; text-shadow: 2px 2px 0 #d50000; transform: scale(0); transition: 0.3s; }
-.combo-text.show { transform: scale(1); }
+.letter-btn.used { background: #cfd8dc; box-shadow: none; color: #90a4ae; cursor: default; }
+
+/* 冷卻遮罩 */
+.freeze-msg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255,255,255,0.8); z-index: 50;
+    display: flex; justify-content: center; align-items: center;
+    color: #f44336; font-size: 2rem; font-weight: 900;
+    border-radius: 20px; animation: pulse 0.5s infinite;
+}
+
+.result-msg { font-size: 1.5rem; font-weight: bold; min-height: 1.5em; margin-bottom: 10px; }
+.btn-next { background: #43a047; color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 1.4rem; cursor: pointer; box-shadow: 0 5px #2e7d32; animation: pop 0.5s infinite alternate; }
+.game-rules { background: #e1f5fe; padding: 20px; border-radius: 15px; text-align: left; border: 2px dashed #81d4fa; margin-top: 30px; }
+.game-rules li { margin-bottom: 8px; color: #0277bd; }
