@@ -1,5 +1,3 @@
-/* style.css - 修正 RWD 並排版 */
-
 :root {
     --bg-gradient-start: #fff9c4;
     --bg-gradient-end: #fff176;
@@ -11,6 +9,8 @@
     --accent-green: #81c784;
     --house-bg: #e1f5fe;
     --slot-line: #bcaaa4;
+    --level1-color: #4caf50;
+    --level2-color: #e91e63;
 }
 
 * { box-sizing: border-box; }
@@ -22,32 +22,43 @@ body {
     text-align: center; overflow-x: hidden;
 }
 
-/* === 遮罩與開始畫面 (修正無法點擊) === */
+/* === 首頁與通用 === */
+.container { max-width: 900px; margin: 0 auto; padding: 0 15px 50px; }
+.main-title { font-size: 3rem; color: #ff9800; text-shadow: 2px 2px 0 #fff; margin-bottom: 5px; margin-top: 30px; }
+
+/* Menu Grid */
+.menu-grid { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
+.menu-card {
+    background: white; border-radius: 20px; padding: 20px; display: flex; align-items: center;
+    text-decoration: none; color: #333; box-shadow: 0 6px 0 rgba(0,0,0,0.1); transition: transform 0.1s;
+    border: 3px solid transparent;
+}
+.menu-card:active { transform: scale(0.98); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+.menu-card.level-1 { border-color: var(--level1-color); }
+.menu-card.level-2 { border-color: var(--level2-color); }
+.card-icon { font-size: 4rem; margin-right: 20px; }
+.card-content h2 { margin: 0; font-size: 1.5rem; }
+.card-content p { margin: 5px 0 10px; color: #666; }
+.tag { background: #eee; padding: 5px 10px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; }
+
+/* === 遮罩與開始畫面 === */
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-    z-index: 9999; /* 提高層級確保在最上層 */
-    display: flex; justify-content: center; align-items: center; padding: 20px;
+    z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;
 }
-
 .modal {
     background: #fff; padding: 30px; border-radius: 30px; width: 100%; max-width: 450px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 5px solid #fff; animation: bounceIn 0.5s;
 }
-
 .start-modal h1 { color: var(--accent-blue); margin-bottom: 20px; font-size: 1.8rem; }
 .input-group label { display: block; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; color: #8d6e63; }
-.input-group input { 
-    width: 100%; padding: 12px; font-size: 1.2rem; border-radius: 12px; 
-    border: 3px solid #eee; text-align: center; color: var(--text-color);
-}
-
+.input-group input { width: 100%; padding: 12px; font-size: 1.2rem; border-radius: 12px; border: 3px solid #eee; text-align: center; color: var(--text-color); }
 .voice-selection { display: flex; gap: 15px; margin-top: 25px; }
 .btn-voice { 
     flex: 1; padding: 15px; font-size: 1.2rem; border: none; border-radius: 20px; 
     cursor: pointer; color: white; font-weight: bold; box-shadow: 0 5px rgba(0,0,0,0.1); 
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-    min-width: 100px; /* 確保最小寬度 */
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 100px;
 }
 .btn-voice span { font-size: 1.5rem; }
 .btn-voice:active { transform: scale(0.95); }
@@ -72,39 +83,23 @@ body {
 .combo-text { position: absolute; top: 60px; right: 20px; font-size: 1.5rem; font-weight: 900; color: #ffca28; text-shadow: 2px 2px 0 #fff; transform: scale(0); transition: 0.3s; z-index: 101; }
 .combo-text.show { transform: scale(1); animation: pop 0.3s; }
 
-/* === 主容器與儀表板 (並排關鍵 CSS) === */
-.container { max-width: 900px; margin: 0 auto; padding: 0 15px 50px; }
-
-/* Dashboard Wrapper: 負責讓房子和說明並排 */
-.dashboard-wrapper {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 25px;
-    align-items: stretch;
-}
-
-/* 左邊：房子 (佔 60%) */
+/* === Dashboard (並排區塊) === */
+.dashboard-wrapper { display: flex; gap: 20px; margin-bottom: 25px; align-items: stretch; }
 .house-section {
-    flex: 1.5; /* 佔比較大 */
-    background: var(--house-bg); border-radius: 30px; padding: 15px;
-    position: relative; border: 4px solid #fff;
-    box-shadow: 0 10px 20px rgba(179, 229, 252, 0.4);
+    flex: 1.5; background: var(--house-bg); border-radius: 30px; padding: 15px;
+    position: relative; border: 4px solid #fff; box-shadow: 0 10px 20px rgba(179, 229, 252, 0.4);
     display: flex; flex-direction: column; justify-content: flex-end;
 }
-
-/* 右邊：說明 (佔 40%) */
 .game-rules-panel {
-    flex: 1; /* 佔比較小 */
-    background: #fff3e0; border-radius: 30px; padding: 20px;
+    flex: 1; background: #fff3e0; border-radius: 30px; padding: 20px;
     border: 4px solid #fff; box-shadow: 0 10px 20px rgba(255, 224, 178, 0.4);
-    text-align: left; font-size: 0.9rem; color: #795548;
-    display: flex; flex-direction: column; justify-content: center;
+    text-align: left; font-size: 0.9rem; color: #795548; display: flex; flex-direction: column; justify-content: center;
 }
 .game-rules-panel h3 { margin-top: 0; color: #f57c00; text-align: center; border-bottom: 2px dashed #ffe0b2; padding-bottom: 10px; }
 .game-rules-panel ul { padding-left: 20px; margin: 0; }
 .game-rules-panel li { margin-bottom: 6px; line-height: 1.4; }
 
-/* 房子內部樣式 */
+/* 房子樣式 */
 .house-wrapper { height: 120px; display: flex; justify-content: center; align-items: flex-end; margin-bottom: 5px; position: relative; }
 .house-icon { font-size: 6rem; z-index: 2; cursor: pointer; filter: drop-shadow(0 8px 0 rgba(0,0,0,0.1)); transition: transform 0.2s; }
 .house-icon:hover { transform: scale(1.1); }
@@ -117,17 +112,13 @@ body {
 .house-bubble.show { opacity: 1; transform: translateY(0); }
 
 /* === 答題區 === */
-.game-stage {
-    background: var(--card-bg); border-radius: 30px; padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative;
-}
+.game-stage { background: var(--card-bg); border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; }
 .q-tag { background: var(--accent-blue); color: white; padding: 5px 20px; border-radius: 50px; font-weight: bold; }
 .question-area { margin-bottom: 20px; }
 .big-icon { font-size: 5rem; margin: 10px 0; animation: float 3s ease-in-out infinite; }
 .cn-text { font-size: 1.4rem; color: #795548; font-weight: bold; background: #efebe9; padding: 5px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; }
 .hint-text { font-size: 3rem; font-weight: 900; color: var(--accent-pink); letter-spacing: 3px; opacity: 0; transition: 0.3s; height: 50px; margin: 5px 0; }
 .hint-text.visible { opacity: 1; }
-
 .btn-group { display: flex; gap: 15px; justify-content: center; }
 .btn-replay, .btn-hint { border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: 0.1s; min-width: 140px; }
 .btn-replay { background: #ffca28; color: #5d4037; }
@@ -147,7 +138,6 @@ body {
 
 .result-msg { font-size: 1.5rem; margin-bottom: 15px; font-weight: bold; min-height: 1.5em; }
 .btn-next { background: var(--accent-green); color: white; border: none; padding: 15px 50px; border-radius: 50px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #2e7d32; animation: pop 0.6s infinite alternate; width: 100%; max-width: 300px; }
-
 .freeze-msg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 50; border-radius: 30px; display: flex; justify-content: center; align-items: center; color: #ef5350; font-size: 2rem; font-weight: 900; }
 
 .levelup-card { text-align: center; border-color: #FFD700; background: radial-gradient(circle, #fff, #fffde7); }
@@ -163,28 +153,19 @@ body {
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .shake-screen { animation: shake 0.4s; background: #ffcdd2; }
 
-/* === RWD 手機版 (Media Query) === */
+/* RWD 手機版 */
 @media (max-width: 768px) {
-    /* 讓儀表板變直排 */
     .dashboard-wrapper { flex-direction: column; }
-    
-    /* 手機上房子和說明都佔滿寬度 */
     .house-section, .game-rules-panel { flex: none; width: 100%; }
-    
-    /* 說明文字縮小 */
     .game-rules-panel { font-size: 0.85rem; padding: 15px; }
-    
     .start-modal h1 { font-size: 1.5rem; }
     .btn-voice { padding: 12px; }
-    
     .game-hud { padding: 8px 15px; }
     .hp-container { font-size: 1rem; }
-    
     .house-icon { font-size: 5rem; }
     .house-wrapper { height: 100px; }
     .big-icon { font-size: 4rem; }
     .hint-text { font-size: 2.5rem; }
-    
     .slot { width: 38px; height: 48px; font-size: 24px; border-width: 4px; }
     .pool-container { gap: 6px; }
     .letter-btn { width: 48px; height: 48px; font-size: 20px; }

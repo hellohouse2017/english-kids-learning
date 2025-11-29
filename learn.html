@@ -7,82 +7,101 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav style="background: #4caf50; padding: 15px; color: white; text-align: left; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 1.2rem; font-weight: bold;">📖 Level 1: Vocabulary</span>
-        <a href="index.html" style="color: white; text-decoration: none; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px;">🏠 回首頁</a>
+    <nav class="game-hud" style="justify-content: space-between; display: flex; align-items: center;">
+        <span style="font-size: 1.2rem; font-weight: bold; color: #5d4037;">📖 單字圖鑑</span>
+        <a href="index.html" class="btn-home">🏠 回首頁</a>
     </nav>
 
     <div class="container">
-        <p>點擊卡片聽聽看怎麼唸！(Click to listen)</p>
-        
+        <p style="margin: 20px 0; color: #795548;">點擊卡片聽聽看怎麼唸！(Click to listen)</p>
         <div id="vocab-container"></div>
     </div>
 
     <script>
-        // === 單字資料庫 (分類版) ===
         const vocabData = {
             "🐶 動物 (Animals)": [
-                { w: "Cat", i: "🐱" }, { w: "Dog", i: "🐶" }, { w: "Pig", i: "🐷" },
-                { w: "Bird", i: "🐦" }, { w: "Fish", i: "🐟" }, { w: "Lion", i: "🦁" },
-                { w: "Tiger", i: "🐯" }, { w: "Bear", i: "🐻" }, { w: "Elephant", i: "🐘" }
+                { w: "Cat", i: "🐱", c: "貓" }, { w: "Dog", i: "🐶", c: "狗" }, 
+                { w: "Pig", i: "🐷", c: "豬" }, { w: "Bird", i: "🐦", c: "鳥" }, 
+                { w: "Fish", i: "🐟", c: "魚" }, { w: "Lion", i: "🦁", c: "獅子" },
+                { w: "Tiger", i: "🐯", c: "老虎" }, { w: "Bear", i: "🐻", c: "熊" }, 
+                { w: "Elephant", i: "🐘", c: "大象" }
             ],
             "🎨 顏色 (Colors)": [
-                { w: "Red", i: "🔴" }, { w: "Blue", i: "🔵" }, { w: "Yellow", i: "🟡" },
-                { w: "Green", i: "🟢" }, { w: "Orange", i: "🟠" }, { w: "Purple", i: "🟣" },
-                { w: "Black", i: "⚫" }, { w: "White", i: "⚪" }
+                { w: "Red", i: "🔴", c: "紅色" }, { w: "Blue", i: "🔵", c: "藍色" }, 
+                { w: "Yellow", i: "🟡", c: "黃色" }, { w: "Green", i: "🟢", c: "綠色" }, 
+                { w: "Orange", i: "🟠", c: "橘色" }, { w: "Purple", i: "🟣", c: "紫色" },
+                { w: "Black", i: "⚫", c: "黑色" }, { w: "White", i: "⚪", c: "白色" }
             ],
             "🔢 數字 (Numbers)": [
-                { w: "One", i: "1️⃣" }, { w: "Two", i: "2️⃣" }, { w: "Three", i: "3️⃣" },
-                { w: "Four", i: "4️⃣" }, { w: "Five", i: "5️⃣" }, { w: "Six", i: "6️⃣" },
-                { w: "Seven", i: "7️⃣" }, { w: "Eight", i: "8️⃣" }, { w: "Nine", i: "9️⃣" }, { w: "Ten", i: "🔟" }
+                { w: "One", i: "1️⃣", c: "一" }, { w: "Two", i: "2️⃣", c: "二" }, 
+                { w: "Three", i: "3️⃣", c: "三" }, { w: "Four", i: "4️⃣", c: "四" }, 
+                { w: "Five", i: "5️⃣", c: "五" }, { w: "Six", i: "6️⃣", c: "六" },
+                { w: "Seven", i: "7️⃣", c: "七" }, { w: "Eight", i: "8️⃣", c: "八" }, 
+                { w: "Nine", i: "9️⃣", c: "九" }, { w: "Ten", i: "🔟", c: "十" }
             ],
             "🍎 食物 (Food)": [
-                { w: "Apple", i: "🍎" }, { w: "Banana", i: "🍌" }, { w: "Egg", i: "🥚" },
-                { w: "Milk", i: "🥛" }, { w: "Cake", i: "🍰" }, { w: "Ice Cream", i: "🍦" },
-                { w: "Pizza", i: "🍕" }, { w: "Hamburger", i: "🍔" }
+                { w: "Apple", i: "🍎", c: "蘋果" }, { w: "Banana", i: "🍌", c: "香蕉" }, 
+                { w: "Egg", i: "🥚", c: "蛋" }, { w: "Milk", i: "🥛", c: "牛奶" }, 
+                { w: "Cake", i: "🍰", c: "蛋糕" }, { w: "Ice Cream", i: "🍦", c: "冰淇淋" },
+                { w: "Pizza", i: "🍕", c: "披薩" }, { w: "Hamburger", i: "🍔", c: "漢堡" }
             ],
             "🖐️ 身體 (Body)": [
-                { w: "Head", i: "🗣️" }, { w: "Eye", i: "👁️" }, { w: "Ear", i: "👂" },
-                { w: "Nose", i: "👃" }, { w: "Mouth", i: "👄" }, { w: "Hand", i: "🖐️" }
+                { w: "Head", i: "🗣️", c: "頭" }, { w: "Eye", i: "👁️", c: "眼睛" }, 
+                { w: "Ear", i: "👂", c: "耳朵" }, { w: "Nose", i: "👃", c: "鼻子" }, 
+                { w: "Mouth", i: "👄", c: "嘴巴" }, { w: "Hand", i: "🖐️", c: "手" }
             ]
         };
 
-        // === 自動產生卡片 ===
         const container = document.getElementById('vocab-container');
 
         for (const [category, words] of Object.entries(vocabData)) {
-            // 1. 建立分類標題
             const title = document.createElement('h2');
-            title.className = 'category-title';
+            title.className = 'category-title'; // 在 CSS 定義樣式
+            title.style.background = "#fff";
+            title.style.padding = "10px 20px";
+            title.style.borderRadius = "20px";
+            title.style.color = "#ff9800";
+            title.style.display = "inline-block";
+            title.style.marginTop = "30px";
             title.innerText = category;
             container.appendChild(title);
 
-            // 2. 建立卡片容器
             const grid = document.createElement('div');
-            grid.className = 'vocab-grid';
+            grid.className = 'pool-container'; // 借用 game 的排版 class
+            grid.style.marginBottom = "20px";
 
-            // 3. 建立每一張卡片
             words.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'vocab-card';
-                card.onclick = () => speak(item.w); // 點擊發音
+                card.className = 'vocab-card'; // 需在 CSS 補充
+                card.style.background = "white";
+                card.style.border = "2px solid #ddd";
+                card.style.borderRadius = "15px";
+                card.style.padding = "15px";
+                card.style.width = "120px";
+                card.style.cursor = "pointer";
+                card.style.boxShadow = "0 4px 0 #ddd";
+                card.style.transition = "transform 0.1s";
+                
+                card.onclick = () => {
+                    card.style.transform = "scale(0.95)";
+                    setTimeout(() => card.style.transform = "scale(1)", 100);
+                    speak(item.w);
+                };
                 
                 card.innerHTML = `
-                    <div class="vocab-icon">${item.i}</div>
-                    <div class="vocab-word">${item.w}</div>
+                    <div style="font-size:3rem; margin-bottom:5px;">${item.i}</div>
+                    <div style="font-weight:bold; color:#333;">${item.w}</div>
+                    <div style="font-size:0.9rem; color:#888;">${item.c}</div>
                 `;
                 grid.appendChild(card);
             });
-
             container.appendChild(grid);
         }
 
-        // === 發音功能 ===
         function speak(text) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance = new SpeechSynthesisUtterance(text.toLowerCase());
             utterance.lang = 'en-US';
-            utterance.rate = 0.8;
             window.speechSynthesis.speak(utterance);
         }
     </script>

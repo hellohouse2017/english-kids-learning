@@ -19,16 +19,11 @@ const HOUSE_STAGES = [
     { icon: "👑", name: "國王的家" }
 ];
 
-// ★ 新增：房子加油語錄
+// 房子加油語錄
 const HOUSE_CHEERS = [
-    "好棒！磚塊+1 🧱",
-    "離城堡越來越近了！🏰",
-    "哇！你拼對了！✨",
-    "房子正在變大喔！🏠",
-    "勇者太強了！⚔️",
-    "我也想變城堡！加油！",
-    "Nice Job! 👍",
-    "繼續保持！🔥"
+    "好棒！磚塊+1 🧱", "離城堡越來越近了！🏰", "哇！你拼對了！✨",
+    "房子正在變大喔！🏠", "勇者太強了！⚔️", "我也想變城堡！加油！",
+    "Nice Job! 👍", "繼續保持！🔥"
 ];
 
 let player = {
@@ -50,9 +45,8 @@ let isReviewMode = false;
 let isFrozen = false; 
 
 // ===================================================
-// 2. 完整單字庫
+// 2. 完整單字庫 (已修正 Desk/Chair, 增加中文)
 // ===================================================
-// (為了節省篇幅，這裡省略中間的單字列表，請保留您原本那一大串 questionBank)
 const questionBank = [
     { word: "CAT", icon: "🐱", cn: "貓咪" }, { word: "DOG", icon: "🐶", cn: "狗狗" },
     { word: "PIG", icon: "🐷", cn: "豬" }, { word: "BIRD", icon: "🐦", cn: "鳥" },
@@ -61,16 +55,19 @@ const questionBank = [
     { word: "BEAR", icon: "🐻", cn: "熊" }, { word: "RABBIT", icon: "🐰", cn: "兔子" },
     { word: "MONKEY", icon: "🐵", cn: "猴子" }, { word: "ELEPHANT", icon: "🐘", cn: "大象" },
     { word: "ZEBRA", icon: "🦓", cn: "斑馬" }, { word: "ANT", icon: "🐜", cn: "螞蟻" },
+    
     { word: "RED", icon: "🔴", cn: "紅色" }, { word: "BLUE", icon: "🔵", cn: "藍色" },
     { word: "YELLOW", icon: "🟡", cn: "黃色" }, { word: "GREEN", icon: "🟢", cn: "綠色" },
     { word: "ORANGE", icon: "🟠", cn: "橘色" }, { word: "PURPLE", icon: "🟣", cn: "紫色" },
     { word: "BLACK", icon: "⚫", cn: "黑色" }, { word: "WHITE", icon: "⚪", cn: "白色" },
     { word: "PINK", icon: "🩷", cn: "粉紅色" },
+
     { word: "ONE", icon: "1️⃣", cn: "一" }, { word: "TWO", icon: "2️⃣", cn: "二" },
     { word: "THREE", icon: "3️⃣", cn: "三" }, { word: "FOUR", icon: "4️⃣", cn: "四" },
     { word: "FIVE", icon: "5️⃣", cn: "五" }, { word: "SIX", icon: "6️⃣", cn: "六" },
     { word: "SEVEN", icon: "7️⃣", cn: "七" }, { word: "EIGHT", icon: "8️⃣", cn: "八" },
     { word: "NINE", icon: "9️⃣", cn: "九" }, { word: "TEN", icon: "🔟", cn: "十" },
+
     { word: "APPLE", icon: "🍎", cn: "蘋果" }, { word: "BANANA", icon: "🍌", cn: "香蕉" },
     { word: "ORANGE", icon: "🍊", cn: "柳橙" }, { word: "LEMON", icon: "🍋", cn: "檸檬" },
     { word: "EGG", icon: "🥚", cn: "蛋" }, { word: "MILK", icon: "🥛", cn: "牛奶" },
@@ -78,11 +75,13 @@ const questionBank = [
     { word: "RICE", icon: "🍚", cn: "米飯" }, { word: "WATER", icon: "💧", cn: "水" },
     { word: "PIZZA", icon: "🍕", cn: "披薩" }, { word: "HOT DOG", icon: "🌭", cn: "熱狗" },
     { word: "HAMBURGER", icon: "🍔", cn: "漢堡" },
+
     { word: "HEAD", icon: "🗣️", cn: "頭" }, { word: "EYE", icon: "👁️", cn: "眼睛" },
     { word: "EAR", icon: "👂", cn: "耳朵" }, { word: "NOSE", icon: "👃", cn: "鼻子" },
     { word: "MOUTH", icon: "👄", cn: "嘴巴" }, { word: "HAND", icon: "🖐️", cn: "手" },
     { word: "LEG", icon: "🦵", cn: "腿" }, { word: "ARM", icon: "💪", cn: "手臂" },
     { word: "FOOT", icon: "🦶", cn: "腳" }, { word: "FACE", icon: "😀", cn: "臉" },
+
     { word: "PEN", icon: "🖊️", cn: "原子筆" }, { word: "PENCIL", icon: "✏️", cn: "鉛筆" },
     { word: "BOOK", icon: "📖", cn: "書" }, { word: "BAG", icon: "🎒", cn: "書包" },
     { word: "RULER", icon: "📏", cn: "尺" }, { word: "BOX", icon: "📦", cn: "箱子" },
@@ -90,6 +89,7 @@ const questionBank = [
     { word: "CAR", icon: "🚗", cn: "車子" }, { word: "BUS", icon: "🚌", cn: "公車" },
     { word: "BIKE", icon: "🚲", cn: "腳踏車" }, { word: "BALL", icon: "⚽", cn: "球" },
     { word: "ROBOT", icon: "🤖", cn: "機器人" }, { word: "HAT", icon: "👒", cn: "帽子" },
+    
     { word: "DAD", icon: "👨", cn: "爸爸" }, { word: "MOM", icon: "👩", cn: "媽媽" },
     { word: "BOY", icon: "👦", cn: "男孩" }, { word: "GIRL", icon: "👧", cn: "女孩" },
     { word: "BABY", icon: "👶", cn: "嬰兒" }, { word: "KING", icon: "👑", cn: "國王" }
@@ -114,7 +114,6 @@ function startGame(gender) {
 
     updateHUD();
     updateHouse();
-    // 遊戲開始時房子先打招呼
     cheerHouse(`你好，${player.name}！我們來蓋房子吧！`);
     nextQuestion();
 }
@@ -229,11 +228,9 @@ function checkAnswer() {
         // --- 答對 ---
         document.getElementById("btn-clear").disabled = true;
         
-        // ★ 觸發房子加油
         const randomCheer = HOUSE_CHEERS[Math.floor(Math.random() * HOUSE_CHEERS.length)];
         cheerHouse(randomCheer);
         
-        // ★ 讓房子跳一下
         const houseIcon = document.getElementById("my-house-icon");
         houseIcon.classList.add("bounce");
         setTimeout(() => houseIcon.classList.remove("bounce"), 1000);
@@ -251,7 +248,6 @@ function checkAnswer() {
         msgDiv.innerHTML = "<span style='color:red'>❌ Wrong!</span>";
         speak("Try again");
         
-        // 答錯時房子也會難過
         cheerHouse("哎呀！再來一次！🛡️");
 
         registerMistake(currentQ);
@@ -275,19 +271,13 @@ function checkAnswer() {
     }
 }
 
-// ★ 新增：房子說話函式
 function cheerHouse(message) {
     const bubble = document.getElementById("house-msg");
     bubble.innerText = message;
     bubble.classList.add("show");
-    
-    // 3秒後消失
-    setTimeout(() => {
-        bubble.classList.remove("show");
-    }, 3000);
+    setTimeout(() => { bubble.classList.remove("show"); }, 3000);
 }
 
-// ... (以下為升級、經驗值、語音等邏輯，保持不變) ...
 function updateHouse() {
     let stageIndex = player.level - 1;
     if (stageIndex >= HOUSE_STAGES.length) stageIndex = HOUSE_STAGES.length - 1;
@@ -316,8 +306,6 @@ function levelUp() {
     
     modal.style.display = "flex";
     updateHouse();
-    
-    // 升級時房子也要慶祝
     cheerHouse("太棒了！我們搬新家囉！🎉");
 }
 
