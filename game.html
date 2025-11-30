@@ -18,17 +18,12 @@
         }
     </script>
     <style>
-        /* ★ V52 修改：允許垂直捲動，防止卡住 */
         body { background-color: #f3f4f6; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        
         .slot { width: 2.5rem; height: 3rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
         .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
-        
-        /* 手機版按鈕稍微縮小 */
         .btn-char { width: 3rem; height: 3rem; background: white; border-radius: 10px; box-shadow: 0 3px 5px rgba(0,0,0,0.1); font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border-bottom: 3px solid #e5e7eb; }
         .btn-char:active { transform: translateY(2px); border-bottom-width: 1px; box-shadow: none; }
         .btn-char.used { background-color: #e5e7eb; color: #9ca3af; border-color: #d1d5db; cursor: default; transform: none; opacity: 0.6; }
-        
         #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         #role-msg.show { opacity: 1; transform: translateY(0); }
         .hint-box { opacity: 0; transform: scale(0.9); transition: all 0.3s; filter: blur(5px); }
@@ -42,7 +37,10 @@
         <div class="max-w-md mx-auto px-4 py-2 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <span class="text-xl">🧩</span>
-                <h1 class="text-base font-bold text-gray-800">拼字冒險</h1>
+                <div class="flex flex-col">
+                    <h1 class="text-sm font-bold text-gray-800 leading-none">拼字冒險</h1>
+                    <span class="text-[10px] text-gray-400 font-game">Spelling Adventure</span>
+                </div>
             </div>
             <a href="index.html" class="text-gray-400 hover:text-primary transition p-2"><i class="fas fa-home text-lg"></i></a>
         </div>
@@ -50,21 +48,23 @@
 
     <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center">
         <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 md:p-8 text-center border-4 border-white w-full mb-6">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">歡迎挑戰！</h2>
-            <p class="text-gray-500 mb-6 text-sm">STEP 2: 聽音辨位，拼出單字</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">歡迎挑戰！</h2>
+            <p class="text-gray-400 mb-6 text-xs font-game">Welcome to Challenge!</p>
             <div class="space-y-4">
-                <input type="text" id="player-name" placeholder="輸入你的名字" class="w-full px-6 py-3 bg-gray-100 rounded-xl text-center text-lg focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
-                <button id="btn-start-game" class="w-full py-3 bg-primary text-white text-lg font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition active:scale-95">
-                    開始遊戲 <i class="fas fa-play ml-2"></i>
+                <input type="text" id="player-name" placeholder="輸入名字 Enter Name" class="w-full px-6 py-3 bg-gray-100 rounded-xl text-center text-lg focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
+                <button id="btn-start-game" class="w-full py-3 bg-primary text-white text-lg font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition active:scale-95 flex flex-col items-center leading-none gap-1">
+                    <span>開始遊戲</span>
+                    <span class="text-[10px] font-light opacity-80">Start Game</span>
                 </button>
             </div>
         </div>
         <div class="w-full bg-white/60 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white">
-            <h3 class="text-sm font-bold text-gray-600 mb-2"><i class="fas fa-info-circle mr-1"></i> 規則說明</h3>
+            <h3 class="text-sm font-bold text-gray-600 mb-2"><i class="fas fa-info-circle mr-1"></i> 規則說明 Rules</h3>
             <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                <li>答對 +50 XP，答錯 -30 XP。</li>
-                <li>Lv.1~6 簡單模式 (字母照順序)。</li>
-                <li>Lv.7 以上 困難模式 (字母會亂跑！)。</li>
+                <li>答對 (Correct) +50 XP</li>
+                <li>答錯 (Wrong) -30 XP</li>
+                <li>Lv.1~6: 簡單模式 (Easy / Ordered)</li>
+                <li>Lv.7+: 困難模式 (Hard / Shuffled)</li>
             </ul>
         </div>
     </div>
@@ -72,23 +72,24 @@
     <div id="screen-category" class="hidden flex-grow w-full max-w-md mx-auto p-4 flex-col">
         <div class="text-center mb-4">
             <p class="text-gray-500 text-sm">嗨 <span id="display-name" class="text-primary font-bold"></span>，請選擇題庫：</p>
+            <p class="text-xs text-gray-400">Select Category</p>
         </div>
         <div class="grid grid-cols-1 gap-3 flex-grow overflow-y-auto pb-10">
             <button onclick="startGame('ALL')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
                 <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🔥</div>
-                <div class="text-left"><h3 class="font-bold text-gray-700">全部單字混合</h3><p class="text-xs text-gray-400">最完整的挑戰</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+                <div class="text-left"><h3 class="font-bold text-gray-700">全部單字 <span class="text-xs font-normal text-gray-400">All Words</span></h3><p class="text-xs text-gray-400">綜合挑戰 Mixed</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
             </button>
             <button onclick="startGame('animal')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🦁</div>
-                <div class="text-left"><h3 class="font-bold text-gray-700">可愛動物區</h3><p class="text-xs text-gray-400">Lion, Cat, Dog...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+                <div class="text-left"><h3 class="font-bold text-gray-700">動物 <span class="text-xs font-normal text-gray-400">Animals</span></h3><p class="text-xs text-gray-400">Lion, Cat, Dog...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
             </button>
             <button onclick="startGame('fruit')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
                 <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🍎</div>
-                <div class="text-left"><h3 class="font-bold text-gray-700">美味水果區</h3><p class="text-xs text-gray-400">Apple, Banana...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+                <div class="text-left"><h3 class="font-bold text-gray-700">水果 <span class="text-xs font-normal text-gray-400">Fruits</span></h3><p class="text-xs text-gray-400">Apple, Banana...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
             </button>
              <button onclick="startGame('color')" class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary border-2 border-transparent transition flex items-center gap-4 group">
                 <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">🎨</div>
-                <div class="text-left"><h3 class="font-bold text-gray-700">繽紛顏色區</h3><p class="text-xs text-gray-400">Red, Blue, Green...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+                <div class="text-left"><h3 class="font-bold text-gray-700">顏色 <span class="text-xs font-normal text-gray-400">Colors</span></h3><p class="text-xs text-gray-400">Red, Blue, Green...</p></div><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
             </button>
         </div>
     </div>
@@ -153,10 +154,12 @@
 
                 <div class="flex justify-center gap-2 mt-3 border-t pt-3">
                     <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-volume-up mr-1"></i> 發音</span>
+                        <span><i class="fas fa-volume-up mr-1"></i> 再次發音</span>
+                        <span class="text-[9px] opacity-70 font-normal">Speak</span>
                     </button>
                     <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看</span>
+                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看答案</span>
+                        <span class="text-[9px] opacity-70 font-normal">Hint</span>
                     </button>
                 </div>
             </div>
@@ -167,10 +170,10 @@
         <div class="bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-4 pb-8 w-full mt-auto">
             <div class="flex justify-between items-center mb-3 gap-2">
                 <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center">
-                    <i class="fas fa-redo mr-1"></i> 重置
+                    <i class="fas fa-redo mr-1"></i> 重置本題 Reset
                 </button>
                 <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center">
-                    <i class="fas fa-backspace mr-1"></i> 刪除
+                    <i class="fas fa-backspace mr-1"></i> 刪除字母 Del
                 </button>
             </div>
             <div id="pool-box" class="flex flex-wrap justify-center gap-2"></div>
