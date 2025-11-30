@@ -1,34 +1,22 @@
 // ===================================================
-// game.js - V50 (Bilingual / 雙語版)
+// game.js - V53 (語音優化 + 最終邏輯)
 // ===================================================
 
-// 1. 遊戲參數
 const XP_WIN = 50;
 const XP_LOSE = 30;
 const HINT_COST = 20;
 
-// ★ 人生進化表 (雙語對照)
 const GROWTH_STAGES = [
-    { icon: "👶", name: "Lv.1 新生兒 (Newborn)" }, 
-    { icon: "🍼", name: "Lv.2 嬰兒 (Baby)" }, 
-    { icon: "🚼", name: "Lv.3 學步兒 (Toddler)" }, 
-    { icon: "🧸", name: "Lv.4 幼兒園 (Preschooler)" }, 
-    { icon: "🎒", name: "Lv.5 小學生 (Student)" }, 
-    { icon: "🚲", name: "Lv.6 國中生 (Junior)" }, 
-    { icon: "🎧", name: "Lv.7 高中生 (Senior)" }, 
-    { icon: "🎓", name: "Lv.8 大學生 (Undergrad)" }, 
-    { icon: "💼", name: "Lv.9 實習生 (Intern)" }, 
-    { icon: "👔", name: "Lv.10 上班族 (Worker)" }, 
-    { icon: "💻", name: "Lv.11 工程師 (Engineer)" }, 
-    { icon: "🧑‍🏫", name: "Lv.12 組長 (Leader)" }, 
-    { icon: "🕶️", name: "Lv.13 經理 (Manager)" }, 
-    { icon: "📈", name: "Lv.14 處長 (Director)" }, 
-    { icon: "🤵", name: "Lv.15 總經理 (GM)" }, 
-    { icon: "🚗", name: "Lv.16 董事長 (Chairman)" }, 
-    { icon: "🛥️", name: "Lv.17 企業大亨 (Tycoon)" }, 
-    { icon: "🚀", name: "Lv.18 慈善家 (Philanthropist)" }, 
-    { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, 
-    { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
+    { icon: "👶", name: "Lv.1 新生兒 (Newborn)" }, { icon: "🍼", name: "Lv.2 嬰兒 (Baby)" }, 
+    { icon: "🚼", name: "Lv.3 學步兒 (Toddler)" }, { icon: "🧸", name: "Lv.4 幼兒園 (Preschooler)" }, 
+    { icon: "🎒", name: "Lv.5 小學生 (Student)" }, { icon: "🚲", name: "Lv.6 國中生 (Junior)" }, 
+    { icon: "🎧", name: "Lv.7 高中生 (Senior)" }, { icon: "🎓", name: "Lv.8 大學生 (Undergrad)" }, 
+    { icon: "💼", name: "Lv.9 實習生 (Intern)" }, { icon: "👔", name: "Lv.10 上班族 (Worker)" }, 
+    { icon: "💻", name: "Lv.11 工程師 (Engineer)" }, { icon: "🧑‍🏫", name: "Lv.12 組長 (Leader)" }, 
+    { icon: "🕶️", name: "Lv.13 經理 (Manager)" }, { icon: "📈", name: "Lv.14 處長 (Director)" }, 
+    { icon: "🤵", name: "Lv.15 總經理 (GM)" }, { icon: "🚗", name: "Lv.16 董事長 (Chairman)" }, 
+    { icon: "🛥️", name: "Lv.17 企業大亨 (Tycoon)" }, { icon: "🚀", name: "Lv.18 慈善家 (Philanthropist)" }, 
+    { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
 ];
 
 let player = { name: "Player", level: 1, xp: 0, hints: 0 };
@@ -39,7 +27,6 @@ let isFrozen = false;
 let isTyping = false;
 let nextQTimer = null;
 
-// === 2. 初始化 ===
 window.onload = function() {
     if (typeof window.VOCAB_LIST === 'undefined') {
         alert("Error: data.js not found"); return;
@@ -50,7 +37,6 @@ window.onload = function() {
     if (startBtn) startBtn.onclick = showCategorySelect;
 };
 
-// === 3. 流程控制 ===
 function showCategorySelect() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value.trim() || "勇者 Hero";
@@ -125,7 +111,6 @@ function nextQuestion() {
     speak(currentQ.word);
 }
 
-// === 4. 拼字模式 ===
 function renderSlots() {
     const box = document.getElementById('slots-box');
     if (!box) return;
@@ -220,7 +205,6 @@ function backspace() {
     }
 }
 
-// === 5. 打字模式 ===
 function checkTyping() {
     const input = document.getElementById('typing-input');
     const val = input.value.toUpperCase(); 
@@ -229,7 +213,6 @@ function checkTyping() {
     }
 }
 
-// === 6. 判定 ===
 function checkAnswer(ans) {
     if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
         isFrozen = true;
@@ -272,7 +255,6 @@ function checkAnswer(ans) {
     }
 }
 
-// === 7. 系統 ===
 function getLevelReq(lv) {
     let req = 0;
     for (let i = 1; i <= lv; i++) req += (50 * (i + 1));
@@ -342,18 +324,12 @@ function useHint() {
 // ★ V53: 智慧語音引擎 (盡力讓電腦版好聽一點)
 function speak(txt) {
     if ('speechSynthesis' in window) {
-        // 1. 停止目前的發音
         window.speechSynthesis.cancel();
-
-        // 2. 建立發音物件
         let u = new SpeechSynthesisUtterance(txt.toLowerCase());
         u.lang = 'en-US';
-        u.rate = 0.8; // 語速設定
+        u.rate = 0.8; 
 
-        // 3. ★ 關鍵：強制抓取所有可用聲音
         let voices = window.speechSynthesis.getVoices();
-        
-        // 如果聲音列表還沒載入 (Chrome有時會延遲)，等待載入
         if (voices.length === 0) {
             window.speechSynthesis.onvoiceschanged = function() {
                 voices = window.speechSynthesis.getVoices();
@@ -366,22 +342,15 @@ function speak(txt) {
 }
 
 function setVoiceAndSpeak(u, voices) {
-    // 4. ★ 挑選聲音的優先順序
-    // 優先找 Google 的聲音 (電腦版 Chrome 最好聽的)
-    // 其次找 Apple 的 Samantha (Mac 電腦專用)
-    // 最後才用系統預設
     const preferredVoice = voices.find(v => v.name.includes("Google US English")) || 
                            voices.find(v => v.name.includes("Google")) ||
                            voices.find(v => v.name.includes("Samantha"));
 
     if (preferredVoice) {
         u.voice = preferredVoice;
-        // Google 的聲音比較清晰，語速可以正常一點點
         if (preferredVoice.name.includes("Google")) {
             u.rate = 0.9; 
         }
     }
-
-    // 5. 播放
     window.speechSynthesis.speak(u);
 }
