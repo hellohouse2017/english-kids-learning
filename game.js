@@ -339,12 +339,50 @@ function useHint() {
     speak(currentQ.word);
 }
 
+// ★ V53: 智慧語音引擎 (盡力讓電腦版好聽一點)
 function speak(txt) {
     if ('speechSynthesis' in window) {
+        // 1. 停止目前的發音
         window.speechSynthesis.cancel();
+
+        // 2. 建立發音物件
         let u = new SpeechSynthesisUtterance(txt.toLowerCase());
         u.lang = 'en-US';
-        u.rate = 0.8;
-        window.speechSynthesis.speak(u);
+        u.rate = 0.8; // 語速設定
+
+        // 3. ★ 關鍵：強制抓取所有可用聲音
+        let voices = window.speechSynthesis.getVoices();
+        
+        // 如果聲音列表還沒載入 (Chrome有時會延遲)，等待載入
+        if (voices.length === 0) {
+            window.speechSynthesis.onvoiceschanged = function() {
+                voices = window.speechSynthesis.getVoices();
+                setVoiceAndSpeak(u, voices);
+            };
+        } else {
+            setVoiceAndSpeak(u, voices);
+        }
     }
+}
+
+function setVoiceAndSpeak(u, voices) {
+    // 4. ★ 挑選聲音的優先順序
+    // 優先找 Google 的聲音 (電腦版 Chrome 最好聽的)
+    // 其次找 Apple 的 Samantha (Mac 電腦專用)
+    // 最後才用系統預設
+    const preferredVoice = voices.find(v => v.name.includes("Google US English")) || 
+                           voices.find(v => v.name.includes("Google")) ||
+                           voices.find(v => v.name.includes("Samantha"));
+
+    if (preferredVoice) {
+        u.voice = preferredVoice;
+        // Google 的聲音比較清晰，語速可以正常一點點
+        if (preferredVoice.name.includes("Google")) {
+            u.rate = 0.9; 
+        }
+    }
+
+    // 5. 播放
+    window.speechSynthesis.speak(u);
+}
 }
