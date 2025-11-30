@@ -18,7 +18,7 @@
         }
     </script>
     <style>
-        body { background-color: #f3f4f6; overflow: hidden; }
+        body { background-color: #f3f4f6; overflow: hidden; touch-action: pan-y; } /* 確保只允許垂直滑動 */
         .typing-box { font-family: 'Fredoka', sans-serif; letter-spacing: 0.2em; text-transform: uppercase; border: 3px solid #e2e8f0; transition: all 0.3s; box-shadow: 0 4px 0 #cbd5e1; }
         .typing-box:focus { border-color: #8b5cf6; box-shadow: 0 4px 0 #7c3aed, 0 0 15px rgba(139, 92, 246, 0.3); transform: translateY(2px); }
         #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
