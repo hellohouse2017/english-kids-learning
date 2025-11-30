@@ -1,5 +1,5 @@
 // ===================================================
-// game.js - V64 (修復動態分類生成崩潰問題 & 流程穩定性)
+// game.js - V68 (防重複選題修正)
 // ===================================================
 
 // 1. 遊戲參數
@@ -20,7 +20,7 @@ const GROWTH_STAGES = [
     { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
 ];
 
-// ★ 分類設定 (確保每個鍵都有 icon 和 color)
+// 分類設定
 const CAT_CONFIG = {
     'animal': { icon: '🦁', cn: '動物', en: 'Animals', color: 'green' },
     'food':   { icon: '🍎', cn: '食物', en: 'Food', color: 'red' },
@@ -43,22 +43,22 @@ let isFrozen = false;
 let isTyping = false;
 let nextQTimer = null;
 
+// ★ 新增：追蹤上一個單字，用於防重複
+let lastWord = null; 
+
 // 2. 初始化
 window.onload = function() {
     if (typeof window.VOCAB_LIST === 'undefined') {
         alert("Error: data.js not found"); return;
     }
+    // 檢查是否為 typing 模式
     if (document.getElementById('typing-input')) isTyping = true;
     
-    // V63: 綁定首頁按鈕 (如果存在，通常只有 index.html 會用到)
     const startBtn = document.getElementById('btn-start-game');
     if (startBtn) startBtn.onclick = showGradeSelect;
 
-    // V63: 進入 game/typing 頁面後，直接從 Grade Screen 開始
     const gradeScreen = document.getElementById('screen-grade');
     if (gradeScreen && gradeScreen.style.display !== 'none') {
-        // 如果現在是 grade screen，確保畫面已切換
-        // (不需要 action，因為按鈕是直接在 HTML 裡綁定 selectGrade)
         setVoice('female'); // 預設女聲
     }
 };
@@ -69,11 +69,10 @@ function showGradeSelect() {
     document.getElementById('screen-grade').style.display = 'flex';
 }
 
-// ★ Step 2: 選擇年級 -> 動態生成分類按鈕 (修正崩潰點)
+// Step 2: 選擇年級 -> 動態生成分類按鈕
 function selectGrade(grade) {
     player.grade = parseInt(grade);
     
-    // 1. 篩選出該年級的所有單字
     const gradeWords = window.VOCAB_LIST.filter(w => w.grade === player.grade);
     
     if (gradeWords.length === 0) {
@@ -81,13 +80,10 @@ function selectGrade(grade) {
         return;
     }
 
-    // 2. 找出該年級有哪些分類 (去重複)
-    const categories = [...new Set(gradeWords.map(w => w.cat))].sort(); // 排序讓按鈕排列一致
+    const categories = [...new Set(gradeWords.map(w => w.cat))].sort();
     
-    // 3. 動態生成按鈕 (★ 關鍵修正區塊)
     const container = document.getElementById('dynamic-category-box');
     
-    // 3.1 確保畫面切換優先執行 (防止崩潰)
     document.getElementById('screen-grade').style.display = 'none';
     document.getElementById('screen-category').style.display = 'flex';
 
@@ -103,7 +99,6 @@ function selectGrade(grade) {
         });
     }
 
-    // 更新年級標籤
     const badge = document.getElementById('grade-badge');
     if(badge) badge.innerText = `Grade ${grade}`;
 }
@@ -126,7 +121,7 @@ function createCatBtn(catKey, config) {
     return btn;
 }
 
-// Step 3: 選擇分類 -> 設定 (從 Screen 3 -> Screen 4)
+// Step 3: 選擇分類 -> 設定
 function selectCategory(cat) {
     player.category = cat;
     document.getElementById('screen-category').style.display = 'none';
@@ -148,7 +143,7 @@ function setVoice(gender) {
     }
 }
 
-// Step 4: 完成設定 -> 開始遊戲 (從 Screen 4 -> Screen 5)
+// Step 4: 完成設定 -> 開始遊戲
 function finishSettingsAndStart() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value.trim();
@@ -163,7 +158,6 @@ function finishSettingsAndStart() {
 
     if (!gameData || gameData.length === 0) {
         alert("⚠️ 錯誤：此分類沒有單字。請重選年級或分類。");
-        // 復原到前一步驟
         document.getElementById('screen-settings').style.display = 'none';
         document.getElementById('screen-category').style.display = 'flex';
         return;
@@ -194,7 +188,7 @@ function realStartGame() {
     nextQuestion();
 }
 
-// === 遊戲邏輯 (維持 V58 不變) ===
+// === 遊戲邏輯 (核心) ===
 function nextQuestion() {
     if (nextQTimer) clearTimeout(nextQTimer);
     isFrozen = false;
@@ -210,8 +204,21 @@ function nextQuestion() {
         if(poolBox) poolBox.innerHTML = ""; 
     }
 
-    const rnd = Math.floor(Math.random() * gameData.length);
-    currentQ = gameData[rnd];
+    // ★ V68 修正：防重複選題邏輯
+    let rnd;
+    let newQ;
+    let attempts = 0;
+    
+    // 確保新單字不等於上一個單字 (除非單字庫只有一個)
+    do {
+        rnd = Math.floor(Math.random() * gameData.length);
+        newQ = gameData[rnd];
+        attempts++;
+        if (gameData.length === 1 || attempts > gameData.length * 2) break; // 防止死循環
+    } while (newQ.word === lastWord); 
+
+    currentQ = newQ;
+    lastWord = currentQ.word; // 更新上一個單字為當前單字
 
     document.getElementById('q-icon').innerText = currentQ.icon;
     document.getElementById('q-cn').innerText = currentQ.cn;
@@ -373,6 +380,9 @@ function checkAnswer(ans) {
                 resetCurrentQuestion();
             }
         }, 1000);
+        
+        // 答錯時，保持 lastWord 不變，這樣下次 nextQuestion() 就不會觸發防重複檢查，等於允許重新出現同一個單字（就是當前這個）
+        if (currentQ) lastWord = currentQ.word; 
     }
 }
 
