@@ -19,11 +19,33 @@
     </script>
     <style>
         body { background-color: #f3f4f6; overflow: hidden; }
+        
+        /* 拼字格樣式 */
         .slot { width: 2.8rem; height: 3.2rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.8rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
         .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
-        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 10px; box-shadow: 0 3px 0 #e5e7eb; border: 1px solid #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.4rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; }
+        
+        /* ★ V64 修復：按鈕改回固定大小，防止變巨無霸 */
+        .btn-char { 
+            width: 3rem; 
+            height: 3rem; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 3px 0 #e5e7eb; 
+            border: 1px solid #e5e7eb; 
+            font-family: 'Fredoka', sans-serif; 
+            font-size: 1.4rem; 
+            font-weight: 600; 
+            color: #374151; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            user-select: none; 
+            transition: all 0.1s; 
+        }
         .btn-char:active { transform: translateY(2px); box-shadow: none; }
         .btn-char.used { background-color: #f3f4f6; color: #d1d5db; box-shadow: none; border-color: transparent; cursor: default; transform: translateY(2px); }
+        
         #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         #role-msg.show { opacity: 1; transform: translateY(0); }
         .hint-box { opacity: 0; transform: scale(0.9); transition: all 0.3s; filter: blur(5px); }
@@ -48,17 +70,7 @@
         </div>
     </header>
 
-    <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 md:p-8 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">歡迎挑戰！</h2>
-            <p class="text-gray-400 mb-4 text-xs font-game">Welcome!</p>
-            <button id="btn-start-game" class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition active:scale-95">
-                開始遊戲 Start
-            </button>
-        </div>
-    </div>
-
-    <div id="screen-grade" class="hidden flex-grow w-full max-w-md mx-auto p-4 flex-col justify-center items-center overflow-y-auto">
+    <div id="screen-grade" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
         <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
             <div class="grid grid-cols-2 gap-3">
@@ -100,10 +112,10 @@
     </div>
 
     <div id="screen-game" class="hidden flex-grow w-full max-w-md mx-auto relative flex-col h-full overflow-hidden">
+        
         <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl h-full">
             <div class="text-6xl mb-4 animate-bounce">🚀</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
-            <p class="text-gray-400 mb-6 font-game">Are you ready?</p>
             <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg hover:scale-105 transition active:scale-95">GO!</button>
         </div>
 
@@ -111,15 +123,30 @@
             <div class="flex justify-between items-center w-full">
                 <div class="flex items-center gap-2">
                     <div id="role-icon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-base shadow-inner">👶</div>
-                    <div class="flex flex-col"><span id="role-name" class="text-xs font-bold text-gray-800 leading-none">Lv.1 新生兒</span><span class="text-[9px] text-gray-400 font-game leading-none">Newborn</span></div>
+                    <div class="flex flex-col">
+                        <span id="role-name" class="text-xs font-bold text-gray-800 leading-none">Lv.1 新生兒</span>
+                        <span class="text-[9px] text-gray-400 font-game leading-none">Newborn</span>
+                    </div>
                 </div>
-                <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200"><span class="text-base mr-1">🎟️</span><span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span></div>
+                <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
+                    <span class="text-base mr-1">🎟️</span>
+                    <span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span>
+                </div>
             </div>
-            <div class="w-full flex items-center gap-2"><div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative"><div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div></div><div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div></div>
-            <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-0.5"><span class="text-green-500">✅ +50</span><span class="text-red-400">❌ -30</span><span class="text-yellow-500">💡 -20</span></div>
+            <div class="w-full flex items-center gap-2">
+                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
+                    <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
+                </div>
+                <div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div>
+            </div>
+            <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-0.5">
+                <span class="text-green-500">✅ +50</span>
+                <span class="text-red-400">❌ -30</span>
+                <span class="text-yellow-500">💡 -20</span>
+            </div>
         </div>
 
-        <div id="role-msg" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
+        <div id="role-msg" class="absolute top-28 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
 
         <div class="flex-grow flex flex-col items-center justify-start p-2 space-y-2 overflow-y-auto">
             <div class="bg-white w-full rounded-2xl shadow-lg p-3 text-center relative border-2 border-white/50 flex-shrink-0">
@@ -128,15 +155,17 @@
                 <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
                 <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
                 <div class="flex justify-center gap-2 mt-2 border-t pt-2">
-                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span></button>
-                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span></button>
+                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音</span></button>
+                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看</span></button>
                 </div>
             </div>
+            
             <div id="slots-box" class="w-full flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 min-h-[40px] px-2 py-1 no-scrollbar"></div>
+
             <div class="bg-white rounded-2xl shadow-lg p-3 w-full border-2 border-white/50 flex-shrink-0">
                 <div class="flex justify-between items-center mb-2 gap-2">
-                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center"><i class="fas fa-redo mr-1"></i> 重置 Reset</button>
-                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center"><i class="fas fa-backspace mr-1"></i> 刪除 Del</button>
+                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center"><i class="fas fa-redo mr-1"></i> 重置</button>
+                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center"><i class="fas fa-backspace mr-1"></i> 刪除</button>
                 </div>
                 <div id="pool-box" class="flex flex-wrap justify-center gap-2"></div>
             </div>
