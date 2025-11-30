@@ -1,5 +1,5 @@
 // ===================================================
-// game.js - V58 (修復升級失效與票券不增加問題)
+// game.js - V62 (年級優先 -> 動態分類 -> 角色設定)
 // ===================================================
 
 // 1. 遊戲參數
@@ -7,7 +7,6 @@ const XP_WIN = 50;
 const XP_LOSE = 30;
 const HINT_COST = 20;
 
-// 成長稱號
 const GROWTH_STAGES = [
     { icon: "👶", name: "Lv.1 新生兒 (Newborn)" }, { icon: "🍼", name: "Lv.2 嬰兒 (Baby)" }, 
     { icon: "🚼", name: "Lv.3 學步兒 (Toddler)" }, { icon: "🧸", name: "Lv.4 幼兒園 (Preschooler)" }, 
@@ -21,10 +20,36 @@ const GROWTH_STAGES = [
     { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
 ];
 
-let player = { name: "Player", level: 1, xp: 0, hints: 0 };
+// ★ 分類設定 (圖示與顏色配置)
+const CAT_CONFIG = {
+    'animal': { icon: '🦁', cn: '動物', en: 'Animals', color: 'green' },
+    'food':   { icon: '🍎', cn: '食物', en: 'Food', color: 'red' },
+    'fruit':  { icon: '🍌', cn: '水果', en: 'Fruit', color: 'orange' },
+    'color':  { icon: '🎨', cn: '顏色', en: 'Color', color: 'purple' },
+    'body':   { icon: '👀', cn: '身體', en: 'Body', color: 'yellow' },
+    'school': { icon: '🎒', cn: '學校', en: 'School', color: 'blue' },
+    'people': { icon: '👶', cn: '人物', en: 'People', color: 'pink' },
+    'nature': { icon: '🌳', cn: '自然', en: 'Nature', color: 'emerald' },
+    'action': { icon: '🏃', cn: '動作', en: 'Action', color: 'indigo' },
+    'number': { icon: '🔢', cn: '數字', en: 'Number', color: 'cyan' },
+    // 預設
+    'default': { icon: '📦', cn: '其他', en: 'Other', color: 'gray' }
+};
+
+// 玩家狀態
+let player = { 
+    name: "Player", 
+    level: 1, 
+    xp: 0, 
+    hints: 0,
+    grade: 1,      
+    category: "ALL",  
+    voice: "female" 
+};
+
 let currentQ = null;
 let currentInput = [];
-let gameData = [];
+let gameData = []; // 當前題庫
 let isFrozen = false;
 let isTyping = false;
 let nextQTimer = null;
@@ -36,48 +61,137 @@ window.onload = function() {
     }
     if (document.getElementById('typing-input')) isTyping = true;
 
+    // 首頁按鈕綁定
     const startBtn = document.getElementById('btn-start-game');
-    if (startBtn) startBtn.onclick = showCategorySelect;
+    if (startBtn) startBtn.onclick = showGradeSelect;
 };
 
-// 3. 流程控制
-function showCategorySelect() {
-    const nameInput = document.getElementById('player-name');
-    const name = nameInput.value.trim() || "勇者 Hero";
-    player.name = name;
-    const displayName = document.getElementById('display-name');
-    if(displayName) displayName.innerText = name;
-    
+// === 流程控制 ===
+
+// Step 1: 顯示年級選擇
+function showGradeSelect() {
     document.getElementById('screen-start').style.display = 'none';
+    document.getElementById('screen-grade').style.display = 'flex';
+}
+
+// Step 2: 選擇年級 -> 動態生成分類按鈕
+function selectGrade(grade) {
+    player.grade = parseInt(grade);
+    
+    // 1. 先篩選出該年級的所有單字
+    const gradeWords = window.VOCAB_LIST.filter(w => w.grade === player.grade);
+    
+    if (gradeWords.length === 0) {
+        alert("目前這個年級還沒有單字喔！先試試 Grade 1 吧！");
+        return;
+    }
+
+    // 2. 找出該年級有哪些分類 (去重複)
+    const categories = [...new Set(gradeWords.map(w => w.cat))];
+    
+    // 3. 動態生成按鈕
+    const container = document.getElementById('dynamic-category-box');
+    container.innerHTML = ''; // 清空舊按鈕
+
+    // 加入「全部」按鈕
+    container.appendChild(createCatBtn('ALL', { icon: '🔥', cn: '全部單字', en: 'Mixed', color: 'indigo' }));
+
+    // 加入其他分類按鈕
+    categories.forEach(cat => {
+        const config = CAT_CONFIG[cat] || CAT_CONFIG['default'];
+        container.appendChild(createCatBtn(cat, config));
+    });
+
+    // 4. 切換畫面
+    document.getElementById('grade-badge').innerText = `Grade ${grade}`;
+    document.getElementById('screen-grade').style.display = 'none';
     document.getElementById('screen-category').style.display = 'flex';
 }
 
-function startGame(category) {
-    if (category === 'ALL') {
-        gameData = window.VOCAB_LIST;
-    } else {
-        gameData = window.VOCAB_LIST.filter(item => item.cat.includes(category));
-    }
-    if (!gameData || gameData.length === 0) gameData = window.VOCAB_LIST; 
+// 輔助：建立分類按鈕 HTML
+function createCatBtn(catKey, config) {
+    const btn = document.createElement('button');
+    // Tailwind 樣式
+    const colorClass = `hover:border-${config.color}-500`;
+    const bgClass = `bg-${config.color}-100`;
+    
+    btn.className = `bg-white p-4 rounded-xl shadow-sm border-2 border-transparent ${colorClass} transition flex items-center gap-4 group w-full text-left`;
+    btn.onclick = () => selectCategory(catKey);
+    
+    btn.innerHTML = `
+        <div class="w-10 h-10 ${bgClass} rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">${config.icon}</div>
+        <div class="flex-grow">
+            <h3 class="font-bold text-gray-700">${config.cn} <span class="text-xs font-normal text-gray-400">${config.en}</span></h3>
+        </div>
+        <i class="fas fa-chevron-right text-gray-300 group-hover:text-${config.color}-500"></i>
+    `;
+    return btn;
+}
 
+// Step 3: 選擇分類 -> 進入設定 (名字/聲音)
+function selectCategory(cat) {
+    player.category = cat;
     document.getElementById('screen-category').style.display = 'none';
-    document.getElementById('hud').style.display = 'block'; // 顯示 HUD
+    document.getElementById('screen-settings').style.display = 'flex';
+}
+
+// 設定聲音
+function setVoice(gender) {
+    player.voice = gender;
+    document.getElementById('btn-voice-male').classList.remove('ring-4', 'ring-primary');
+    document.getElementById('btn-voice-female').classList.remove('ring-4', 'ring-primary');
+    
+    if(gender === 'male') {
+        document.getElementById('btn-voice-male').classList.add('ring-4', 'ring-primary');
+        speakTest("Hello");
+    } else {
+        document.getElementById('btn-voice-female').classList.add('ring-4', 'ring-primary');
+        speakTest("Hello");
+    }
+}
+
+// Step 4: 完成設定 -> 開始遊戲
+function finishSettingsAndStart() {
+    const nameInput = document.getElementById('player-name');
+    const name = nameInput.value.trim();
+    if(!name) {
+        alert("請輸入名字！ Please enter your name.");
+        nameInput.focus();
+        return;
+    }
+    player.name = name;
+
+    // 最終篩選題庫
+    if (player.category === 'ALL') {
+        gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade);
+    } else {
+        gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade && i.cat === player.category);
+    }
+
+    if (!gameData || gameData.length === 0) {
+        alert("發生錯誤：沒有單字資料");
+        return;
+    }
+
+    // 切換到遊戲畫面
+    document.getElementById('screen-settings').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
     document.getElementById('screen-game').style.display = 'flex';
 
+    // 強制顯示遮罩
     const overlay = document.getElementById('ready-overlay');
     if (overlay) overlay.style.display = 'flex';
-    else nextQuestion();
 
     updateHUD();
-    updateGrowth("準備開始！ Ready!");
+    updateGrowth(`Hi, ${player.name}!`);
 }
 
 function realStartGame() {
-    const overlay = document.getElementById('ready-overlay');
-    if(overlay) overlay.style.display = 'none';
+    document.getElementById('ready-overlay').style.display = 'none';
     nextQuestion();
 }
 
+// === 遊戲邏輯 (維持 V58 不變) ===
 function nextQuestion() {
     if (nextQTimer) clearTimeout(nextQTimer);
     isFrozen = false;
@@ -115,7 +229,7 @@ function nextQuestion() {
     speak(currentQ.word);
 }
 
-// 4. 拼字介面
+// 拼字渲染
 function renderSlots() {
     const box = document.getElementById('slots-box');
     if (!box) return;
@@ -210,7 +324,6 @@ function backspace() {
     }
 }
 
-// 5. 打字模式
 function checkTyping() {
     const input = document.getElementById('typing-input');
     const val = input.value.toUpperCase(); 
@@ -219,7 +332,6 @@ function checkTyping() {
     }
 }
 
-// 6. 核心判定 (★ 重要修正：先加分，再發音)
 function checkAnswer(ans) {
     if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
         isFrozen = true;
@@ -231,16 +343,12 @@ function checkAnswer(ans) {
             if(input) input.disabled = true;
         }
         
-        // 1. 先執行加分邏輯 (確保升級視窗會出來)
+        // 優先加分
         gainXP(XP_WIN);
         updateGrowth("很棒！ Great Job!");
 
-        // 2. 再嘗試發音 (就算發音失敗也不會卡住加分)
-        try {
-            speak(currentQ.word);
-        } catch (e) { console.error("Audio Error:", e); }
+        try { speak(currentQ.word); } catch (e) {}
 
-        // 3. 設定下一題計時器
         nextQTimer = setTimeout(() => {
             nextQuestion();
         }, 1500);
@@ -266,11 +374,9 @@ function checkAnswer(ans) {
     }
 }
 
-// 7. 系統 (★ 修正升級邏輯與顯示)
+// 成長系統
 function getLevelReq(lv) {
-    // 為了測試方便，Lv.1 只要 50xp 就能升級 (答對1題)
     if (lv === 1) return 50;
-    
     let req = 0;
     for (let i = 1; i <= lv; i++) req += (50 * (i + 1));
     return req;
@@ -278,11 +384,10 @@ function getLevelReq(lv) {
 
 function updateHUD() {
     if (player.level > 20) player.level = 20;
-    
     let nextReq = getLevelReq(player.level);
     let pct = (player.xp / nextReq) * 100;
     if (pct < 0) pct = 0; if (pct > 100) pct = 100;
-
+    
     const xpBar = document.getElementById('xp-bar');
     if (xpBar) xpBar.style.width = pct + "%";
     
@@ -293,23 +398,18 @@ function updateHUD() {
     if (lvNum) lvNum.innerText = player.level;
     
     const ticketNum = document.getElementById('ticket-num');
-    if (ticketNum) ticketNum.innerText = player.hints; // 確保這裡有更新
+    if (ticketNum) ticketNum.innerText = player.hints;
 }
 
 function gainXP(amount) {
     player.xp += amount;
     let req = getLevelReq(player.level);
     
-    // 升級檢查
     if (player.xp >= req) {
         player.level++;
-        player.hints++; // 增加票券
-        
-        // ★ 強制畫面重繪：先更新數字，再跳視窗
+        player.hints++;
         updateHUD();
         updateGrowth("升級啦！ Level Up!");
-
-        // 使用 requestAnimationFrame 確保 UI 渲染完畢後再彈窗
         requestAnimationFrame(() => {
             setTimeout(() => {
                 alert(`🎉 恭喜升級！Level Up!\n\n現在是 Lv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
@@ -333,7 +433,6 @@ function updateGrowth(msg) {
     
     const icon = document.getElementById('role-icon');
     const name = document.getElementById('role-name');
-    
     if (icon) icon.innerText = GROWTH_STAGES[idx].icon;
     if (name) name.innerText = GROWTH_STAGES[idx].name;
     
@@ -369,29 +468,33 @@ function speak(txt) {
         let u = new SpeechSynthesisUtterance(txt.toLowerCase());
         u.lang = 'en-US';
         u.rate = 0.8; 
-
-        let voices = window.speechSynthesis.getVoices();
-        if (voices.length === 0) {
-            window.speechSynthesis.onvoiceschanged = function() {
-                voices = window.speechSynthesis.getVoices();
-                setVoiceAndSpeak(u, voices);
-            };
-        } else {
-            setVoiceAndSpeak(u, voices);
-        }
+        assignVoice(u, player.voice);
+        window.speechSynthesis.speak(u);
     }
 }
 
-function setVoiceAndSpeak(u, voices) {
-    const preferredVoice = voices.find(v => v.name.includes("Google US English")) || 
-                           voices.find(v => v.name.includes("Google")) ||
-                           voices.find(v => v.name.includes("Samantha"));
-
-    if (preferredVoice) {
-        u.voice = preferredVoice;
-        if (preferredVoice.name.includes("Google")) {
-            u.rate = 0.9; 
-        }
+function speakTest(txt) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        let u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'en-US';
+        assignVoice(u, player.voice);
+        window.speechSynthesis.speak(u);
     }
-    window.speechSynthesis.speak(u);
 }
+
+function assignVoice(u, gender) {
+    const voices = window.speechSynthesis.getVoices();
+    let preferredVoice = null;
+
+    if (gender === 'male') {
+        preferredVoice = voices.find(v => v.name.includes("Daniel")) || 
+                         voices.find(v => v.name.includes("David")) || 
+                         voices.find(v => v.name.includes("Male"));
+    } else {
+        preferredVoice = voices.find(v => v.name.includes("Google US English")) || 
+                         voices.find(v => v.name.includes("Samantha")) || 
+                         voices.find(v => v.name.includes("Zira")) ||
+                         voices.find(v => v.name.includes("Female"));
+    }
+    if (preferredVoice) u.voice = preferredVoice;
