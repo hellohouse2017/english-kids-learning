@@ -43,7 +43,21 @@
         </div>
     </header>
 
-    <div id="screen-grade" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
+    <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto" style="display: none;">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="selectGrade(1)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 1<br><span class="text-xs">一年級</span></button>
+                <button onclick="selectGrade(2)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 2<br><span class="text-xs">二年級</span></button>
+                <button onclick="selectGrade(3)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 3<br><span class="text-xs">三年級</span></button>
+                <button onclick="selectGrade(4)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 4<br><span class="text-xs">四年級</span></button>
+                <button onclick="selectGrade(5)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 5<br><span class="text-xs">五年級</span></button>
+                <button onclick="selectGrade(6)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 6<br><span class="text-xs">六年級</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-grade" class="flex-grow w-full max-w-md mx-auto p-4 flex-col justify-center items-center overflow-y-auto" style="display: flex;">
         <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
             <div class="grid grid-cols-2 gap-3">
@@ -86,13 +100,14 @@
 
     <div id="screen-game" class="hidden flex-grow w-full max-w-md mx-auto relative flex-col h-full overflow-hidden">
         
-        <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl h-full">
+        <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center h-full w-full">
             <div class="text-6xl mb-4 animate-bounce">🚀</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
-            <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg transition active:scale-95">GO!</button>
+            <p class="text-gray-400 mb-6 font-game">Are you ready?</p>
+            <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg hover:scale-105 transition active:scale-95">GO!</button>
         </div>
 
-        <div id="hud" class="bg-white px-3 py-2 shadow-md z-10 flex flex-col gap-1 border-b border-gray-200 flex-shrink-0 rounded-b-2xl mx-2">
+        <div id="hud" class="bg-white w-full px-4 py-3 shadow-md z-30 flex flex-col gap-1 border-b border-gray-200 flex-shrink-0">
             <div class="flex justify-between items-center w-full">
                 <div class="flex items-center gap-2">
                     <div id="role-icon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-base shadow-inner">👶</div>
@@ -100,38 +115,32 @@
                 </div>
                 <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200"><span class="text-base mr-1">🎟️</span><span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span></div>
             </div>
-            <div class="w-full flex items-center gap-2"><div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative"><div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div></div><div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div></div>
+            <div class="w-full flex items-center gap-2"><div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner relative"><div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div></div><div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div></div>
             <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-0.5"><span class="text-green-500">✅ +50</span><span class="text-red-400">❌ -30</span><span class="text-yellow-500">💡 -20</span></div>
         </div>
 
-        <div id="role-msg" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
+        <div id="role-msg" class="absolute top-36 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
 
         <div class="flex-grow flex flex-col items-center justify-start p-2 space-y-2 overflow-y-auto">
-            <div class="bg-white w-full rounded-2xl shadow-lg p-3 text-center relative border-2 border-white/50 flex-shrink-0">
-                <div id="q-icon" class="text-6xl mb-1 filter drop-shadow-sm">🚗</div>
-                <div id="q-cn" class="text-xl font-bold text-gray-700">汽車</div>
-                <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">CAR</div>
+            <div class="bg-white w-full rounded-2xl shadow-lg p-3 text-center relative border-2 border-white/50 flex-shrink-0 mt-1">
+                <div id="q-icon" class="text-6xl mb-1 filter drop-shadow-sm">🍎</div>
+                <div id="q-cn" class="text-xl font-bold text-gray-700">蘋果</div>
+                <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
                 <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
                 <div class="flex justify-center gap-2 mt-2 border-t pt-2">
-                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音</span></button>
-                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看</span></button>
+                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span></button>
+                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span></button>
                 </div>
             </div>
-
-            <div class="w-full bg-white rounded-2xl shadow-lg p-4 border-2 border-white/50">
-                <label class="block text-center text-gray-400 text-xs font-bold mb-2 tracking-widest uppercase">Type Answer (輸入單字)</label>
-                <input type="text" id="typing-input" 
-                       class="typing-box w-full px-4 py-4 text-center text-4xl font-bold text-gray-700 rounded-2xl focus:outline-none" 
-                       placeholder="..." 
-                       autocomplete="off" 
-                       autocorrect="off" 
-                       autocapitalize="off" 
-                       spellcheck="false">
-                <p class="text-center text-gray-300 text-[10px] mt-2">請使用鍵盤輸入 (Use Keyboard)</p>
+            <div id="slots-box" class="w-full flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 min-h-[40px] px-2 py-1 no-scrollbar flex-shrink-0"></div>
+            <div class="bg-white rounded-2xl shadow-lg p-3 w-full border-2 border-white/50 flex-shrink-0">
+                <div class="flex justify-between items-center mb-2 gap-2">
+                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center"><i class="fas fa-redo mr-1"></i> 重置 Reset</button>
+                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center"><i class="fas fa-backspace mr-1"></i> 刪除 Del</button>
+                </div>
+                <div id="pool-box" class="flex flex-wrap justify-center gap-2"></div>
             </div>
         </div>
-        
-        <div class="h-1/4 w-full bg-gray-50/50 flex-shrink-0"></div>
     </div>
 
     <script src="data.js"></script>
