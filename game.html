@@ -18,12 +18,20 @@
         }
     </script>
     <style>
-        body { background-color: #f3f4f6; overflow: hidden; } /* 鎖定背景滾動 */
+        body { background-color: #f3f4f6; overflow: hidden; }
         
-        .slot { width: 2.5rem; height: 3rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
+        /* ★ V56 修改：格子大小微調，確保不換行 */
+        .slot { 
+            flex-shrink: 0; /* 禁止縮小，強制觸發捲動 */
+            width: 2.2rem; height: 2.8rem; /* 稍微縮小一點點 */
+            border-bottom: 3px solid #cbd5e1; 
+            display: flex; align-items: center; justify-content: center; 
+            font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; 
+            color: #4f46e5; transition: all 0.2s; 
+        }
         .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
         
-        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 12px; box-shadow: 0 4px 0 #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border: 1px solid #f3f4f6; }
+        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 10px; box-shadow: 0 3px 0 #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border: 1px solid #f3f4f6; }
         .btn-char:active { transform: translateY(2px); box-shadow: none; }
         .btn-char.used { background-color: #f3f4f6; color: #d1d5db; box-shadow: none; border-color: transparent; cursor: default; transform: translateY(2px); }
         
@@ -32,6 +40,10 @@
         .hint-box { opacity: 0; transform: scale(0.9); transition: all 0.3s; filter: blur(5px); }
         .hint-box.visible { opacity: 1; transform: scale(1); filter: blur(0); }
         #ready-overlay { z-index: 9999 !important; }
+
+        /* 隱藏橫向捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col font-sans bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
@@ -96,10 +108,9 @@
             </button>
         </div>
 
-        <div id="hud" class="bg-white px-4 py-3 shadow-md z-10 flex flex-col gap-2 border-b border-gray-200 flex-shrink-0 rounded-b-3xl mx-2">
+        <div id="hud" class="bg-white px-3 py-2 shadow-md z-10 flex flex-col gap-2 border-b border-gray-200 flex-shrink-0 rounded-b-3xl mx-2">
             <div class="flex justify-between items-center w-full">
                 <a href="index.html" class="text-gray-400 hover:text-primary p-1"><i class="fas fa-home text-lg"></i></a>
-                
                 <div class="flex items-center gap-2">
                     <div id="role-icon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-base shadow-inner">👶</div>
                     <div class="flex flex-col">
@@ -107,20 +118,17 @@
                         <span class="text-[9px] text-gray-400 font-game leading-none">Newborn</span>
                     </div>
                 </div>
-
                 <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
                     <span class="text-base mr-1">🎟️</span>
                     <span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span>
                 </div>
             </div>
-
             <div class="w-full flex items-center gap-2">
                 <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
                     <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
                 </div>
                 <div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div>
             </div>
-            
             <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-1">
                 <span class="text-green-500">✅ +50 XP</span>
                 <span class="text-red-400">❌ -30 XP</span>
@@ -130,15 +138,15 @@
 
         <div id="role-msg" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
 
-        <div class="flex-grow flex flex-col items-center justify-center p-4 space-y-4 overflow-y-auto">
+        <div class="flex-grow flex flex-col items-center justify-center p-2 space-y-2 overflow-hidden">
             
-            <div class="bg-white w-full rounded-2xl shadow-lg p-4 text-center relative border-2 border-white/50">
-                <div id="q-icon" class="text-6xl mb-2 filter drop-shadow-sm">🍎</div>
-                <div id="q-cn" class="text-xl font-bold text-gray-700">蘋果</div>
-                <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
-                <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
+            <div class="bg-white w-full rounded-2xl shadow-lg p-2 text-center relative border-2 border-white/50 flex-shrink-0">
+                <div id="q-icon" class="text-6xl mb-1 filter drop-shadow-sm">🍎</div>
+                <div id="q-cn" class="text-lg font-bold text-gray-700">蘋果</div>
+                <div id="hint-text" class="hint-box text-2xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
+                <div id="msg-area" class="h-6 font-bold text-base transition-all"></div>
 
-                <div class="flex justify-center gap-2 mt-3 border-t pt-3">
+                <div class="flex justify-center gap-2 mt-2 border-t pt-2">
                     <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1">
                         <span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span>
                     </button>
@@ -148,10 +156,10 @@
                 </div>
             </div>
 
-            <div id="slots-box" class="flex flex-wrap justify-center gap-2 min-h-[50px] w-full"></div>
+            <div id="slots-box" class="w-full flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 min-h-[50px] px-2 py-1 no-scrollbar"></div>
 
-            <div class="bg-white rounded-2xl shadow-lg p-4 w-full border-2 border-white/50">
-                <div class="flex justify-between items-center mb-3 gap-2">
+            <div class="bg-white rounded-2xl shadow-lg p-3 w-full border-2 border-white/50 flex-shrink-0">
+                <div class="flex justify-between items-center mb-2 gap-2">
                     <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center">
                         <i class="fas fa-redo mr-1"></i> 重置 Reset
                     </button>
