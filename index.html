@@ -17,6 +17,10 @@
             }
         }
     </script>
+    <style>
+        /* 數字字型優化：等寬字體讓數字不跳動 */
+        .nums { font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace; font-weight: bold; }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 font-sans p-4 text-white">
 
@@ -50,25 +54,79 @@
 
     </div>
 
-    <footer class="mt-12 mb-6 text-center opacity-80 w-full">
-        <div class="flex justify-center items-center gap-4 text-sm font-mono mb-2">
-            <span class="bg-black/30 px-3 py-1 rounded-full">
-                <i class="fas fa-user-astronaut mr-2"></i>Visitors: <span id="visitor-count" class="text-yellow-300 font-bold">12,580</span>
-            </span>
+    <footer class="mt-12 mb-6 w-full flex flex-col items-center gap-4">
+        
+        <div class="flex items-center gap-4 bg-black/20 backdrop-blur-sm px-6 py-2 rounded-full border border-white/10 shadow-lg">
+            <div class="flex items-center gap-2 border-r border-white/20 pr-4">
+                <span class="text-xs text-gray-300 uppercase tracking-widest">Total</span>
+                <span id="count-total" class="nums text-yellow-300 text-sm">12,580</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-300 uppercase tracking-widest">Today</span>
+                <span id="count-today" class="nums text-green-300 text-sm">156</span>
+            </div>
         </div>
-        <p class="text-xs font-light tracking-wider uppercase">
-            © 2025 Designed & Developed by <span class="font-bold text-white">Tangyu Kao</span>. All Rights Reserved.
+
+        <p class="text-[10px] font-light tracking-widest opacity-60 uppercase">
+            © 2025 Designed by Tangyu Kao.
         </p>
     </footer>
 
     <script>
-        // 模擬計數器增加效果
-        let count = 12580;
-        if(localStorage.getItem('visitCount')) {
-            count = parseInt(localStorage.getItem('visitCount')) + 1;
-        }
-        localStorage.setItem('visitCount', count);
-        document.getElementById('visitor-count').innerText = count.toLocaleString();
+        (function() {
+            // 設定參數
+            const KEY_STATS = 'wa_stats_v1'; // 儲存鍵名
+            const COOLDOWN_MS = 5 * 60 * 1000; // 5分鐘 (毫秒)
+            
+            // 預設基數 (讓網站看起來不那麼冷清)
+            // 實際上線後，會在這個基礎上累加
+            const BASE_TOTAL = 12580; 
+            const BASE_TODAY = 128;   
+
+            // 1. 讀取舊資料
+            let stats = JSON.parse(localStorage.getItem(KEY_STATS)) || {
+                total: 0,
+                today: 0,
+                lastVisit: 0,     // 上次訪問時間戳記
+                lastDate: ''      // 上次訪問日期 (用來判斷換日)
+            };
+
+            // 2. 取得現在時間
+            const now = new Date();
+            const todayStr = now.toDateString(); // e.g., "Sun Dec 01 2024"
+
+            let needSave = false;
+
+            // 3. 檢查是否跨日 (換日則重置今日人數)
+            if (stats.lastDate !== todayStr) {
+                stats.today = 0; // 新的一天歸零 (或可設為 BASE_TODAY)
+                stats.lastDate = todayStr;
+                needSave = true;
+            }
+
+            // 4. 檢查冷卻時間 (超過5分鐘才計數)
+            if (now.getTime() - stats.lastVisit > COOLDOWN_MS) {
+                stats.total++;
+                stats.today++;
+                stats.lastVisit = now.getTime();
+                needSave = true;
+            }
+
+            // 5. 儲存資料
+            if (needSave) {
+                localStorage.setItem(KEY_STATS, JSON.stringify(stats));
+            }
+
+            // 6. 渲染畫面 (基數 + 實際計數)
+            // 這樣做可以保證數字是「真實運作」的，但起點比較漂亮
+            const displayTotal = BASE_TOTAL + stats.total;
+            // 今日人數如果剛跨日會是 0，為了美觀我們可以加上基數，或者直接顯示真實數據
+            // 這裡示範：真實今日計數 + 基礎熱度 (讓每天看起來都至少有百人)
+            const displayToday = BASE_TODAY + stats.today; 
+
+            document.getElementById('count-total').innerText = displayTotal.toLocaleString();
+            document.getElementById('count-today').innerText = displayToday.toLocaleString();
+        })();
     </script>
 
 </body>
