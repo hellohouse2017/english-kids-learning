@@ -26,8 +26,6 @@
         .hint-box { opacity: 0; transition: all 0.3s; filter: blur(5px); }
         .hint-box.visible { opacity: 1; filter: blur(0); }
         #ready-overlay { z-index: 9999 !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col font-sans bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
@@ -46,10 +44,10 @@
     </header>
 
     <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
+        <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
             <h2 class="text-xl font-bold text-gray-800 mb-1">鍵盤大師！</h2>
             <p class="text-gray-400 mb-4 text-xs font-game">Typing Master!</p>
-            <button id="btn-start-game" class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition active:scale-95">開始挑戰 Start</button>
+            <button id="btn-start-game" class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition active:scale-95">開始挑戰 Start</button>
         </div>
     </div>
 
@@ -95,7 +93,6 @@
     </div>
 
     <div id="screen-game" class="hidden flex-grow w-full max-w-md mx-auto relative flex-col h-full overflow-hidden">
-        
         <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl h-full">
             <div class="text-6xl mb-4 animate-bounce">🚀</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
