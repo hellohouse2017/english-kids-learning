@@ -1,5 +1,5 @@
 // ===================================================
-// game.js - V57 (修復升級提示券顯示順序)
+// game.js - V58 (修復升級失效與票券不增加問題)
 // ===================================================
 
 // 1. 遊戲參數
@@ -7,6 +7,7 @@ const XP_WIN = 50;
 const XP_LOSE = 30;
 const HINT_COST = 20;
 
+// 成長稱號
 const GROWTH_STAGES = [
     { icon: "👶", name: "Lv.1 新生兒 (Newborn)" }, { icon: "🍼", name: "Lv.2 嬰兒 (Baby)" }, 
     { icon: "🚼", name: "Lv.3 學步兒 (Toddler)" }, { icon: "🧸", name: "Lv.4 幼兒園 (Preschooler)" }, 
@@ -60,7 +61,7 @@ function startGame(category) {
     if (!gameData || gameData.length === 0) gameData = window.VOCAB_LIST; 
 
     document.getElementById('screen-category').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
+    document.getElementById('hud').style.display = 'block'; // 顯示 HUD
     document.getElementById('screen-game').style.display = 'flex';
 
     const overlay = document.getElementById('ready-overlay');
@@ -114,7 +115,7 @@ function nextQuestion() {
     speak(currentQ.word);
 }
 
-// 4. 拼字模式
+// 4. 拼字介面
 function renderSlots() {
     const box = document.getElementById('slots-box');
     if (!box) return;
@@ -218,7 +219,7 @@ function checkTyping() {
     }
 }
 
-// 6. 判定
+// 6. 核心判定 (★ 重要修正：先加分，再發音)
 function checkAnswer(ans) {
     if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
         isFrozen = true;
@@ -230,15 +231,19 @@ function checkAnswer(ans) {
             if(input) input.disabled = true;
         }
         
+        // 1. 先執行加分邏輯 (確保升級視窗會出來)
+        gainXP(XP_WIN);
+        updateGrowth("很棒！ Great Job!");
+
+        // 2. 再嘗試發音 (就算發音失敗也不會卡住加分)
+        try {
+            speak(currentQ.word);
+        } catch (e) { console.error("Audio Error:", e); }
+
+        // 3. 設定下一題計時器
         nextQTimer = setTimeout(() => {
             nextQuestion();
         }, 1500);
-
-        try {
-            speak(currentQ.word);
-            gainXP(XP_WIN);
-            updateGrowth("很棒！ Great Job!");
-        } catch (e) { console.error(e); }
 
     } else {
         isFrozen = true;
@@ -261,8 +266,11 @@ function checkAnswer(ans) {
     }
 }
 
-// 7. 系統
+// 7. 系統 (★ 修正升級邏輯與顯示)
 function getLevelReq(lv) {
+    // 為了測試方便，Lv.1 只要 50xp 就能升級 (答對1題)
+    if (lv === 1) return 50;
+    
     let req = 0;
     for (let i = 1; i <= lv; i++) req += (50 * (i + 1));
     return req;
@@ -270,35 +278,44 @@ function getLevelReq(lv) {
 
 function updateHUD() {
     if (player.level > 20) player.level = 20;
+    
     let nextReq = getLevelReq(player.level);
     let pct = (player.xp / nextReq) * 100;
     if (pct < 0) pct = 0; if (pct > 100) pct = 100;
-    document.getElementById('xp-bar').style.width = pct + "%";
-    document.getElementById('xp-text').innerText = `${player.xp} / ${nextReq} XP`;
-    document.getElementById('lv-num').innerText = player.level;
-    document.getElementById('ticket-num').innerText = player.hints;
+
+    const xpBar = document.getElementById('xp-bar');
+    if (xpBar) xpBar.style.width = pct + "%";
+    
+    const xpText = document.getElementById('xp-text');
+    if (xpText) xpText.innerText = `${player.xp} / ${nextReq} XP`;
+    
+    const lvNum = document.getElementById('lv-num');
+    if (lvNum) lvNum.innerText = player.level;
+    
+    const ticketNum = document.getElementById('ticket-num');
+    if (ticketNum) ticketNum.innerText = player.hints; // 確保這裡有更新
 }
 
-// ★ V57 修改：升級時先更新 UI，再跳 Alert
 function gainXP(amount) {
     player.xp += amount;
     let req = getLevelReq(player.level);
     
-    // 檢查是否升級
+    // 升級檢查
     if (player.xp >= req) {
         player.level++;
         player.hints++; // 增加票券
         
-        // 1. 先更新畫面 (包含票券數量)
+        // ★ 強制畫面重繪：先更新數字，再跳視窗
         updateHUD();
         updateGrowth("升級啦！ Level Up!");
 
-        // 2. 延遲彈出視窗，確保玩家先看到右上角的數字變了
-        setTimeout(() => {
-            alert(`🎉 恭喜升級！Level Up!\nLv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
-        }, 100);
+        // 使用 requestAnimationFrame 確保 UI 渲染完畢後再彈窗
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                alert(`🎉 恭喜升級！Level Up!\n\n現在是 Lv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
+            }, 50);
+        });
     } else {
-        // 沒升級，直接更新畫面
         updateHUD();
     }
 }
@@ -313,8 +330,13 @@ function loseXP(amount) {
 function updateGrowth(msg) {
     let idx = player.level - 1;
     if (idx >= GROWTH_STAGES.length) idx = GROWTH_STAGES.length - 1;
-    document.getElementById('role-icon').innerText = GROWTH_STAGES[idx].icon;
-    document.getElementById('role-name').innerText = GROWTH_STAGES[idx].name;
+    
+    const icon = document.getElementById('role-icon');
+    const name = document.getElementById('role-name');
+    
+    if (icon) icon.innerText = GROWTH_STAGES[idx].icon;
+    if (name) name.innerText = GROWTH_STAGES[idx].name;
+    
     if (msg) {
         let bub = document.getElementById('role-msg');
         if(bub) {
@@ -340,6 +362,7 @@ function useHint() {
     speak(currentQ.word);
 }
 
+// 語音
 function speak(txt) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
