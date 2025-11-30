@@ -1,66 +1,126 @@
-// data.js
+// ===================================================
+// data.js - V62 (含 Grade 1-6 年級標籤與分類)
+// ===================================================
+
 window.VOCAB_LIST = [
-    // 動物
-    { word: "CAT", icon: "🐱", cn: "貓咪", cat: "animal" },
-    { word: "DOG", icon: "🐶", cn: "狗狗", cat: "animal" },
-    { word: "PIG", icon: "🐷", cn: "豬", cat: "animal" },
-    { word: "BIRD", icon: "🐦", cn: "鳥", cat: "animal" },
-    { word: "FISH", icon: "🐟", cn: "魚", cat: "animal" },
-    { word: "LION", icon: "🦁", cn: "獅子", cat: "animal" },
-    { word: "TIGER", icon: "🐯", cn: "老虎", cat: "animal" },
-    { word: "ELEPHANT", icon: "🐘", cn: "大象", cat: "animal" },
-    { word: "ZEBRA", icon: "🦓", cn: "斑馬", cat: "animal" },
-    { word: "ANT", icon: "🐜", cn: "螞蟻", cat: "animal" },
-    // 顏色
-    { word: "RED", icon: "🔴", cn: "紅色", cat: "color" },
-    { word: "BLUE", icon: "🔵", cn: "藍色", cat: "color" },
-    { word: "YELLOW", icon: "🟡", cn: "黃色", cat: "color" },
-    { word: "GREEN", icon: "🟢", cn: "綠色", cat: "color" },
-    { word: "ORANGE", icon: "🟠", cn: "橘色", cat: "color" },
-    { word: "PURPLE", icon: "🟣", cn: "紫色", cat: "color" },
-    { word: "BLACK", icon: "⚫", cn: "黑色", cat: "color" },
-    { word: "WHITE", icon: "⚪", cn: "白色", cat: "color" },
-    { word: "PINK", icon: "🩷", cn: "粉紅色", cat: "color" },
-    // 數字
-    { word: "ONE", icon: "1️⃣", cn: "一", cat: "number" },
-    { word: "TWO", icon: "2️⃣", cn: "二", cat: "number" },
-    { word: "THREE", icon: "3️⃣", cn: "三", cat: "number" },
-    { word: "FOUR", icon: "4️⃣", cn: "四", cat: "number" },
-    { word: "FIVE", icon: "5️⃣", cn: "五", cat: "number" },
-    { word: "SIX", icon: "6️⃣", cn: "六", cat: "number" },
-    { word: "SEVEN", icon: "7️⃣", cn: "七", cat: "number" },
-    { word: "EIGHT", icon: "8️⃣", cn: "八", cat: "number" },
-    { word: "NINE", icon: "9️⃣", cn: "九", cat: "number" },
-    { word: "TEN", icon: "🔟", cn: "十", cat: "number" },
-    // 食物
-    { word: "APPLE", icon: "🍎", cn: "蘋果", cat: "food" },
-    { word: "BANANA", icon: "🍌", cn: "香蕉", cat: "food" },
-    { word: "EGG", icon: "🥚", cn: "蛋", cat: "food" },
-    { word: "MILK", icon: "🥛", cn: "牛奶", cat: "food" },
-    { word: "CAKE", icon: "🍰", cn: "蛋糕", cat: "food" },
-    { word: "PIZZA", icon: "🍕", cn: "披薩", cat: "food" },
-    { word: "HAMBURGER", icon: "🍔", cn: "漢堡", cat: "food" },
-    // 身體
-    { word: "HEAD", icon: "🗣️", cn: "頭", cat: "body" },
-    { word: "EYE", icon: "👁️", cn: "眼睛", cat: "body" },
-    { word: "EAR", icon: "👂", cn: "耳朵", cat: "body" },
-    { word: "NOSE", icon: "👃", cn: "鼻子", cat: "body" },
-    { word: "MOUTH", icon: "👄", cn: "嘴巴", cat: "body" },
-    { word: "HAND", icon: "🖐️", cn: "手", cat: "body" },
-    { word: "LEG", icon: "🦵", cn: "腿", cat: "body" },
-    { word: "FOOT", icon: "🦶", cn: "腳", cat: "body" },
-    // 用品
-    { word: "PEN", icon: "🖊️", cn: "原子筆", cat: "item" },
-    { word: "BOOK", icon: "📖", cn: "書", cat: "item" },
-    { word: "BAG", icon: "🎒", cn: "書包", cat: "item" },
-    { word: "CHAIR", icon: "🪑", cn: "椅子", cat: "item" },
-    { word: "DESK", icon: "✍️", cn: "書桌", cat: "item" },
-    { word: "CAR", icon: "🚗", cn: "車子", cat: "item" },
-    { word: "BUS", icon: "🚌", cn: "公車", cat: "item" },
-    { word: "BALL", icon: "⚽", cn: "球", cat: "item" },
-    // 家庭
-    { word: "DAD", icon: "👨", cn: "爸爸", cat: "family" },
-    { word: "MOM", icon: "👩", cn: "媽媽", cat: "family" },
-    { word: "BOY", icon: "👦", cn: "男孩", cat: "family" },
-    { word: "GIRL", icon: "👧", cn: "女孩", cat: "family" }
+    // ==========================================
+    // Grade 1 (一年級：字母、顏色、數字、基礎動物)
+    // ==========================================
+    { word: "ANT", cn: "螞蟻", cat: "animal", icon: "🐜", grade: 1 },
+    { word: "BAT", cn: "蝙蝠", cat: "animal", icon: "🦇", grade: 1 },
+    { word: "CAT", cn: "貓", cat: "animal", icon: "🐱", grade: 1 },
+    { word: "DOG", cn: "狗", cat: "animal", icon: "🐶", grade: 1 },
+    { word: "PIG", cn: "豬", cat: "animal", icon: "🐷", grade: 1 },
+    { word: "RED", cn: "紅色", cat: "color", icon: "🔴", grade: 1 },
+    { word: "BLUE", cn: "藍色", cat: "color", icon: "🔵", grade: 1 },
+    { word: "ONE", cn: "一", cat: "number", icon: "1️⃣", grade: 1 },
+    { word: "TWO", cn: "二", cat: "number", icon: "2️⃣", grade: 1 },
+    { word: "TEN", cn: "十", cat: "number", icon: "🔟", grade: 1 },
+    { word: "EYE", cn: "眼睛", cat: "body", icon: "👁️", grade: 1 },
+    { word: "EAR", cn: "耳朵", cat: "body", icon: "👂", grade: 1 },
+    { word: "BUS", cn: "公車", cat: "school", icon: "🚌", grade: 1 },
+    { word: "BOX", cn: "盒子", cat: "school", icon: "📦", grade: 1 },
+
+    // ==========================================
+    // Grade 2 (二年級：常見水果、食物、自然)
+    // ==========================================
+    { word: "EGG", cn: "蛋", cat: "food", icon: "🥚", grade: 2 },
+    { word: "JAM", cn: "果醬", cat: "food", icon: "🍓", grade: 2 },
+    { word: "NUT", cn: "堅果", cat: "food", icon: "🥜", grade: 2 },
+    { word: "APPLE", cn: "蘋果", cat: "fruit", icon: "🍎", grade: 2 },
+    { word: "BANANA", cn: "香蕉", cat: "fruit", icon: "🍌", grade: 2 },
+    { word: "BIRD", cn: "鳥", cat: "animal", icon: "🐦", grade: 2 },
+    { word: "DUCK", cn: "鴨子", cat: "animal", icon: "🦆", grade: 2 },
+    { word: "FISH", cn: "魚", cat: "animal", icon: "🐟", grade: 2 },
+    { word: "LION", cn: "獅子", cat: "animal", icon: "🦁", grade: 2 },
+    { word: "TREE", cn: "樹", cat: "nature", icon: "🌳", grade: 2 },
+    { word: "SUN", cn: "太陽", cat: "nature", icon: "☀️", grade: 2 },
+    { word: "MOON", cn: "月亮", cat: "nature", icon: "🌙", grade: 2 },
+    { word: "BOOK", cn: "書", cat: "school", icon: "📖", grade: 2 },
+    { word: "PEN", cn: "原子筆", cat: "school", icon: "🖊️", grade: 2 },
+
+    // ==========================================
+    // Grade 3 (三年級：身體部位、家庭、基礎動作)
+    // ==========================================
+    { word: "HAND", cn: "手", cat: "body", icon: "✋", grade: 3 },
+    { word: "NOSE", cn: "鼻子", cat: "body", icon: "👃", grade: 3 },
+    { word: "MOUTH", cn: "嘴巴", cat: "body", icon: "👄", grade: 3 },
+    { word: "FACE", cn: "臉", cat: "body", icon: "😀", grade: 3 },
+    { word: "HEAD", cn: "頭", cat: "body", icon: "👶", grade: 3 },
+    { word: "DAD", cn: "爸爸", cat: "people", icon: "👨", grade: 3 },
+    { word: "MOM", cn: "媽媽", cat: "people", icon: "👩", grade: 3 },
+    { word: "BOY", cn: "男孩", cat: "people", icon: "👦", grade: 3 },
+    { word: "GIRL", cn: "女孩", cat: "people", icon: "👧", grade: 3 },
+    { word: "RUN", cn: "跑", cat: "action", icon: "🏃", grade: 3 },
+    { word: "JUMP", cn: "跳", cat: "action", icon: "🤸", grade: 3 },
+    { word: "SWIM", cn: "游泳", cat: "action", icon: "🏊", grade: 3 },
+    { word: "WALK", cn: "走路", cat: "action", icon: "🚶", grade: 3 },
+    { word: "DESK", cn: "書桌", cat: "school", icon: "🏫", grade: 3 },
+    { word: "CHAIR", cn: "椅子", cat: "school", icon: "🪑", grade: 3 },
+    { word: "GREEN", cn: "綠色", cat: "color", icon: "🟢", grade: 3 },
+    { word: "PINK", cn: "粉紅", cat: "color", icon: "🌸", grade: 3 },
+
+    // ==========================================
+    // Grade 4 (四年級：職業、交通、形容詞)
+    // ==========================================
+    { word: "TIGER", cn: "老虎", cat: "animal", icon: "🐯", grade: 4 },
+    { word: "ZEBRA", cn: "斑馬", cat: "animal", icon: "🦓", grade: 4 },
+    { word: "HORSE", cn: "馬", cat: "animal", icon: "🐴", grade: 4 },
+    { word: "COOK", cn: "廚師", cat: "people", icon: "👨‍🍳", grade: 4 },
+    { word: "NURSE", cn: "護理師", cat: "people", icon: "👩‍⚕️", grade: 4 },
+    { word: "DOCTOR", cn: "醫生", cat: "people", icon: "👨‍⚕️", grade: 4 },
+    { word: "TEACHER", cn: "老師", cat: "people", icon: "👩‍🏫", grade: 4 },
+    { word: "HAPPY", cn: "快樂的", cat: "action", icon: "😊", grade: 4 },
+    { word: "SAD", cn: "難過的", cat: "action", icon: "😢", grade: 4 },
+    { word: "ANGRY", cn: "生氣的", cat: "action", icon: "😡", grade: 4 },
+    { word: "TIRED", cn: "累的", cat: "action", icon: "😫", grade: 4 },
+    { word: "BIKE", cn: "腳踏車", cat: "school", icon: "🚲", grade: 4 },
+    { word: "TAXI", cn: "計程車", cat: "school", icon: "🚕", grade: 4 },
+    { word: "HOME", cn: "家", cat: "school", icon: "🏠", grade: 4 },
+    { word: "PARK", cn: "公園", cat: "nature", icon: "🏞️", grade: 4 },
+    { word: "GRAPE", cn: "葡萄", cat: "fruit", icon: "🍇", grade: 4 },
+    { word: "LEMON", cn: "檸檬", cat: "fruit", icon: "🍋", grade: 4 },
+
+    // ==========================================
+    // Grade 5 (五年級：生活用品、天氣、地點)
+    // ==========================================
+    { word: "ELEPHANT", cn: "大象", cat: "animal", icon: "🐘", grade: 5 },
+    { word: "BUTTERFLY", cn: "蝴蝶", cat: "animal", icon: "🦋", grade: 5 },
+    { word: "SPIDER", cn: "蜘蛛", cat: "animal", icon: "🕷️", grade: 5 },
+    { word: "UMBRELLA", cn: "雨傘", cat: "school", icon: "☂️", grade: 5 },
+    { word: "COMPUTER", cn: "電腦", cat: "school", icon: "💻", grade: 5 },
+    { word: "SCHOOL", cn: "學校", cat: "school", icon: "🏫", grade: 5 },
+    { word: "LIBRARY", cn: "圖書館", cat: "school", icon: "📚", grade: 5 },
+    { word: "HOSPITAL", cn: "醫院", cat: "school", icon: "🏥", grade: 5 },
+    { word: "ZOO", cn: "動物園", cat: "school", icon: "🦁", grade: 5 },
+    { word: "SUNNY", cn: "晴朗的", cat: "nature", icon: "☀️", grade: 5 },
+    { word: "RAINY", cn: "下雨的", cat: "nature", icon: "☔", grade: 5 },
+    { word: "WINDY", cn: "有風的", cat: "nature", icon: "🍃", grade: 5 },
+    { word: "SANDWICH", cn: "三明治", cat: "food", icon: "🥪", grade: 5 },
+    { word: "HAMBURGER", cn: "漢堡", cat: "food", icon: "🍔", grade: 5 },
+    { word: "NOODLE", cn: "麵", cat: "food", icon: "🍜", grade: 5 },
+    { word: "RICE", cn: "米飯", cat: "food", icon: "🍚", grade: 5 },
+    { word: "MANGO", cn: "芒果", cat: "fruit", icon: "🥭", grade: 5 },
+    { word: "TOMATO", cn: "番茄", cat: "fruit", icon: "🍅", grade: 5 },
+
+    // ==========================================
+    // Grade 6 (六年級：國家、季節、複雜動作)
+    // ==========================================
+    { word: "STRAWBERRY", cn: "草莓", cat: "fruit", icon: "🍓", grade: 6 },
+    { word: "WATERMELON", cn: "西瓜", cat: "fruit", icon: "🍉", grade: 6 },
+    { word: "PINEAPPLE", cn: "鳳梨", cat: "fruit", icon: "🍍", grade: 6 },
+    { word: "SPRING", cn: "春天", cat: "nature", icon: "🌸", grade: 6 },
+    { word: "SUMMER", cn: "夏天", cat: "nature", icon: "☀️", grade: 6 },
+    { word: "FALL", cn: "秋天", cat: "nature", icon: "🍁", grade: 6 },
+    { word: "WINTER", cn: "冬天", cat: "nature", icon: "❄️", grade: 6 },
+    { word: "TAIWAN", cn: "台灣", cat: "school", icon: "🇹🇼", grade: 6 },
+    { word: "USA", cn: "美國", cat: "school", icon: "🇺🇸", grade: 6 },
+    { word: "JAPAN", cn: "日本", cat: "school", icon: "🇯🇵", grade: 6 },
+    { word: "POLICE", cn: "警察", cat: "people", icon: "👮", grade: 6 },
+    { word: "WRITER", cn: "作家", cat: "people", icon: "✍️", grade: 6 },
+    { word: "SINGER", cn: "歌手", cat: "people", icon: "🎤", grade: 6 },
+    { word: "EXCITED", cn: "興奮的", cat: "action", icon: "🤩", grade: 6 },
+    { word: "BORED", cn: "無聊的", cat: "action", icon: "🥱", grade: 6 },
+    { word: "SCARED", cn: "害怕的", cat: "action", icon: "😱", grade: 6 },
+    { word: "SURPRISED", cn: "驚訝的", cat: "action", icon: "😲", grade: 6 }
 ];
