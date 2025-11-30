@@ -1,7 +1,8 @@
 // ===================================================
-// game.js - V53 (語音優化 + 最終邏輯)
+// game.js - V57 (修復升級提示券顯示順序)
 // ===================================================
 
+// 1. 遊戲參數
 const XP_WIN = 50;
 const XP_LOSE = 30;
 const HINT_COST = 20;
@@ -27,6 +28,7 @@ let isFrozen = false;
 let isTyping = false;
 let nextQTimer = null;
 
+// 2. 初始化
 window.onload = function() {
     if (typeof window.VOCAB_LIST === 'undefined') {
         alert("Error: data.js not found"); return;
@@ -37,6 +39,7 @@ window.onload = function() {
     if (startBtn) startBtn.onclick = showCategorySelect;
 };
 
+// 3. 流程控制
 function showCategorySelect() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value.trim() || "勇者 Hero";
@@ -111,6 +114,7 @@ function nextQuestion() {
     speak(currentQ.word);
 }
 
+// 4. 拼字模式
 function renderSlots() {
     const box = document.getElementById('slots-box');
     if (!box) return;
@@ -205,6 +209,7 @@ function backspace() {
     }
 }
 
+// 5. 打字模式
 function checkTyping() {
     const input = document.getElementById('typing-input');
     const val = input.value.toUpperCase(); 
@@ -213,6 +218,7 @@ function checkTyping() {
     }
 }
 
+// 6. 判定
 function checkAnswer(ans) {
     if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
         isFrozen = true;
@@ -255,6 +261,7 @@ function checkAnswer(ans) {
     }
 }
 
+// 7. 系統
 function getLevelReq(lv) {
     let req = 0;
     for (let i = 1; i <= lv; i++) req += (50 * (i + 1));
@@ -272,16 +279,28 @@ function updateHUD() {
     document.getElementById('ticket-num').innerText = player.hints;
 }
 
+// ★ V57 修改：升級時先更新 UI，再跳 Alert
 function gainXP(amount) {
     player.xp += amount;
     let req = getLevelReq(player.level);
+    
+    // 檢查是否升級
     if (player.xp >= req) {
         player.level++;
-        player.hints++;
-        alert(`🎉 恭喜升級！Level Up!\nLv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
+        player.hints++; // 增加票券
+        
+        // 1. 先更新畫面 (包含票券數量)
+        updateHUD();
         updateGrowth("升級啦！ Level Up!");
+
+        // 2. 延遲彈出視窗，確保玩家先看到右上角的數字變了
+        setTimeout(() => {
+            alert(`🎉 恭喜升級！Level Up!\nLv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
+        }, 100);
+    } else {
+        // 沒升級，直接更新畫面
+        updateHUD();
     }
-    updateHUD();
 }
 
 function loseXP(amount) {
@@ -321,7 +340,6 @@ function useHint() {
     speak(currentQ.word);
 }
 
-// ★ V53: 智慧語音引擎 (盡力讓電腦版好聽一點)
 function speak(txt) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
