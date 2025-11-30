@@ -2,75 +2,274 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>單字大冒險 | Word Adventure</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>單字卡學習 | Vocabulary Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], game: ['"Fredoka"', 'sans-serif'] },
-                    colors: { primary: '#6366f1', secondary: '#ec4899', accent: '#f59e0b' }
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        game: ['"Fredoka"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#10b981', // Emerald 500
+                        secondary: '#3b82f6', // Blue 500
+                        bg: '#f0fdf4',
+                    }
                 }
             }
         }
     </script>
+    <style>
+        body { background-color: #f0fdf4; }
+        .vocab-card {
+            transition: all 0.2s;
+            cursor: pointer;
+            border-bottom: 3px solid #d1d5db;
+        }
+        .vocab-card:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            box-shadow: none !important;
+        }
+        .vocab-card:hover {
+            box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.1);
+            border-color: #10b981;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* V69 Category Button Styles */
+        .cat-btn.active {
+             background-color: #10b981 !important;
+             color: white !important;
+             border-color: #059669 !important;
+        }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 font-sans p-4 text-white">
+<body class="min-h-screen flex flex-col font-sans text-gray-800">
 
-    <div class="text-center mb-8 animate-bounce mt-10">
-        <h1 class="text-6xl font-game font-bold drop-shadow-lg mb-2">Word Adventure</h1>
-        <p class="text-xl opacity-90 tracking-wide">從單字新手進化成傳奇大師！</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl flex-grow">
-        
-        <a href="learn.html" class="relative group bg-white text-gray-800 rounded-3xl p-6 shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-b-8 border-yellow-400 active:border-b-0 active:translate-y-0 flex flex-col items-center justify-center">
-            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-white font-bold px-4 py-1 rounded-full text-sm shadow-md">STEP 1 預習</div>
-            <div class="text-6xl mb-4 group-hover:scale-110 transition">📖</div>
-            <h2 class="text-2xl font-bold text-yellow-500 mb-2">單字圖鑑</h2>
-            <p class="text-gray-400 text-center text-sm">先看過、聽過，建立視覺與聽覺記憶。</p>
-        </a>
-
-        <a href="game.html" class="relative group bg-white text-gray-800 rounded-3xl p-6 shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-b-8 border-indigo-400 active:border-b-0 active:translate-y-0 flex flex-col items-center justify-center">
-            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-indigo-500 text-white font-bold px-4 py-1 rounded-full text-sm shadow-md">STEP 2 練習</div>
-            <div class="text-6xl mb-4 group-hover:scale-110 transition">🧩</div>
-            <h2 class="text-2xl font-bold text-indigo-600 mb-2">拼字冒險</h2>
-            <p class="text-gray-400 text-center text-sm">看圖拼字！運用記憶把單字組裝起來。</p>
-        </a>
-
-        <a href="typing.html" class="relative group bg-white text-gray-800 rounded-3xl p-6 shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-b-8 border-pink-400 active:border-b-0 active:translate-y-0 flex flex-col items-center justify-center">
-            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white font-bold px-4 py-1 rounded-full text-sm shadow-md">STEP 3 挑戰</div>
-            <div class="text-6xl mb-4 group-hover:scale-110 transition">⌨️</div>
-            <h2 class="text-2xl font-bold text-pink-500 mb-2">打字特訓</h2>
-            <p class="text-gray-400 text-center text-sm">不看提示！靠大腦與手速直接輸出單字。</p>
-        </a>
-
-    </div>
-
-    <footer class="mt-12 mb-6 text-center opacity-80 w-full">
-        <div class="flex justify-center items-center gap-4 text-sm font-mono mb-2">
-            <span class="bg-black/30 px-3 py-1 rounded-full">
-                <i class="fas fa-user-astronaut mr-2"></i>Visitors: <span id="visitor-count" class="text-yellow-300 font-bold">12,580</span>
-            </span>
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl">📖</span>
+                <h1 class="text-xl font-bold tracking-wide text-gray-800">單字圖鑑</h1>
+            </div>
+            <a href="index.html" class="text-gray-400 hover:text-primary transition p-2">
+                <i class="fas fa-home text-xl"></i>
+            </a>
         </div>
-        <p class="text-xs font-light tracking-wider uppercase">
-            © 2025 Designed & Developed by <span class="font-bold text-white">Tangyu Kao</span>. All Rights Reserved.
-        </p>
-    </footer>
+    </header>
+
+    <main class="flex-grow p-4 max-w-5xl mx-auto w-full flex flex-col">
+        
+        <div id="screen-grade" class="flex-grow w-full flex flex-col justify-center items-center">
+            <div class="bg-white rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full max-w-md">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="selectGrade(1)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 1</button>
+                    <button onclick="selectGrade(2)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 2</button>
+                    <button onclick="selectGrade(3)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 3</button>
+                    <button onclick="selectGrade(4)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 4</button>
+                    <button onclick="selectGrade(5)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 5</button>
+                    <button onclick="selectGrade(6)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 6</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-cards" class="hidden flex-grow w-full flex-col">
+            
+            <div class="flex justify-between items-center mb-3">
+                 <button onclick="showGradeSelect()" class="text-gray-500 hover:text-secondary text-sm"><i class="fas fa-arrow-left mr-1"></i> 重選年級</button>
+                 <span id="grade-info" class="text-secondary font-bold">Grade 3</span>
+            </div>
+
+            <div id="category-bar" class="flex gap-2 overflow-x-auto scrollbar-hide flex-shrink-0 mb-4 pb-1">
+                 </div>
+
+            <div id="error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-center">
+                <strong class="font-bold">⚠️ 讀取不到 data.js</strong>
+                <p class="text-sm mt-1">請確認 data.js 檔案是否存在於同一目錄下。</p>
+            </div>
+
+            <div id="cards-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow overflow-y-auto pb-6">
+                 </div>
+
+            <div class="text-center mt-4 animate-bounce flex-shrink-0">
+                <span class="inline-block bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm font-bold shadow-sm border border-yellow-200">
+                    👇 點擊卡片聽聽看怎麼唸！
+                </span>
+                <a href="game.html" class="block mt-3 text-primary hover:text-secondary text-sm underline font-bold">
+                    完成預習，開始挑戰！
+                </a>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="data.js"></script>
 
     <script>
-        // 模擬計數器
-        let count = 12580;
-        if(localStorage.getItem('visitCount')) {
-            count = parseInt(localStorage.getItem('visitCount')) + 1;
-        } else {
-            localStorage.setItem('visitCount', count);
-        }
-        document.getElementById('visitor-count').innerText = count.toLocaleString();
-    </script>
+        // 設定分類對應表 (必須與 game.js 相同)
+        const CAT_CONFIG = {
+            'animal': { icon: '🦁', cn: '動物', en: 'Animals', color: 'green' },
+            'food':   { icon: '🍎', cn: '食物', en: 'Food', color: 'red' },
+            'fruit':  { icon: '🍌', cn: '水果', en: 'Fruit', color: 'orange' },
+            'color':  { icon: '🎨', cn: '顏色', en: 'Color', color: 'purple' },
+            'body':   { icon: '👀', cn: '身體', en: 'Body', color: 'yellow' },
+            'school': { icon: '🎒', cn: '學校', en: 'School', color: 'blue' },
+            'people': { icon: '👶', cn: '人物', en: 'People', color: 'pink' },
+            'nature': { icon: '🌳', cn: '自然', en: 'Nature', color: 'emerald' },
+            'action': { icon: '🏃', cn: '動作', en: 'Action', color: 'indigo' },
+            'number': { icon: '🔢', cn: '數字', en: 'Number', color: 'cyan' },
+            'default': { icon: '📦', cn: '其他', en: 'Other', color: 'gray' }
+        };
 
+        let currentGrade = 3; // 預設年級
+        let currentCategory = 'ALL';
+
+        // 初始化
+        window.onload = function() {
+            if (typeof window.VOCAB_LIST === 'undefined' || !Array.isArray(window.VOCAB_LIST)) {
+                document.getElementById('error-msg').classList.remove('hidden');
+                return;
+            }
+            // 預設顯示 Grade 3
+            selectGrade(3);
+        };
+
+        // Step 1: 選擇年級
+        function selectGrade(grade) {
+            currentGrade = grade;
+            
+            // 找出該年級有哪些分類
+            const gradeWords = window.VOCAB_LIST.filter(w => w.grade === currentGrade);
+            const categories = [...new Set(gradeWords.map(w => w.cat))].sort();
+
+            if (categories.length === 0) {
+                 alert(`Grade ${grade} 目前沒有單字資料，請檢查 data.js！`);
+                 return;
+            }
+
+            // 渲染分類按鈕
+            renderCategoryButtons(categories);
+
+            // 切換畫面
+            document.getElementById('screen-grade').style.display = 'none';
+            document.getElementById('screen-cards').style.display = 'flex';
+            document.getElementById('grade-info').innerText = `Grade ${grade}`;
+
+            // 預設篩選 ALL
+            filterCards('ALL');
+        }
+
+        // Step 2 輔助：渲染分類按鈕
+        function renderCategoryButtons(categories) {
+            const bar = document.getElementById('category-bar');
+            bar.innerHTML = '';
+            
+            // 1. 全部按鈕
+            bar.appendChild(createFilterBtn('ALL', '全部', '🔥', 'indigo'));
+
+            // 2. 其他分類按鈕
+            categories.forEach(cat => {
+                const config = CAT_CONFIG[cat] || CAT_CONFIG['default'];
+                bar.appendChild(createFilterBtn(cat, config.cn, config.icon, config.color));
+            });
+        }
+
+        // 輔助：建立單個分類按鈕
+        function createFilterBtn(catKey, cnText, icon, color) {
+            const btn = document.createElement('button');
+            btn.className = `cat-btn px-4 py-1.5 rounded-full border border-gray-200 text-sm font-bold whitespace-nowrap transition`;
+            btn.dataset.category = catKey;
+            btn.innerHTML = `${icon} ${cnText}`;
+            btn.onclick = () => filterCards(catKey);
+            return btn;
+        }
+
+        // Step 3: 篩選單字並渲染
+        function filterCards(category) {
+            currentCategory = category;
+
+            // 1. 取得該年級所有單字
+            let filteredData = window.VOCAB_LIST.filter(item => item.grade === currentGrade);
+
+            // 2. 依分類篩選
+            if (category !== 'ALL') {
+                filteredData = filteredData.filter(item => item.cat === category);
+            }
+
+            // 3. 渲染
+            renderCards(filteredData);
+            
+            // 4. 更新按鈕樣式
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // 核心：渲染卡片 HTML
+        function renderCards(data) {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+            
+            container.innerHTML = ''; 
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'vocab-card bg-white rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-md';
+                
+                // 點擊發音
+                card.onclick = () => speak(item.word);
+
+                card.innerHTML = `
+                    <div class="absolute top-3 right-3 text-gray-300 hover:text-primary transition">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="text-6xl mb-4 filter drop-shadow-sm transform transition-transform group-hover:scale-110">${item.icon}</div>
+                    <div class="text-2xl font-game font-bold text-gray-800 tracking-wide mb-1">${item.word}</div>
+                    <div class="text-sm text-gray-500 font-bold bg-gray-100 px-3 py-1 rounded-full">${item.cn}</div>
+                `;
+                container.appendChild(card);
+            });
+
+             if (data.length === 0) {
+                 container.innerHTML = '<p class="text-center text-gray-500 mt-10">這個分類目前沒有單字。</p>';
+             }
+        }
+
+        // 語音發音
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text.toLowerCase());
+                u.lang = 'en-US';
+                u.rate = 0.8;
+                
+                // 確保語音載入
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => v.name.includes("Google US English")) || voices.find(v => v.name.includes("Samantha"));
+                if (preferredVoice) u.voice = preferredVoice;
+
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        // Step 1: 顯示年級選擇 (用於 Home 頁面按鈕)
+        function showGradeSelect() {
+            document.getElementById('screen-grade').style.display = 'flex';
+            document.getElementById('screen-cards').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
