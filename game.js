@@ -385,4 +385,3 @@ function setVoiceAndSpeak(u, voices) {
     // 5. 播放
     window.speechSynthesis.speak(u);
 }
-}
