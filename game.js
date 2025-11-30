@@ -1,204 +1,497 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>拼字冒險 | Spelling Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'], game: ['"Fredoka"', 'sans-serif'] },
-                    colors: { primary: '#6366f1', secondary: '#ec4899', accent: '#f59e0b', bg: '#f3f4f6' }
-                }
+// ===================================================
+// game.js - V64 (修復動態分類生成崩潰問題 & 流程穩定性)
+// ===================================================
+
+// 1. 遊戲參數
+const XP_WIN = 50;
+const XP_LOSE = 30;
+const HINT_COST = 20;
+
+const GROWTH_STAGES = [
+    { icon: "👶", name: "Lv.1 新生兒 (Newborn)" }, { icon: "🍼", name: "Lv.2 嬰兒 (Baby)" }, 
+    { icon: "🚼", name: "Lv.3 學步兒 (Toddler)" }, { icon: "🧸", name: "Lv.4 幼兒園 (Preschooler)" }, 
+    { icon: "🎒", name: "Lv.5 小學生 (Student)" }, { icon: "🚲", name: "Lv.6 國中生 (Junior)" }, 
+    { icon: "🎧", name: "Lv.7 高中生 (Senior)" }, { icon: "🎓", name: "Lv.8 大學生 (Undergrad)" }, 
+    { icon: "💼", name: "Lv.9 實習生 (Intern)" }, { icon: "👔", name: "Lv.10 上班族 (Worker)" }, 
+    { icon: "💻", name: "Lv.11 工程師 (Engineer)" }, { icon: "🧑‍🏫", name: "Lv.12 組長 (Leader)" }, 
+    { icon: "🕶️", name: "Lv.13 經理 (Manager)" }, { icon: "📈", name: "Lv.14 處長 (Director)" }, 
+    { icon: "🤵", name: "Lv.15 總經理 (GM)" }, { icon: "🚗", name: "Lv.16 董事長 (Chairman)" }, 
+    { icon: "🛥️", name: "Lv.17 企業大亨 (Tycoon)" }, { icon: "🚀", name: "Lv.18 慈善家 (Philanthropist)" }, 
+    { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
+];
+
+// ★ 分類設定 (確保每個鍵都有 icon 和 color)
+const CAT_CONFIG = {
+    'animal': { icon: '🦁', cn: '動物', en: 'Animals', color: 'green' },
+    'food':   { icon: '🍎', cn: '食物', en: 'Food', color: 'red' },
+    'fruit':  { icon: '🍌', cn: '水果', en: 'Fruit', color: 'orange' },
+    'color':  { icon: '🎨', cn: '顏色', en: 'Color', color: 'purple' },
+    'body':   { icon: '👀', cn: '身體', en: 'Body', color: 'yellow' },
+    'school': { icon: '🎒', cn: '學校', en: 'School', color: 'blue' },
+    'people': { icon: '👶', cn: '人物', en: 'People', color: 'pink' },
+    'nature': { icon: '🌳', cn: '自然', en: 'Nature', color: 'emerald' },
+    'action': { icon: '🏃', cn: '動作', en: 'Action', color: 'indigo' },
+    'number': { icon: '🔢', cn: '數字', en: 'Number', color: 'cyan' },
+    'default': { icon: '📦', cn: '其他', en: 'Other', color: 'gray' } // 預設防呆
+};
+
+let player = { name: "Player", level: 1, xp: 0, hints: 0, grade: 1, category: "ALL", voice: "female" };
+let currentQ = null;
+let currentInput = [];
+let gameData = [];
+let isFrozen = false;
+let isTyping = false;
+let nextQTimer = null;
+
+// 2. 初始化
+window.onload = function() {
+    if (typeof window.VOCAB_LIST === 'undefined') {
+        alert("Error: data.js not found"); return;
+    }
+    if (document.getElementById('typing-input')) isTyping = true;
+    
+    // V63: 綁定首頁按鈕 (如果存在，通常只有 index.html 會用到)
+    const startBtn = document.getElementById('btn-start-game');
+    if (startBtn) startBtn.onclick = showGradeSelect;
+
+    // V63: 進入 game/typing 頁面後，直接從 Grade Screen 開始
+    const gradeScreen = document.getElementById('screen-grade');
+    if (gradeScreen && gradeScreen.style.display !== 'none') {
+        // 如果現在是 grade screen，確保畫面已切換
+        // (不需要 action，因為按鈕是直接在 HTML 裡綁定 selectGrade)
+        setVoice('female'); // 預設女聲
+    }
+};
+
+// Step 1: 顯示年級選擇
+function showGradeSelect() {
+    document.getElementById('screen-start').style.display = 'none';
+    document.getElementById('screen-grade').style.display = 'flex';
+}
+
+// ★ Step 2: 選擇年級 -> 動態生成分類按鈕 (修正崩潰點)
+function selectGrade(grade) {
+    player.grade = parseInt(grade);
+    
+    // 1. 篩選出該年級的所有單字
+    const gradeWords = window.VOCAB_LIST.filter(w => w.grade === player.grade);
+    
+    if (gradeWords.length === 0) {
+        alert(`Grade ${grade} 目前沒有單字資料，請檢查 data.js！`);
+        return;
+    }
+
+    // 2. 找出該年級有哪些分類 (去重複)
+    const categories = [...new Set(gradeWords.map(w => w.cat))].sort(); // 排序讓按鈕排列一致
+    
+    // 3. 動態生成按鈕 (★ 關鍵修正區塊)
+    const container = document.getElementById('dynamic-category-box');
+    
+    // 3.1 確保畫面切換優先執行 (防止崩潰)
+    document.getElementById('screen-grade').style.display = 'none';
+    document.getElementById('screen-category').style.display = 'flex';
+
+    if(container) {
+        container.innerHTML = ''; 
+        // 增加全部單字按鈕
+        container.appendChild(createCatBtn('ALL', { icon: '🔥', cn: '全部單字', en: 'All Words', color: 'indigo' }));
+
+        // 增加其他分類按鈕
+        categories.forEach(cat => {
+            const config = CAT_CONFIG[cat] || CAT_CONFIG['default'];
+            container.appendChild(createCatBtn(cat, config));
+        });
+    }
+
+    // 更新年級標籤
+    const badge = document.getElementById('grade-badge');
+    if(badge) badge.innerText = `Grade ${grade}`;
+}
+
+// 輔助：建立分類按鈕 HTML
+function createCatBtn(catKey, config) {
+    const btn = document.createElement('button');
+    const colorClass = `hover:border-${config.color}-500`;
+    
+    btn.className = `bg-white p-4 rounded-xl shadow-sm border-2 border-transparent ${colorClass} transition flex items-center gap-4 group w-full text-left`;
+    btn.onclick = () => selectCategory(catKey);
+    
+    btn.innerHTML = `
+        <div class="w-10 h-10 bg-${config.color}-100 rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition">${config.icon}</div>
+        <div class="flex-grow">
+            <h3 class="font-bold text-gray-700">${config.cn} <span class="text-xs font-normal text-gray-400">${config.en}</span></h3>
+        </div>
+        <i class="fas fa-chevron-right text-gray-300 group-hover:text-${config.color}-500"></i>
+    `;
+    return btn;
+}
+
+// Step 3: 選擇分類 -> 設定 (從 Screen 3 -> Screen 4)
+function selectCategory(cat) {
+    player.category = cat;
+    document.getElementById('screen-category').style.display = 'none';
+    document.getElementById('screen-settings').style.display = 'flex';
+}
+
+// 設定聲音
+function setVoice(gender) {
+    player.voice = gender;
+    document.getElementById('btn-voice-male').classList.remove('ring-4', 'ring-primary');
+    document.getElementById('btn-voice-female').classList.remove('ring-4', 'ring-primary');
+    
+    if(gender === 'male') {
+        document.getElementById('btn-voice-male').classList.add('ring-4', 'ring-primary');
+        speakTest("Hello");
+    } else {
+        document.getElementById('btn-voice-female').classList.add('ring-4', 'ring-primary');
+        speakTest("Hello");
+    }
+}
+
+// Step 4: 完成設定 -> 開始遊戲 (從 Screen 4 -> Screen 5)
+function finishSettingsAndStart() {
+    const nameInput = document.getElementById('player-name');
+    const name = nameInput.value.trim();
+    if(!name) {
+        alert("請輸入名字！ Please enter your name.");
+        nameInput.focus();
+        return;
+    }
+    player.name = name;
+
+    filterGameData();
+
+    if (!gameData || gameData.length === 0) {
+        alert("⚠️ 錯誤：此分類沒有單字。請重選年級或分類。");
+        // 復原到前一步驟
+        document.getElementById('screen-settings').style.display = 'none';
+        document.getElementById('screen-category').style.display = 'flex';
+        return;
+    }
+
+    document.getElementById('screen-settings').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('screen-game').style.display = 'flex';
+
+    const overlay = document.getElementById('ready-overlay');
+    if (overlay) overlay.style.display = 'flex';
+
+    updateHUD();
+    updateGrowth(`Hi, ${player.name}!`);
+}
+
+// 資料篩選邏輯
+function filterGameData() {
+    if (player.category === 'ALL') {
+        gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade);
+    } else {
+        gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade && i.cat === player.category);
+    }
+}
+
+function realStartGame() {
+    document.getElementById('ready-overlay').style.display = 'none';
+    nextQuestion();
+}
+
+// === 遊戲邏輯 (維持 V58 不變) ===
+function nextQuestion() {
+    if (nextQTimer) clearTimeout(nextQTimer);
+    isFrozen = false;
+    currentInput = [];
+    
+    document.getElementById('msg-area').innerText = "";
+    document.getElementById('hint-text').classList.remove('visible');
+    
+    if(!isTyping) {
+        const slotsBox = document.getElementById('slots-box');
+        if(slotsBox) slotsBox.innerHTML = ""; 
+        const poolBox = document.getElementById('pool-box');
+        if(poolBox) poolBox.innerHTML = ""; 
+    }
+
+    const rnd = Math.floor(Math.random() * gameData.length);
+    currentQ = gameData[rnd];
+
+    document.getElementById('q-icon').innerText = currentQ.icon;
+    document.getElementById('q-cn').innerText = currentQ.cn;
+    document.getElementById('hint-text').innerText = currentQ.word;
+
+    if (isTyping) {
+        const input = document.getElementById('typing-input');
+        if (input) {
+            input.value = "";
+            input.disabled = false;
+            setTimeout(() => input.focus(), 100);
+            input.oninput = checkTyping;
+        }
+    } else {
+        renderSlots();
+        renderButtons();
+    }
+    speak(currentQ.word);
+}
+
+// 拼字渲染
+function renderSlots() {
+    const box = document.getElementById('slots-box');
+    if (!box) return;
+    for (let i = 0; i < currentQ.word.length; i++) {
+        let div = document.createElement('div');
+        div.className = 'slot';
+        div.id = 'slot-' + i;
+        box.appendChild(div);
+    }
+}
+
+function renderButtons() {
+    const pool = document.getElementById('pool-box');
+    if (!pool) return;
+    
+    let chars = currentQ.word.split(''); 
+    if (player.level >= 7) {
+        const isAllSame = chars.every(c => c === chars[0]);
+        if (chars.length > 1 && !isAllSame) {
+            let shuffledStr = "";
+            do {
+                chars.sort(() => Math.random() - 0.5);
+                shuffledStr = chars.join('');
+            } while (shuffledStr === currentQ.word);
+        }
+    }
+    
+    chars.forEach((char, index) => {
+        let btn = document.createElement('button');
+        btn.className = 'btn-char';
+        btn.innerText = char;
+        btn.dataset.char = char;
+        btn.dataset.index = index; 
+        btn.onclick = function() { clickLetter(char, this); };
+        pool.appendChild(btn);
+    });
+}
+
+function clickLetter(char, btn) {
+    if (isFrozen) return;
+    if (currentInput.length >= currentQ.word.length) return;
+
+    speak(char);
+    currentInput.push(char);
+    
+    for (let i = 0; i < currentQ.word.length; i++) {
+        let slot = document.getElementById('slot-' + i);
+        if (slot && slot.innerText === "") {
+            slot.innerText = char;
+            break;
+        }
+    }
+    
+    btn.classList.add('used');
+    btn.onclick = null;
+
+    if (currentInput.length === currentQ.word.length) {
+        checkAnswer(currentInput.join(""));
+    }
+}
+
+function resetCurrentQuestion() {
+    if (isFrozen) return;
+    currentInput = [];
+    const slots = document.getElementsByClassName('slot');
+    for (let s of slots) s.innerText = "";
+    const btns = document.getElementsByClassName('btn-char');
+    for (let btn of btns) {
+        btn.classList.remove('used');
+        btn.onclick = function() { clickLetter(btn.innerText, this); };
+    }
+}
+
+function backspace() {
+    if (isFrozen || currentInput.length === 0) return;
+    let lastChar = currentInput.pop();
+    let slots = document.getElementsByClassName('slot');
+    for (let i = slots.length - 1; i >= 0; i--) {
+        if (slots[i].innerText !== "") {
+            slots[i].innerText = "";
+            break;
+        }
+    }
+    let btns = document.getElementsByClassName('btn-char');
+    for (let i = btns.length - 1; i >= 0; i--) {
+        let btn = btns[i];
+        if (btn.innerText === lastChar && btn.classList.contains('used')) {
+            btn.classList.remove('used');
+            btn.onclick = function() { clickLetter(lastChar, this); };
+            break; 
+        }
+    }
+}
+
+function checkTyping() {
+    const input = document.getElementById('typing-input');
+    const val = input.value.toUpperCase(); 
+    if (val.length === currentQ.word.length) {
+        checkAnswer(val);
+    }
+}
+
+function checkAnswer(ans) {
+    if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
+        isFrozen = true;
+        const msgArea = document.getElementById('msg-area');
+        if(msgArea) msgArea.innerHTML = "<span style='color:green'>🎉 答對了！ Correct!</span>";
+        
+        if (isTyping) {
+            const input = document.getElementById('typing-input');
+            if(input) input.disabled = true;
+        }
+        
+        gainXP(XP_WIN);
+        updateGrowth("很棒！ Great Job!");
+
+        try { speak(currentQ.word); } catch (e) {}
+
+        nextQTimer = setTimeout(() => {
+            nextQuestion();
+        }, 1500);
+
+    } else {
+        isFrozen = true;
+        const msgArea = document.getElementById('msg-area');
+        if(msgArea) msgArea.innerHTML = "<span style='color:red'>❌ 再試一次 Try Again</span>";
+        
+        loseXP(XP_LOSE);
+        updateGrowth("哎呀！ Oops!");
+        
+        setTimeout(() => {
+            isFrozen = false;
+            if(msgArea) msgArea.innerText = "";
+            if (isTyping) {
+                const input = document.getElementById('typing-input');
+                if(input) { input.value = ""; input.disabled = false; input.focus(); }
+            } else {
+                resetCurrentQuestion();
             }
+        }, 1000);
+    }
+}
+
+function getLevelReq(lv) {
+    if (lv === 1) return 50;
+    let req = 0;
+    for (let i = 1; i <= lv; i++) req += (50 * (i + 1));
+    return req;
+}
+
+function updateHUD() {
+    if (player.level > 20) player.level = 20;
+    let nextReq = getLevelReq(player.level);
+    let pct = (player.xp / nextReq) * 100;
+    if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+
+    const xpBar = document.getElementById('xp-bar');
+    if (xpBar) xpBar.style.width = pct + "%";
+    const xpText = document.getElementById('xp-text');
+    if (xpText) xpText.innerText = `${player.xp} / ${nextReq} XP`;
+    const lvNum = document.getElementById('lv-num');
+    if (lvNum) lvNum.innerText = player.level;
+    const ticketNum = document.getElementById('ticket-num');
+    if (ticketNum) ticketNum.innerText = player.hints;
+}
+
+function gainXP(amount) {
+    player.xp += amount;
+    let req = getLevelReq(player.level);
+    
+    if (player.xp >= req) {
+        player.level++;
+        player.hints++;
+        updateHUD();
+        updateGrowth("升級啦！ Level Up!");
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                alert(`🎉 恭喜升級！Level Up!\n\n現在是 Lv.${player.level}\n獲得提示券 +1 (Get Hint +1)`);
+            }, 50);
+        });
+    } else {
+        updateHUD();
+    }
+}
+
+function loseXP(amount) {
+    player.xp -= amount;
+    let min = (player.level === 1) ? 0 : getLevelReq(player.level - 1);
+    if (player.xp < min) player.xp = min;
+    updateHUD();
+}
+
+function updateGrowth(msg) {
+    let idx = player.level - 1;
+    if (idx >= GROWTH_STAGES.length) idx = GROWTH_STAGES.length - 1;
+    
+    const icon = document.getElementById('role-icon');
+    const name = document.getElementById('role-name');
+    if (icon) icon.innerText = GROWTH_STAGES[idx].icon;
+    if (name) name.innerText = GROWTH_STAGES[idx].name;
+    
+    if (msg) {
+        let bub = document.getElementById('role-msg');
+        if(bub) {
+            bub.innerText = msg;
+            bub.classList.add('show');
+            setTimeout(() => bub.classList.remove('show'), 2000);
         }
-    </script>
-    <style>
-        /* 鎖定網頁不回彈，背景固定 */
-        body { background-color: #f3f4f6; overflow: hidden; touch-action: none; }
-        
-        /* 拼字格 */
-        .slot { width: 2.8rem; height: 3.2rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.8rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; flex-shrink: 0; }
-        .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
-        
-        /* ★ 按鈕強制固定大小，不會變巨無霸 */
-        .btn-char { 
-            width: 3rem; height: 3rem; 
-            background: white; border-radius: 10px; 
-            box-shadow: 0 3px 0 #e5e7eb; border: 1px solid #e5e7eb; 
-            font-family: 'Fredoka', sans-serif; font-size: 1.4rem; font-weight: 600; color: #374151; 
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; user-select: none; transition: all 0.1s; 
+    }
+}
+
+function useHint() {
+    if (player.hints > 0) {
+        player.hints--;
+    } else {
+        let min = (player.level === 1) ? 0 : getLevelReq(player.level - 1);
+        if (player.xp - HINT_COST < min) {
+            alert("經驗值不足！ Not enough XP!"); return;
         }
-        .btn-char:active { transform: translateY(2px); box-shadow: none; }
-        .btn-char.used { background-color: #f3f4f6; color: #d1d5db; box-shadow: none; border-color: transparent; cursor: default; transform: translateY(2px); }
-        
-        #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
-        #role-msg.show { opacity: 1; transform: translateY(0); }
-        .hint-box { opacity: 0; transform: scale(0.9); transition: all 0.3s; filter: blur(5px); }
-        .hint-box.visible { opacity: 1; transform: scale(1); filter: blur(0); }
-        
-        /* 遮罩層級設定 */
-        #ready-overlay { z-index: 50 !important; }
-        
-        /* 隱藏捲軸 */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-</head>
-<body class="h-screen flex flex-col font-sans bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+        player.xp -= HINT_COST;
+    }
+    updateHUD();
+    document.getElementById('hint-text').classList.add('visible');
+    speak(currentQ.word);
+}
 
-    <header class="bg-white shadow-sm z-40 w-full flex-shrink-0 border-b border-gray-200">
-        <div class="max-w-md mx-auto px-4 py-2 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🧩</span>
-                <div class="flex flex-col">
-                    <h1 class="text-base font-bold text-gray-800 leading-none">拼字冒險</h1>
-                    <span class="text-[10px] text-gray-400 font-game tracking-wider">Spelling Adventure</span>
-                </div>
-            </div>
-            <a href="index.html" class="text-gray-400 hover:text-primary transition p-2 active:scale-95">
-                <i class="fas fa-home text-xl"></i>
-            </a>
-        </div>
-    </header>
+function speak(txt) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        let u = new SpeechSynthesisUtterance(txt.toLowerCase());
+        u.lang = 'en-US';
+        u.rate = 0.8; 
+        assignVoice(u, player.voice);
+        window.speechSynthesis.speak(u);
+    }
+}
 
-    <div id="screen-start" class="flex-1 w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 md:p-8 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">歡迎挑戰！</h2>
-            <p class="text-gray-400 mb-4 text-xs font-game">Welcome!</p>
-            <div class="space-y-3">
-                <input type="text" id="player-name" placeholder="輸入名字 Enter Name" class="w-full px-4 py-3 bg-gray-100 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
-                <button id="btn-start-game" class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition active:scale-95">
-                    開始遊戲 Start
-                </button>
-            </div>
-        </div>
-    </div>
+function speakTest(txt) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        let u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'en-US';
+        assignVoice(u, player.voice);
+        window.speechSynthesis.speak(u);
+    }
+}
 
-    <div id="screen-grade" class="hidden flex-1 w-full max-w-md mx-auto p-4 flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="selectGrade(1)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 1<br><span class="text-xs">一年級</span></button>
-                <button onclick="selectGrade(2)" class="py-3 bg-blue-100 text-blue-600 font-bold rounded-xl hover:bg-blue-200 transition">Grade 2<br><span class="text-xs">二年級</span></button>
-                <button onclick="selectGrade(3)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 3<br><span class="text-xs">三年級</span></button>
-                <button onclick="selectGrade(4)" class="py-3 bg-green-100 text-green-600 font-bold rounded-xl hover:bg-green-200 transition">Grade 4<br><span class="text-xs">四年級</span></button>
-                <button onclick="selectGrade(5)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 5<br><span class="text-xs">五年級</span></button>
-                <button onclick="selectGrade(6)" class="py-3 bg-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-200 transition">Grade 6<br><span class="text-xs">六年級</span></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-category" class="hidden flex-1 w-full max-w-md mx-auto p-4 flex-col overflow-hidden">
-        <div class="flex items-center justify-between mb-2">
-            <button onclick="location.reload()" class="text-gray-400 hover:text-gray-600 text-xs"><i class="fas fa-arrow-left"></i> 重選年級</button>
-            <span id="grade-badge" class="bg-primary text-white text-xs px-3 py-1 rounded-full font-bold">Grade ?</span>
-        </div>
-        <div class="text-center mb-2 flex-shrink-0"><p class="text-gray-500 text-sm">Step 2: 選擇主題</p></div>
-        <div id="dynamic-category-box" class="grid grid-cols-1 gap-3 flex-grow overflow-y-auto pb-4"></div>
-    </div>
-
-    <div id="screen-settings" class="hidden flex-1 w-full max-w-md mx-auto p-4 flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Step 3: 建立角色</h2>
-            <div class="mb-6">
-                <label class="block text-left text-xs font-bold text-gray-500 mb-1 ml-1">你的名字 Name</label>
-                <input type="text" id="player-name" placeholder="勇者 Hero" class="w-full px-4 py-3 bg-gray-100 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
-            </div>
-            <div class="mb-6">
-                <label class="block text-left text-xs font-bold text-gray-500 mb-2 ml-1">發音 Voice</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="btn-voice-female" onclick="setVoice('female')" class="p-3 rounded-xl border-2 border-gray-200 hover:border-pink-400 flex flex-col items-center transition ring-4 ring-primary"><span class="text-2xl mb-1">👩</span><span class="text-xs font-bold">女聲 Female</span></button>
-                    <button id="btn-voice-male" onclick="setVoice('male')" class="p-3 rounded-xl border-2 border-gray-200 hover:border-blue-400 flex flex-col items-center transition"><span class="text-2xl mb-1">👨</span><span class="text-xs font-bold">男聲 Male</span></button>
-                </div>
-            </div>
-            <button onclick="finishSettingsAndStart()" class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-lg hover:scale-105 transition active:scale-95">開始冒險 Start!</button>
-        </div>
-    </div>
-
-    <div id="screen-game" class="hidden flex-1 w-full max-w-md mx-auto relative flex-col h-full overflow-hidden">
-        
-        <div id="ready-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center h-full w-full">
-            <div class="text-6xl mb-4 animate-bounce">🚀</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
-            <p class="text-gray-400 mb-6 font-game">Are you ready?</p>
-            <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg hover:scale-105 transition active:scale-95">
-                GO! 開始 Start
-            </button>
-        </div>
-
-        <div id="hud" class="bg-white w-full px-4 py-3 shadow-md z-30 flex flex-col gap-2 border-b border-gray-200 flex-shrink-0">
-            <div class="flex justify-between items-center w-full">
-                <div class="flex items-center gap-2">
-                    <div id="role-icon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-base shadow-inner">👶</div>
-                    <div class="flex flex-col">
-                        <span id="role-name" class="text-xs font-bold text-gray-800 leading-none">Lv.1 新生兒</span>
-                        <span class="text-[9px] text-gray-400 font-game leading-none">Newborn</span>
-                    </div>
-                </div>
-                <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
-                    <span class="text-base mr-1">🎟️</span>
-                    <span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span>
-                </div>
-            </div>
-            
-            <div class="w-full flex items-center gap-2">
-                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
-                    <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
-                </div>
-                <div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div>
-            </div>
-            
-            <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-0.5">
-                <span class="text-green-500">✅ +50</span>
-                <span class="text-red-400">❌ -30</span>
-                <span class="text-yellow-500">💡 -20</span>
-            </div>
-        </div>
-
-        <div id="role-msg" class="absolute top-36 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
-
-        <div class="flex-1 flex flex-col items-center justify-start p-2 space-y-2 overflow-y-auto">
-            
-            <div class="bg-white w-full rounded-2xl shadow-lg p-3 text-center relative border-2 border-white/50 flex-shrink-0 mt-1">
-                <div id="q-icon" class="text-6xl mb-1 filter drop-shadow-sm">🍎</div>
-                <div id="q-cn" class="text-xl font-bold text-gray-700">蘋果</div>
-                <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
-                <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
-
-                <div class="flex justify-center gap-2 mt-2 border-t pt-2">
-                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span>
-                    </button>
-                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="slots-box" class="w-full flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 min-h-[40px] px-2 py-1 no-scrollbar flex-shrink-0"></div>
-
-            <div class="bg-white rounded-2xl shadow-lg p-3 w-full border-2 border-white/50 flex-shrink-0">
-                <div class="flex justify-between items-center mb-2 gap-2">
-                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center">
-                        <i class="fas fa-redo mr-1"></i> 重置 Reset
-                    </button>
-                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center">
-                        <i class="fas fa-backspace mr-1"></i> 刪除 Del
-                    </button>
-                </div>
-                <div id="pool-box" class="flex flex-wrap justify-center gap-2"></div>
-            </div>
-
-        </div>
-    </div>
-
-    <script src="data.js"></script>
-    <script src="game.js"></script>
-</body>
-</html>
+function assignVoice(u, gender) {
+    const voices = window.speechSynthesis.getVoices();
+    let preferredVoice = null;
+    if (gender === 'male') {
+        preferredVoice = voices.find(v => v.name.includes("Daniel")) || 
+                         voices.find(v => v.name.includes("David")) || 
+                         voices.find(v => v.name.includes("Male"));
+    } else {
+        preferredVoice = voices.find(v => v.name.includes("Google US English")) || 
+                         voices.find(v => v.name.includes("Samantha")) || 
+                         voices.find(v => v.name.includes("Zira")) ||
+                         voices.find(v => v.name.includes("Female"));
+    }
+    if (preferredVoice) u.voice = preferredVoice;
+}
