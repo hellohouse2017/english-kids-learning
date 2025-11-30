@@ -43,15 +43,7 @@
         </div>
     </header>
 
-    <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-1">鍵盤大師！</h2>
-            <p class="text-gray-400 mb-4 text-xs font-game">Typing Master!</p>
-            <button id="btn-start-game" class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition active:scale-95">開始挑戰 Start</button>
-        </div>
-    </div>
-
-    <div id="screen-grade" class="hidden flex-grow w-full max-w-md mx-auto p-4 flex-col justify-center items-center overflow-y-auto">
+    <div id="screen-grade" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
         <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Step 1: 選擇年級</h2>
             <div class="grid grid-cols-2 gap-3">
@@ -93,10 +85,10 @@
     </div>
 
     <div id="screen-game" class="hidden flex-grow w-full max-w-md mx-auto relative flex-col h-full overflow-hidden">
+        
         <div id="ready-overlay" class="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl h-full">
             <div class="text-6xl mb-4 animate-bounce">🚀</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-1">準備好了嗎？</h2>
-            <p class="text-gray-400 mb-6 font-game">Are you ready?</p>
             <button onclick="realStartGame()" class="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-white text-xl font-bold rounded-2xl shadow-lg transition active:scale-95">GO!</button>
         </div>
 
@@ -121,17 +113,25 @@
                 <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">CAR</div>
                 <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
                 <div class="flex justify-center gap-2 mt-2 border-t pt-2">
-                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span></button>
-                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span></button>
+                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音</span></button>
+                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看</span></button>
                 </div>
             </div>
+
             <div class="w-full bg-white rounded-2xl shadow-lg p-4 border-2 border-white/50">
                 <label class="block text-center text-gray-400 text-xs font-bold mb-2 tracking-widest uppercase">Type Answer (輸入單字)</label>
-                <input type="text" id="typing-input" class="typing-box w-full px-4 py-4 text-center text-4xl font-bold text-gray-700 rounded-2xl focus:outline-none" placeholder="..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <input type="text" id="typing-input" 
+                       class="typing-box w-full px-4 py-4 text-center text-4xl font-bold text-gray-700 rounded-2xl focus:outline-none" 
+                       placeholder="..." 
+                       autocomplete="off" 
+                       autocorrect="off" 
+                       autocapitalize="off" 
+                       spellcheck="false">
                 <p class="text-center text-gray-300 text-[10px] mt-2">請使用鍵盤輸入 (Use Keyboard)</p>
             </div>
         </div>
-        <div class="h-10 w-full flex-shrink-0"></div>
+        
+        <div class="h-1/4 w-full bg-gray-50/50 flex-shrink-0"></div>
     </div>
 
     <script src="data.js"></script>
