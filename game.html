@@ -21,7 +21,7 @@
         body { background-color: #f3f4f6; overflow: hidden; }
         .slot { width: 2.8rem; height: 3.2rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.8rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
         .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
-        .btn-char { width: 3rem; height: 3rem; background: white; border-radius: 10px; box-shadow: 0 3px 0 #e5e7eb; border: 1px solid #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.4rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; }
+        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 10px; box-shadow: 0 3px 0 #e5e7eb; border: 1px solid #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.4rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; }
         .btn-char:active { transform: translateY(2px); box-shadow: none; }
         .btn-char.used { background-color: #f3f4f6; color: #d1d5db; box-shadow: none; border-color: transparent; cursor: default; transform: translateY(2px); }
         #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
@@ -128,15 +128,15 @@
                 <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
                 <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
                 <div class="flex justify-center gap-2 mt-2 border-t pt-2">
-                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音</span></button>
-                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看</span></button>
+                    <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span></button>
+                    <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1"><span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span></button>
                 </div>
             </div>
             <div id="slots-box" class="w-full flex flex-nowrap overflow-x-auto items-center justify-start md:justify-center gap-2 min-h-[40px] px-2 py-1 no-scrollbar"></div>
             <div class="bg-white rounded-2xl shadow-lg p-3 w-full border-2 border-white/50 flex-shrink-0">
                 <div class="flex justify-between items-center mb-2 gap-2">
-                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center"><i class="fas fa-redo mr-1"></i> 重置</button>
-                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center"><i class="fas fa-backspace mr-1"></i> 刪除</button>
+                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center"><i class="fas fa-redo mr-1"></i> 重置 Reset</button>
+                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center"><i class="fas fa-backspace mr-1"></i> 刪除 Del</button>
                 </div>
                 <div id="pool-box" class="flex flex-wrap justify-center gap-2"></div>
             </div>
