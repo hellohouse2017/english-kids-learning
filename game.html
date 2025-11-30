@@ -18,16 +18,14 @@
         }
     </script>
     <style>
-        /* ★ V54: 鎖定高度，防止手機版面跑掉 */
-        body { background-color: #f3f4f6; overflow: hidden; }
+        body { background-color: #f3f4f6; overflow: hidden; } /* 鎖定背景滾動 */
         
         .slot { width: 2.5rem; height: 3rem; border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: #4f46e5; transition: all 0.2s; }
         .slot:empty { background-color: rgba(255,255,255,0.5); border-radius: 6px; border: 2px dashed #cbd5e1; }
         
-        /* 手機版按鈕適配 */
-        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 10px; box-shadow: 0 3px 5px rgba(0,0,0,0.1); font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border-bottom: 3px solid #e5e7eb; }
-        .btn-char:active { transform: translateY(2px); border-bottom-width: 1px; box-shadow: none; }
-        .btn-char.used { background-color: #e5e7eb; color: #9ca3af; border-color: #d1d5db; cursor: default; transform: none; opacity: 0.6; }
+        .btn-char { width: 100%; aspect-ratio: 1/1; background: white; border-radius: 12px; box-shadow: 0 4px 0 #e5e7eb; font-family: 'Fredoka', sans-serif; font-size: 1.2rem; font-weight: 600; color: #374151; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.1s; border: 1px solid #f3f4f6; }
+        .btn-char:active { transform: translateY(2px); box-shadow: none; }
+        .btn-char.used { background-color: #f3f4f6; color: #d1d5db; box-shadow: none; border-color: transparent; cursor: default; transform: translateY(2px); }
         
         #role-msg { opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         #role-msg.show { opacity: 1; transform: translateY(0); }
@@ -39,23 +37,17 @@
 <body class="h-screen flex flex-col font-sans bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
 
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-20 w-full flex-shrink-0">
-        <div class="max-w-md mx-auto px-4 py-2 flex justify-between items-center">
+        <div class="max-w-md mx-auto px-4 py-2 flex justify-center items-center">
             <div class="flex items-center gap-2">
                 <span class="text-xl">🧩</span>
-                <div class="flex flex-col">
-                    <h1 class="text-sm font-bold text-gray-800 leading-none">拼字冒險</h1>
-                    <span class="text-[10px] text-gray-400 font-game">Spelling Adventure</span>
-                </div>
+                <h1 class="text-base font-bold text-gray-800 font-game tracking-wider">Spelling Adventure</h1>
             </div>
-            <a href="index.html" class="text-gray-400 hover:text-primary transition p-2 flex flex-col items-center">
-                <i class="fas fa-home text-lg"></i>
-            </a>
         </div>
     </header>
 
     <div id="screen-start" class="flex-grow w-full max-w-md mx-auto p-4 flex flex-col justify-center items-center overflow-y-auto">
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 text-center border-4 border-white w-full mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-1">歡迎挑戰！</h2>
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6 md:p-8 text-center border-4 border-white w-full mb-4">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1">歡迎挑戰！</h2>
             <p class="text-gray-400 mb-4 text-xs font-game">Welcome!</p>
             <div class="space-y-3">
                 <input type="text" id="player-name" placeholder="輸入名字 Enter Name" class="w-full px-4 py-3 bg-gray-100 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-primary transition" autocomplete="off">
@@ -63,6 +55,9 @@
                     開始遊戲 Start
                 </button>
             </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="index.html" class="text-gray-400 text-sm hover:text-gray-600 underline">回首頁 Home</a>
         </div>
     </div>
 
@@ -101,69 +96,72 @@
             </button>
         </div>
 
-        <div id="hud" class="bg-white px-3 py-2 shadow-sm z-10 flex items-center justify-between border-t border-gray-100 flex-shrink-0">
-            <div class="flex items-center gap-2 flex-grow">
-                <div class="relative">
-                    <div id="role-icon" class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-lg shadow-inner">👶</div>
-                    <div class="absolute -bottom-1 -right-1 bg-gray-800 text-white text-[8px] px-1 py-0.5 rounded-full border border-white" id="lv-num">1</div>
-                </div>
-                <div class="flex-grow max-w-[100px]">
-                    <div id="role-name" class="text-xs font-bold text-gray-800 truncate">Lv.1 新生兒</div>
-                    <div class="w-full h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                        <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
+        <div id="hud" class="bg-white px-4 py-3 shadow-md z-10 flex flex-col gap-2 border-b border-gray-200 flex-shrink-0 rounded-b-3xl mx-2">
+            <div class="flex justify-between items-center w-full">
+                <a href="index.html" class="text-gray-400 hover:text-primary p-1"><i class="fas fa-home text-lg"></i></a>
+                
+                <div class="flex items-center gap-2">
+                    <div id="role-icon" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-base shadow-inner">👶</div>
+                    <div class="flex flex-col">
+                        <span id="role-name" class="text-xs font-bold text-gray-800 leading-none">Lv.1 新生兒</span>
+                        <span class="text-[9px] text-gray-400 font-game leading-none">Newborn</span>
                     </div>
+                </div>
+
+                <div class="flex items-center bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
+                    <span class="text-base mr-1">🎟️</span>
+                    <span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span>
                 </div>
             </div>
+
+            <div class="w-full flex items-center gap-2">
+                <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
+                    <div id="xp-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 w-0 transition-all duration-500"></div>
+                </div>
+                <div id="xp-text" class="text-[9px] text-gray-400 font-mono whitespace-nowrap">0 XP</div>
+            </div>
             
-            <div class="flex items-center gap-3">
-                <div class="flex flex-col items-end text-[9px] text-gray-400 font-mono leading-tight">
-                    <span class="text-green-600 font-bold">✅ +50</span>
-                    <span class="text-red-400 font-bold">❌ -30</span>
-                    <span class="text-yellow-500 font-bold">💡 -20</span>
-                </div>
-                
-                <div class="flex flex-col items-center">
-                    <div class="flex items-center bg-yellow-50 px-2 py-0.5 rounded-lg border border-yellow-200">
-                        <span class="text-base mr-1">🎟️</span>
-                        <span class="text-xs font-bold text-yellow-700" id="ticket-num">0</span>
-                    </div>
-                    <span class="text-[8px] text-gray-400 mt-0.5">Hints</span>
-                </div>
+            <div class="flex justify-center gap-3 text-[9px] text-gray-400 font-bold border-t border-gray-100 pt-1 mt-1">
+                <span class="text-green-500">✅ +50 XP</span>
+                <span class="text-red-400">❌ -30 XP</span>
+                <span class="text-yellow-500">💡 -20 XP</span>
             </div>
         </div>
 
-        <div id="role-msg" class="absolute top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
+        <div id="role-msg" class="absolute top-32 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-full shadow-lg pointer-events-none z-20 whitespace-nowrap">加油！</div>
 
-        <div class="flex-grow flex flex-col items-center justify-start p-3 space-y-3 overflow-y-auto">
-            <div class="bg-white w-full rounded-2xl shadow-md p-4 text-center relative border-b-4 border-gray-200 flex-shrink-0">
-                <div id="q-icon" class="text-7xl mb-2 filter drop-shadow-sm">🍎</div>
+        <div class="flex-grow flex flex-col items-center justify-center p-4 space-y-4 overflow-y-auto">
+            
+            <div class="bg-white w-full rounded-2xl shadow-lg p-4 text-center relative border-2 border-white/50">
+                <div id="q-icon" class="text-6xl mb-2 filter drop-shadow-sm">🍎</div>
                 <div id="q-cn" class="text-xl font-bold text-gray-700">蘋果</div>
                 <div id="hint-text" class="hint-box text-3xl font-game font-bold text-yellow-500 tracking-wider mt-1 absolute top-2 right-3 opacity-0">APPLE</div>
                 <div id="msg-area" class="h-6 mt-1 font-bold text-base transition-all"></div>
 
                 <div class="flex justify-center gap-2 mt-3 border-t pt-3">
                     <button onclick="speak(currentQ.word)" class="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-volume-up mr-1"></i> 發音</span>
+                        <span><i class="fas fa-volume-up mr-1"></i> 發音 Speak</span>
                     </button>
                     <button onclick="useHint()" class="flex-1 px-2 py-1.5 bg-yellow-50 text-yellow-600 rounded-lg text-xs font-bold hover:bg-yellow-100 transition flex flex-col items-center leading-none gap-1">
-                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看</span>
+                        <span><i class="fas fa-lightbulb mr-1"></i> 偷看 Hint</span>
                     </button>
                 </div>
             </div>
 
-            <div id="slots-box" class="flex flex-wrap justify-center gap-2 min-h-[50px] mb-2"></div>
-        </div>
+            <div id="slots-box" class="flex flex-wrap justify-center gap-2 min-h-[50px] w-full"></div>
 
-        <div class="bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-4 pb-8 w-full flex-shrink-0">
-            <div class="flex justify-between items-center mb-3 gap-2">
-                <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center">
-                    <i class="fas fa-redo mr-1"></i> 重置 Reset
-                </button>
-                <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center">
-                    <i class="fas fa-backspace mr-1"></i> 刪除 Del
-                </button>
+            <div class="bg-white rounded-2xl shadow-lg p-4 w-full border-2 border-white/50">
+                <div class="flex justify-between items-center mb-3 gap-2">
+                    <button onclick="resetCurrentQuestion()" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center">
+                        <i class="fas fa-redo mr-1"></i> 重置 Reset
+                    </button>
+                    <button onclick="backspace()" class="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center justify-center">
+                        <i class="fas fa-backspace mr-1"></i> 刪除 Del
+                    </button>
+                </div>
+                <div id="pool-box" class="grid grid-cols-5 gap-2"></div>
             </div>
-            <div id="pool-box" class="grid grid-cols-5 gap-2"></div>
+
         </div>
     </div>
 
