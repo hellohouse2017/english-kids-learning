@@ -1,5 +1,5 @@
 // ===================================================
-// game.js - V62 (年級優先 -> 動態分類 -> 角色設定)
+// game.js - V63 (流程修復版：首頁->年級->主題->設定->遊戲)
 // ===================================================
 
 // 1. 遊戲參數
@@ -20,7 +20,7 @@ const GROWTH_STAGES = [
     { icon: "👑", name: "Lv.19 世界首富 (Richest)" }, { icon: "🦸", name: "Lv.20 傳奇人物 (Legend)" }
 ];
 
-// ★ 分類設定 (圖示與顏色配置)
+// 分類設定 (圖示與顏色)
 const CAT_CONFIG = {
     'animal': { icon: '🦁', cn: '動物', en: 'Animals', color: 'green' },
     'food':   { icon: '🍎', cn: '食物', en: 'Food', color: 'red' },
@@ -32,24 +32,13 @@ const CAT_CONFIG = {
     'nature': { icon: '🌳', cn: '自然', en: 'Nature', color: 'emerald' },
     'action': { icon: '🏃', cn: '動作', en: 'Action', color: 'indigo' },
     'number': { icon: '🔢', cn: '數字', en: 'Number', color: 'cyan' },
-    // 預設
     'default': { icon: '📦', cn: '其他', en: 'Other', color: 'gray' }
 };
 
-// 玩家狀態
-let player = { 
-    name: "Player", 
-    level: 1, 
-    xp: 0, 
-    hints: 0,
-    grade: 1,      
-    category: "ALL",  
-    voice: "female" 
-};
-
+let player = { name: "Player", level: 1, xp: 0, hints: 0, grade: 1, category: "ALL", voice: "female" };
 let currentQ = null;
 let currentInput = [];
-let gameData = []; // 當前題庫
+let gameData = [];
 let isFrozen = false;
 let isTyping = false;
 let nextQTimer = null;
@@ -57,61 +46,64 @@ let nextQTimer = null;
 // 2. 初始化
 window.onload = function() {
     if (typeof window.VOCAB_LIST === 'undefined') {
-        alert("Error: data.js not found"); return;
+        alert("Error: data.js not found. 請確認 data.js 是否存在！"); return;
     }
     if (document.getElementById('typing-input')) isTyping = true;
 
-    // 首頁按鈕綁定
+    // 綁定首頁按鈕
     const startBtn = document.getElementById('btn-start-game');
-    if (startBtn) startBtn.onclick = showGradeSelect;
+    if (startBtn) {
+        // 清除舊事件，重新綁定到 showGradeSelect
+        startBtn.onclick = showGradeSelect;
+    }
 };
 
 // === 流程控制 ===
 
-// Step 1: 顯示年級選擇
+// Step 1: 顯示年級選擇 (從 Screen 1 -> Screen 2)
 function showGradeSelect() {
     document.getElementById('screen-start').style.display = 'none';
     document.getElementById('screen-grade').style.display = 'flex';
 }
 
-// Step 2: 選擇年級 -> 動態生成分類按鈕
+// Step 2: 選擇年級 -> 產生分類 (從 Screen 2 -> Screen 3)
 function selectGrade(grade) {
     player.grade = parseInt(grade);
     
-    // 1. 先篩選出該年級的所有單字
+    // 篩選該年級單字
     const gradeWords = window.VOCAB_LIST.filter(w => w.grade === player.grade);
     
     if (gradeWords.length === 0) {
-        alert("目前這個年級還沒有單字喔！先試試 Grade 1 吧！");
+        alert(`Grade ${grade} 目前沒有單字資料，請檢查 data.js！`);
         return;
     }
 
-    // 2. 找出該年級有哪些分類 (去重複)
+    // 找出分類
     const categories = [...new Set(gradeWords.map(w => w.cat))];
     
-    // 3. 動態生成按鈕
+    // 動態生成按鈕
     const container = document.getElementById('dynamic-category-box');
-    container.innerHTML = ''; // 清空舊按鈕
+    if(container) {
+        container.innerHTML = ''; 
+        // 全部單字按鈕
+        container.appendChild(createCatBtn('ALL', { icon: '🔥', cn: '全部單字', en: 'All Words', color: 'indigo' }));
+        // 各分類按鈕
+        categories.forEach(cat => {
+            const config = CAT_CONFIG[cat] || CAT_CONFIG['default'];
+            container.appendChild(createCatBtn(cat, config));
+        });
+    }
 
-    // 加入「全部」按鈕
-    container.appendChild(createCatBtn('ALL', { icon: '🔥', cn: '全部單字', en: 'Mixed', color: 'indigo' }));
-
-    // 加入其他分類按鈕
-    categories.forEach(cat => {
-        const config = CAT_CONFIG[cat] || CAT_CONFIG['default'];
-        container.appendChild(createCatBtn(cat, config));
-    });
-
-    // 4. 切換畫面
-    document.getElementById('grade-badge').innerText = `Grade ${grade}`;
+    // 顯示畫面
+    const badge = document.getElementById('grade-badge');
+    if(badge) badge.innerText = `Grade ${grade}`;
+    
     document.getElementById('screen-grade').style.display = 'none';
     document.getElementById('screen-category').style.display = 'flex';
 }
 
-// 輔助：建立分類按鈕 HTML
 function createCatBtn(catKey, config) {
     const btn = document.createElement('button');
-    // Tailwind 樣式
     const colorClass = `hover:border-${config.color}-500`;
     const bgClass = `bg-${config.color}-100`;
     
@@ -128,7 +120,7 @@ function createCatBtn(catKey, config) {
     return btn;
 }
 
-// Step 3: 選擇分類 -> 進入設定 (名字/聲音)
+// Step 3: 選擇分類 -> 設定 (從 Screen 3 -> Screen 4)
 function selectCategory(cat) {
     player.category = cat;
     document.getElementById('screen-category').style.display = 'none';
@@ -150,7 +142,7 @@ function setVoice(gender) {
     }
 }
 
-// Step 4: 完成設定 -> 開始遊戲
+// Step 4: 完成設定 -> 開始遊戲 (從 Screen 4 -> Screen 5)
 function finishSettingsAndStart() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value.trim();
@@ -161,7 +153,7 @@ function finishSettingsAndStart() {
     }
     player.name = name;
 
-    // 最終篩選題庫
+    // 最終篩選
     if (player.category === 'ALL') {
         gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade);
     } else {
@@ -169,16 +161,15 @@ function finishSettingsAndStart() {
     }
 
     if (!gameData || gameData.length === 0) {
-        alert("發生錯誤：沒有單字資料");
-        return;
+        alert("⚠️ 錯誤：此分類沒有單字。載入該年級全部單字。");
+        gameData = window.VOCAB_LIST.filter(i => i.grade === player.grade);
     }
 
-    // 切換到遊戲畫面
     document.getElementById('screen-settings').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('screen-game').style.display = 'flex';
 
-    // 強制顯示遮罩
+    // 顯示準備遮罩
     const overlay = document.getElementById('ready-overlay');
     if (overlay) overlay.style.display = 'flex';
 
@@ -191,7 +182,7 @@ function realStartGame() {
     nextQuestion();
 }
 
-// === 遊戲邏輯 (維持 V58 不變) ===
+// === 遊戲邏輯 ===
 function nextQuestion() {
     if (nextQTimer) clearTimeout(nextQTimer);
     isFrozen = false;
@@ -324,6 +315,7 @@ function backspace() {
     }
 }
 
+// 打字模式
 function checkTyping() {
     const input = document.getElementById('typing-input');
     const val = input.value.toUpperCase(); 
@@ -332,6 +324,7 @@ function checkTyping() {
     }
 }
 
+// 判定
 function checkAnswer(ans) {
     if (ans.toUpperCase() === currentQ.word.toUpperCase()) {
         isFrozen = true;
@@ -343,7 +336,6 @@ function checkAnswer(ans) {
             if(input) input.disabled = true;
         }
         
-        // 優先加分
         gainXP(XP_WIN);
         updateGrowth("很棒！ Great Job!");
 
@@ -374,7 +366,7 @@ function checkAnswer(ans) {
     }
 }
 
-// 成長系統
+// 系統
 function getLevelReq(lv) {
     if (lv === 1) return 50;
     let req = 0;
@@ -387,16 +379,13 @@ function updateHUD() {
     let nextReq = getLevelReq(player.level);
     let pct = (player.xp / nextReq) * 100;
     if (pct < 0) pct = 0; if (pct > 100) pct = 100;
-    
+
     const xpBar = document.getElementById('xp-bar');
     if (xpBar) xpBar.style.width = pct + "%";
-    
     const xpText = document.getElementById('xp-text');
     if (xpText) xpText.innerText = `${player.xp} / ${nextReq} XP`;
-    
     const lvNum = document.getElementById('lv-num');
     if (lvNum) lvNum.innerText = player.level;
-    
     const ticketNum = document.getElementById('ticket-num');
     if (ticketNum) ticketNum.innerText = player.hints;
 }
@@ -404,7 +393,6 @@ function updateHUD() {
 function gainXP(amount) {
     player.xp += amount;
     let req = getLevelReq(player.level);
-    
     if (player.xp >= req) {
         player.level++;
         player.hints++;
@@ -430,12 +418,10 @@ function loseXP(amount) {
 function updateGrowth(msg) {
     let idx = player.level - 1;
     if (idx >= GROWTH_STAGES.length) idx = GROWTH_STAGES.length - 1;
-    
     const icon = document.getElementById('role-icon');
     const name = document.getElementById('role-name');
     if (icon) icon.innerText = GROWTH_STAGES[idx].icon;
     if (name) name.innerText = GROWTH_STAGES[idx].name;
-    
     if (msg) {
         let bub = document.getElementById('role-msg');
         if(bub) {
@@ -461,7 +447,6 @@ function useHint() {
     speak(currentQ.word);
 }
 
-// 語音
 function speak(txt) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -486,7 +471,6 @@ function speakTest(txt) {
 function assignVoice(u, gender) {
     const voices = window.speechSynthesis.getVoices();
     let preferredVoice = null;
-
     if (gender === 'male') {
         preferredVoice = voices.find(v => v.name.includes("Daniel")) || 
                          voices.find(v => v.name.includes("David")) || 
@@ -498,3 +482,4 @@ function assignVoice(u, gender) {
                          voices.find(v => v.name.includes("Female"));
     }
     if (preferredVoice) u.voice = preferredVoice;
+}
